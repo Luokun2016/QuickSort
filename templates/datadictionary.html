@@ -1,0 +1,105 @@
+{% extends "templates/sysmgrmenu.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}数据字典{% endblock %}
+{% block script%}
+<script type="text/javascript">
+function singlebackcolor(tableName,sender)
+           {
+                var trSelected = "#" + tableName +">tbody>tr.success";
+               $(trSelected).removeClass('success');
+               $(sender).addClass('success');
+          };
+
+function E_AddButtonClick()
+{};
+
+function E_EditButtonClick()
+{};
+
+function E_DeleteButtonClick()
+{};
+
+function C_AddButtonClick()
+{};
+
+function C_EditButtonClick()
+{};
+
+function C_DeleteButtonClick()
+{};
+
+</script>
+{% endblock %}
+{% block content1 %}
+<form action="/myexp/" method='post'>
+        <div class="page-header" style="position:relative; top:-30px; ">
+            <h3>数据字典</h3>
+        </div>
+        <div class="modal-body" style="font-size:16px; vertical-align:middle; position:relative; top:-30px;">
+        <ul class="nav nav-tabs">
+            <li class="dlgList active" id="class_baseinfo"><a href="#id_enum_tab">基本信息</a> </li>
+            <li class="dlgList " id="class_outlines"><a href="#id_content_tab">详细信息</a> </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade in active" id="id_enum_tab">
+                    <div class="bs-docs-section">
+                        <button id="addButton" class="btn btn-default" type="button" onclick="E_AddButtonClick()"
+                            data-backdrop="static" data-toggle="modal">
+                            添加</button>
+                        <button id="editButton" type="button" class="btn btn-default" onclick="E_EditButtonClick()">
+                            编辑</button>
+                        <button id="deleteButton" type="button" class="btn btn-default" onclick="E_DeleteButtonClick()">
+                            删除</button>
+                        </div>
+                        <div class="panel-body" style="padding-left: 0px; padding-right: 0px;">
+                            <!-- Glyphicons
+                          ================================================== -->
+                            <table id="id_enmus_list" class="table table-striped topsec_tabletop table-hover">
+                                <tr>
+                                    <th>类型</th>
+                                    <th>描述</th>
+                                </tr>
+                                {% for type in enums %}
+                                <tr data-id="{{type.id}}" onclick="singlebackcolor('id_enmus_list',this)">
+                                    <td>{{ type.key }}</td>
+                                    <td>{{ type.description }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+            </div>
+
+             <div class="tab-pane fade in" id="id_content_tab">
+                    <div class="bs-docs-section">
+                        <button id="addButton" class="btn btn-default" type="button" onclick="C_AddButtonClick()"
+                            data-backdrop="static" data-toggle="modal">
+                            添加</button>
+                        <button id="editButton" type="button" class="btn btn-default" onclick="C_EditButtonClick()">
+                            编辑</button>
+                        <button id="deleteButton" type="button" class="btn btn-default" onclick="C_DeleteButtonClick()">
+                            删除</button>
+                        </div>
+                        <div class="panel-body" style="padding-left: 0px; padding-right: 0px;">
+                            <!-- Glyphicons
+                          ================================================== -->
+                            <table id="id_content_list" class="table table-striped topsec_tabletop table-hover">
+                                <tr>
+                                    <th>类型</th>
+                                    <th>名称</th>
+                                </tr>
+                                {% for item in contents %}
+                                <tr data-id="{{item.id}}" onclick="singlebackcolor('id_content_list',this)">
+                                    <td>{{ item.key }}</td>
+                                    <td>{{ item.description }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+            </div>
+
+           </div>
+        </div>
+</form>
+
+{% endblock %}

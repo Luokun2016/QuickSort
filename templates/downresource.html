@@ -1,0 +1,172 @@
+{% extends "templates/examclientindex.html" %}
+{% load i18n %} 
+{% load staticfiles%}
+
+  {% block script %}
+<script type="text/javascript">
+      function ajaxobj(_url, _tag, _way, _form)
+      {
+        var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+        var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+        var info = "";
+        $.ajax({
+          type:m,
+          url:_url,
+          data:par,
+          async: false,
+          error: function(request) {
+            //alert("Connection error");
+          },
+          success: function(data) {
+            //$(_tag).html(data);
+            //alert(data);
+            info = data;
+          }
+        });
+        return info;
+      }
+      function LoadDate()
+      {
+        $('.form_date').datetimepicker({
+          language:  'zh-CN',
+          weekStart: 1,
+          todayBtn:  1,
+          autoclose: 1,
+          todayHighlight: 1,
+          startView: 2,
+          minView: 2,
+          forceParse: 0
+        });
+      }
+      function savepwd()
+      {
+          var dev = ajaxobj("/modifypwd/", "", "post", "#userinfoform");
+          if(dev == "1")
+              alert("密码修改成功！");
+          else
+              alert("密码修改失败！");
+          $('#myModal1').modal('hide');
+      }
+      function userpwd()
+      {
+          $('#myModal1').modal('show');
+      }
+</script>
+{% endblock %}
+
+{% block content1 %}
+<form id='toolsform' action="/downresource/" method='get' >
+  <div class="container" style="width:100%;height:100%;">
+    <!-- Static navbar -->
+    
+      <div id="HomeContent" style="width:100%;height:100%;">
+
+        <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+          <div class="panel-heading">系统资源</div>
+          <div class="panel-body" style="padding-left:0px; padding-right:0px;">
+            <table id="showtooltable" class="table table-striped topsec_tabletop table-hover" data-selid="0" >
+                <!-- 自定义data的delis属性值为‘0’ -->
+                  <tr>
+                    <th width='25%'>名称</th>
+                    <th width='25%'>说明</th>
+                    <!-- <th width='25%'>备注</th> -->
+                    <th width='15%'>上传时间</th>
+                    <th width='10%'>下载</th>
+                  </tr>
+                  {% for show_tool in tool_list %}
+                  <tr  id="{{show_tool.id}}" >
+                    <td title={{show_tool.toolname}}>{{show_tool.toolname|truncatechars:20}}</td>
+                    <td title={{show_tool.toolmessage}}>{{show_tool.toolmessage|truncatechars:20}}</td>      
+                   <!--  <td title={{show_tool.toolinformation}}>{{show_tool.toolinformation|truncatechars:20}}</td> -->
+                    <td>{{show_tool.toolcreatetime|date:"Y-m-d H:i:s"}}</td>
+                    {%if show_tool.toolfile %}
+                    <td>
+                    <a id="download" href = "/document/uploadtools/{{show_tool.toolfile}}" >下载</a>
+                    </td>
+                    {%else%}
+                    <td>--</td>
+                    {% endif %}
+                  </tr>
+                  {% endfor %}  
+            </table>
+            <div class="flickr">
+                {% if tool_list.has_previous %}
+                  <a href="?page={{ tool_list.previous_page_number }}{% ifnotequal toolselect '' %}&toolselect={{toolselect}}{% endifnotequal %}">上一页</a>
+                {% else %}
+                <span>上一页</span>
+                {% endif %}
+                <span>
+                  {% for p in page_range %}
+
+                  {% ifequal p tool_list.number %}
+                    <span class="current">{{p}}</span>
+                  {% else %}
+                    <a href="?page={{p}}{% ifnotequal toolselect '' %}&toolselect={{toolselect}}{% endifnotequal %}" title="第{{p}}页">{{p}}</a>
+                  {% endifequal %}
+
+                {% endfor %}
+              </span>
+              {% if tool_list.has_next %}
+              <a href="?page={{ tool_list.next_page_number }}{% ifnotequal toolselect '' %}&toolselect={{toolselect}}{% endifnotequal %}">下一页</a>
+              {% else %}
+              <span>下一页</span>
+              {% endif %}
+            </div>        
+        </div>
+        </div>
+
+      </div>
+  </div>
+</form>
+<script type="text/javascript">
+$(function(){
+
+     setbackgroundcolor("sycolor");
+});
+
+function startBench()
+{
+    var client = ajaxobj("/startBench/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    var result = json.result;
+
+    if(result == 0 && clientid != 0)
+    {
+        open_vnc(false, clientid);
+        $("#curvms").val(clientid);
+        $("#btnstopexp").removeClass('disabled');
+        $("#btnmaxscreen").removeClass('disabled');
+        $("#btnstartexp").addClass('disabled');
+    }
+    else if (result == 2)
+        alert("系统资源无法满足当前请求，请联系管理员！");
+    else if(result == 1)
+        alert("请求失败，请联系管理员！");
+}
+function stopBench()
+{
+    var client = ajaxobj("/stopBench/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    $("#curvms").val("0");
+    document.getElementById("syssframe").src = "";
+    $("#btnstartexp").removeClass('disabled');
+    $("#btnstopexp").addClass('disabled');
+    $("#btnmaxscreen").addClass('disabled');
+}
+function fullscreen()
+{
+    var clientid = $("#curvms").val();
+    open_vnc(true, clientid);
+    //var client = ajaxobj("/fullscreen/", "", "post", "#information");
+}
+function timedCount()
+ {
+    var client = ajaxobj("/clientinfor/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    var t=setTimeout("timedCount()",60000);
+ }
+</script>
+{% endblock %}

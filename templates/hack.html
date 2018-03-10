@@ -1,0 +1,214 @@
+{% extends "templates/hackclientindex.html" %}
+{% load i18n %} 
+{% load staticfiles%}
+
+{% block content1 %}
+
+<div class="container" style="width:100%;height:100%;margin-top:0px;">
+      <div id="HomeContent" style="width:100%;height:100%;margin-top:0px;">
+       
+        <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+          <div class="panel-heading">团队信息</div>
+
+          <div class="panel-body" style="height:100%;">
+            <div id="control" style="text-align:left; vertical-align:top;">
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                  <div class="panel-heading">我的控制台</div>
+                  <div id = "controls" class="panel-body" style="height:100%;">
+                    <div id="hacker" style="text-align:left; vertical-align:top;">
+                      <a href="#">172.18.10.101</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div id="tree" style="text-align:left; vertical-align:top;">
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">团队名称</div>
+                <div id = "gname" class="panel-body" style="height:100%;">
+                  <div id="hacker" style="text-align:left; vertical-align:top;">
+                    精灵鼠
+                  </div>
+                </div>
+              </div>
+
+              <!-- <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">团队排名</div>
+                <div id = "rank" class="panel-body" style="height:100%;">
+                  <div id="hacker" style="text-align:left; vertical-align:top; color:red;">
+                    1
+                  </div>
+                </div>
+              </div> -->
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">团队队长</div>
+                <div id = "gmembercpt" class="panel-body" style="height:100%;">
+                  <div id="hacker" style="text-align:left; vertical-align:top;">
+                    HONEST LEE
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">团队成员</div>
+                <div id = "gmembers" class="panel-body" style="height:100%;">
+                  <div id="hacker" style="text-align:left; vertical-align:top;">
+                    HONEST LEE，SEA WANG
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">团队成绩</div>
+                <div id = "grades" class="panel-body" style="height:100%;">
+                  <div id="hacker" style="text-align:left; vertical-align:top;">
+                    总得分107。
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+      </div>
+  </div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+  function ajaxobj(_url, _tag, _way, _form)
+  {
+    var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+    var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+    var info = "";
+    $.ajax({
+      type:m,
+      url:_url,
+      data:par,
+      async: false,
+      error: function(request) {
+        //alert("Connection error");
+      },
+      success: function(data) {
+        //$(_tag).html(data);
+        //alert(data);
+        info = data;
+      }
+    });
+    return info;
+  }
+  function LoadDate()
+  {
+    $('.form_date').datetimepicker({
+      language:  'zh-CN',
+      weekStart: 1,
+      todayBtn:  1,
+      autoclose: 1,
+      todayHighlight: 1,
+      startView: 2,
+      minView: 2,
+      forceParse: 0
+    });
+  }
+  function open_vnc(fscreen, vmid) 
+  {
+      var preid = vmid;
+      var url = '/console/' + preid + '/vm?token=' + preid;
+      if(fscreen)
+        window.open(url,'','width=850,height=485');
+      else
+        document.getElementById("syssframe").src = url;
+  }
+</script>
+
+<script type="text/javascript">
+$(function(){
+  setbackgroundcolor("groupmemcolor");
+  getteaminfo();
+});
+
+function getteaminfo()
+{
+  var teaminfo = ajaxobj("/getteamess/","","get","");
+  var data = $.parseJSON(teaminfo);
+  var count = 1;
+  var setnu = 0;
+  // for(i = 0;i<json.length;i++)
+  // {
+  //   $.each(json[i], function(index, value) {
+  //      if(index == data.groupname)
+  //      {
+  //        setnu = 1;
+  //      }
+  //      if(index != data.groupname && setnu == 0)
+  //      {
+  //        count++;
+  //      }
+  //   });
+  // }
+  addr ='<div id="hacker" style="text-align:left; vertical-align:top;">'+data.addr+'</div>';
+
+  tr='<div id="hacker" style="text-align:left; vertical-align:top;">'+data.groupname +'</div>';
+  if(data.captain)
+  {
+    cap ='<div id="hacker" style="text-align:left; vertical-align:top;">'+ data.captain +'</div>';
+  }
+  else
+  {
+    cap ='<div id="hacker" style="text-align:left; vertical-align:top;">'+ '队长被免职，当前无队长' +'</div>';
+  }
+  con = '<div id="hacker" style="text-align:left; vertical-align:top;">'+ data.members +'</div>';
+  content = '<div id="hacker" style="text-align:left; vertical-align:top;">总得分'+data.scores+'。</div>';
+  // trs ='<div id="hacker" style="text-align:left; vertical-align:top; color:red;">'+ count +'</div>'
+  $('#controls').html(addr);
+  $('#gname').html(tr);
+  $('#gmembercpt').html(cap);
+  $('#gmembers').html(con);
+  $('#grades').html(content);
+  // $('#rank').html(trs);
+}
+
+function startBench()
+{
+    var client = ajaxobj("/startBench/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    var result = json.result;
+
+    if(result == 0 && clientid != 0)
+    {
+        open_vnc(false, clientid);
+        $("#curvms").val(clientid);
+        $("#btnstopexp").removeClass('disabled');
+        $("#btnmaxscreen").removeClass('disabled');
+        $("#btnstartexp").addClass('disabled');
+    }
+    else if (result == 2)
+        alert("系统资源无法满足当前请求，请联系管理员！");
+    else if(result == 1)
+        alert("请求失败，请联系管理员！");
+}
+function stopBench()
+{
+    var client = ajaxobj("/stopBench/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    $("#curvms").val("0");
+    document.getElementById("syssframe").src = "";
+    $("#btnstartexp").removeClass('disabled');
+    $("#btnstopexp").addClass('disabled');
+    $("#btnmaxscreen").addClass('disabled');
+}
+function fullscreen()
+{
+    var clientid = $("#curvms").val();
+    open_vnc(true, clientid);
+    //var client = ajaxobj("/fullscreen/", "", "post", "#information");
+}
+function timedCount()
+ {
+    var client = ajaxobj("/clientinfor/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    var t=setTimeout("timedCount()",60000);
+ }
+</script>
+{% endblock %}

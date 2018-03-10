@@ -1,0 +1,479 @@
+{% extends "templates/questiondesign.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}题目管理{% endblock %}
+{% block css %}
+<style>
+    input:required:invalid, input:focus:invalid, textarea:required:invalid, textarea:focus:invalid{box-shadow: none;}
+</style>   
+{% endblock %}
+{% block script1 %}
+
+{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">简答题</span>
+</div>
+{% endblock %}
+{% block content1 %}
+
+<form id='questionform' action="/questions/ask/" method='get' style="position: relative; ">
+   {% csrf_token %}
+  <div class="bs-docs-section">
+      <table width="100%">
+         <tr>
+              <td >
+                  <div style="text-align:left;">
+                      
+                        <button type="button" class="btn btn-primary" data-target="#myModal" data-toggle="modal" title="添加题目" onclick='mclear()'><span class="glyphicon glyphicon-plus"></span></button>
+                        <button type="button" class="btn btn-primary disabled"  onclick='edit()' title="编辑题目" data-toggle="modal" id='editsuccess'><span class="glyphicon glyphicon-pencil"></span></button>
+                          <button type="button"  onclick='details()'   title="题目详情"   data-toggle="modal" class="btn btn-primary disabled" id='detailsuccess'><span class="glyphicon glyphicon-info-sign"></span></button>
+                        <button id="btndel" type="button" class="btn btn-danger disabled" title="删除题目" onclick='submitdelform()'><span class="glyphicon glyphicon-remove"></span></button>
+                   </div>
+              </td>
+              <td align="right">
+                  <div style="text-align:right;">    
+                        <input id='querytext' name='querytext' value="{{queselect}}" placeholder="请输入编号、标题关键字" type='text' class="form-control topself_input"  style="width:185px; display:inline; "/>
+                        <button id="btnquery" type="submit" class="btn btn-danger" formaction="/questions/ask/" title="查找题目" ><span class="glyphicon glyphicon-search"></span></button>
+               </div>
+              </td>
+          </tr>
+       </table>
+  </div>
+  <div class="panel-body" style="padding-left:0px; padding-right:0px;">
+    <!-- Glyphicons
+  ================================================== -->
+    <table  id="lsque" class="table table-striped topsec_tabletop table-hover" data-selid="0" >
+      <tr>
+        
+        <th>编号</th>
+        <th>标题</th>
+        <th>分值</th>
+        <th>出题人</th>
+        <th>创建时间</th>
+        <th>最后修改时间</th>
+      </tr>
+      {% for question in questionls.object_list %}
+      <tr  id="{{question.id}}" >
+        <td>{{question.qid}}</td>
+        <td>{{question.qtitle}}</td>
+        <td>{{question.qscore}}</td>
+        <td>{{question.teacherid.teaname}}</td>
+        <td>{{question.createtime|date:"Y-m-d H:i:s"}}</td>
+        <td>{{question.edittime|date:"Y-m-d H:i:s"}}</td>
+      </tr>
+      {% endfor %}   
+    </table>
+      <div id='flickr1' class="flickr">
+        <input type="hidden" name="flickr1_current" id="flickr1_current" value="{{page}}" />
+        <input type="hidden" name="flickr1_total" id="flickr1_total" value="{{page_long}}" />
+        <input type="hidden" name="flickr1_querytext" id="flickr1_querytext" value="{{querytext}}" />
+      </div>
+
+  </div>
+</form>
+
+  <form id='askaddform' action="/questions/askadd/" enctype="multipart/form-data" method='post'>
+    {% csrf_token %}
+
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog" style="width:1000px">
+        <div class="modal-content" style="width:950px;">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+
+            <h3 id="myModalLabel">添加题目</h3>
+          </div>
+
+          <div>
+            <div>
+              <table class="table topsec_tabletop">
+                <tr>
+                  <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目编号：</td>
+
+                  <td style="width:320px;"><input id='qid' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" name='qid' type='text' required="required" maxlength="20" onchange="checkqid()" class="form-control topself_input" /></td>
+
+                  <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目标题：</td>
+
+                  <td style="width:320px;"><input id='qtitle' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" name='qtitle' type='text' required="required" maxlength="20" class="form-control topself_input" /></td>
+
+                  <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目分值：</td>
+
+                  <td style="width:260apx;"><input id='qscore' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" name='qscore' type='text' required="required" maxlength="30" onchange="checkscore()" class="form-control topself_input" /></td>
+                </tr>
+
+                <tr>
+                  <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目内容：</td>
+
+                  <td colspan="4">
+                  <textarea id='addcontent' name='addcontent' required="required" style="background:transparent;color:#FFF;padding: 3px;resize:none;width:100%;">
+</textarea></td>
+
+                  <td><input type='file' id='addconpic' name='addconpic' maxlength='50' accept='image/*' onchange='fileSelected(this);selectFileType(this)' /></td>
+                </tr>
+
+                <tr>
+                  <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>参考答案：</td>
+
+                  <td colspan="4">
+                  <textarea id='addresult' name='addresult' required="required" style="background:transparent;color:#FFF;padding: 3px;resize:none;width:100%;">
+</textarea></td>
+
+                  <td style="display:none;"><input type='file' id='addrepic' name='addrepic' maxlength='50' accept='image/*' onchange='fileSelected(this);selectFileType(this)' /></td>
+                </tr>
+              </table>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-primary" id="" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+<form  id='askeditform' action="" enctype="multipart/form-data" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px;">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel1">编辑题目</h3>
+        </div>
+<div>
+   <div>
+    <table class="table topsec_tabletop">
+     <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目编号：</td>
+              <td style="width:320px; ">
+                <input id='qidedit' name='qidedit' type='text'  required="required" maxLength="20" disabled class="form-control topself_input"/>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目标题：</td>
+              <td style="width:320px; ">
+                <input id='qtitleedit' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" name='qtitleedit' type='text' required="required" maxLength="20"  class="form-control topself_input"/>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目分值：</td>
+              <td style="width:260apx; ">
+                <input id='qscoreedit' name='qscoreedit' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" type='text'  required="required" maxLength="30" onchange="checkscore()" class="form-control topself_input"/>
+              </td>
+              </tr>
+              <tr >
+                    <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目内容：</td>
+                    <td colspan=4>
+                      <textarea id='editcontent' name='editcontent' required="required" style="background:transparent;color:#FFF;padding: 3px;resize:none;width:100%;"></textarea>
+                    </td>
+                    <td>
+                      <input  type='file' id='editconpic' name='editconpic'  maxLength='50' accept='image/*' onchange='fileSelected(this);selectFileType(this)'/>
+                    </td>
+               </tr>     
+              <tr>
+                    <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>参考答案：</td>
+                    <td colspan=4>
+                      <textarea id='editresult' name='editresult'  required="required"  style="background:transparent;color:#FFF;padding: 3px;resize:none;width:100%;"></textarea>
+
+                    </td>
+                    <td style='display:none;'>
+                      <input  type='file' id='editrepic' name='editrepic'  maxLength='50' accept='image/*' onchange='fileSelected(this);selectFileType(this)'/>
+                    </td>
+               </tr>             
+                <input id='askid' name='queid' type='hidden'/>
+            
+            </table>
+          </div>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" id="" type="submit" title='保存' onclick='return submitformedit();'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<form  id='askdetailform' action="" enctype="multipart/form-data" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px;">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel1">题目详情</h3>
+        </div>
+<div>
+   <div>
+    <table class="table topsec_tabletop">
+     <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目编号：</td>
+              <td style="width:230px; ">
+                <input id='qiddetail' name='qiddetail' type='text'  required="required" maxLength="20"   class="form-control topself_input" readOnly/>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目标题：</td>
+              <td style="width:230px; ">
+                <input id='qtitledetail' name='qtitledetail' type='text' required="required" maxLength="20"  class="form-control topself_input" readOnly/>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目分值：</td>
+              <td style="width:260apx; ">
+                <input id='qscoredetail' name='qscoredetail' type='text'  required="required" maxLength="30"  class="form-control topself_input" readOnly/>
+              </td>
+              </tr>
+              <tr >
+                    <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目内容：</td>
+                    <td colspan=4>
+                      <textarea id='detailcontent' name='detailcontent' required="required" style="background:transparent;color:#FFF;padding: 3px;resize:none;width:100%;" readOnly></textarea>
+                    </td>
+                    <td>
+                      <input  id='detailconpic' name='detailconpic'  type='hidden'/>
+                    </td>
+               </tr>     
+              <tr>
+                    <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>参考答案：</td>
+                    <td colspan=4>
+                      <textarea id='detailresult' name='detailresult'  required="required"  style="background:transparent;color:#FFF;padding: 3px;resize:none;width:100%;" readOnly></textarea>
+                    </td>
+                    <td>
+                      <input  id='detailrepic' name='detailrepic'   type='hidden'/>
+                    </td>
+               </tr>             
+                <input id='askiddetail' name='queid' type='hidden'/>
+            
+            </table>
+          </div>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+</form>
+
+<script type="text/javascript">
+  setfontcolor("choctrl");
+  setbackgroundcolor("ask");
+  setTableEvent("lsque", true);
+$(function()
+  {
+    var total_page=parseInt($('#flickr1_total').val());
+    var current_page=parseInt($('#flickr1_current').val());
+    var flickr1_querytext=$('#flickr1_querytext').val();
+    var dic = new Array(); 
+    if(flickr1_querytext!=''){
+      dic["querytext"] = flickr1_querytext;
+    }
+    document.getElementById('flickr1').innerHTML=setflickr(total_page,current_page,dic);
+  });
+function setTableEvent(tableid, singleSelect) {
+         var tr = "#" + tableid + ">tbody>tr";
+         var trSelected = tr + ".success";
+
+         $(tr).click(function(event) {
+                    if($(this).attr('id') == undefined)
+                      return;
+                  //var id = $("td:first-child", $(this)).text();
+                  // single-select
+                  if (singleSelect) {
+                      $(trSelected).removeClass('success');
+                  }
+                    if($("#editsuccess").hasClass('disabled'))
+                  {
+
+                    $("#editsuccess").removeClass('disabled');
+                    $("#btndel").removeClass('disabled');
+                    $("#detailsuccess").removeClass('disabled');
+                  }
+                  $(this).addClass('success');
+                  $("#lsque").data("selid", $(this).attr('id'));
+                  $("#btndel").attr('formaction', '/questiondel/' + $(this).attr('id')+'/');  
+         });
+}
+function selectFileType(e)
+{
+      filename=e.value;
+      var extStart=filename.lastIndexOf(".");
+      var ext=filename.substring(extStart,filename.length).toUpperCase();
+      if(ext!=".BMP"&&ext!=".PNG"&&ext!=".GIF"&&ext!=".JPG"&&ext!=".JPEG"){
+            Showbo.Msg.alert("图片限于png,gif,jpeg,jpg格式");
+            e.value='';
+      }
+}
+function details(){
+    var preid = $("#lsque").data("selid");
+    if(preid == "0")
+    {
+        return false;
+    }
+
+    $("#askiddetail").val(preid);
+    if(img1.parentNode){
+      img1.parentNode.removeChild(img1);
+    }
+
+    var que = ajaxobj("/questions/askinfo/", "", "post", "#askdetailform");
+    var jsondata = $.parseJSON(que);
+    $("#qscoredetail").val(jsondata.qscore);
+    $("#qiddetail").val(jsondata.qid);
+    $("#qtitledetail").val(jsondata.qtitle);
+    $('#detailcontent').val(jsondata.qcontent);
+    $('#detailresult').val(jsondata.qresult);
+    cp = jsondata.contentpic;
+    rp = jsondata.resultpic;
+    if(cp){
+      img1.setAttribute('src', '/'+cp);
+      document.getElementById('detailconpic').parentNode.appendChild(img1)
+    }
+    if(rp){
+      img2.setAttribute('src', '/'+rp);
+      document.getElementById('detailrepic').parentNode.appendChild(img2)
+    }
+    $('#myModal2').modal('show');
+}
+
+function checkqid(){
+                   var qid=document.getElementById("qid");
+                   var judgeqid;
+                   var que = ajaxobj("/questions/qidcheck/", "", "post", "#askaddform");
+                   var jsondata = $.parseJSON(que);
+                   judgeqid=jsondata.judgeqid;
+                   var reg=/^[A-Za-z0-9]+$/;
+                  if(reg.test(qid.value)==false)
+                        {qid.setCustomValidity("只能输入数字或字母");}
+                  else if(judgeqid==1)
+                    qid.setCustomValidity("已存在的编号!");
+                  else
+                    qid.setCustomValidity("");
+    }
+
+
+function submitdelform()
+{
+      var preid = $("#lsque").data("selid");
+      var jresult = ajaxobj("/questions/checkquedel/"+preid+"/", "", "post", "");
+      var jsonresult = $.parseJSON(jresult);
+      if(jsonresult.cando=="false"){
+            Showbo.Msg.alert("您没有权限删除该题!");
+            return;
+      }else  if(jsonresult.result != '0')//被试卷使用
+      {
+            Showbo.Msg.alert("该题目已被添加到试卷中，删除无效！");
+            return;
+      }
+      Showbo.Msg.oncallback = submitdelformcallback;
+      Showbo.Msg.confirm("确定删除吗？");
+}
+function submitdelformcallback()
+{
+      var preid = $("#lsque").data("selid");
+
+        if(preid!=0)
+        {
+        var delurl="/questions/askdel/"+preid+'/';
+        document.getElementById("questionform").action=delurl;
+        document.getElementById("questionform").submit();
+       }
+}  
+
+ function mclear()
+ {
+  $("#qid").val('');
+  $("#qtitle").val('');
+  $("#qscore").val('');
+  $("#addresult").val('');
+  $("#addcontent").val('');
+  $("#addconpic").val('');
+  $("#addresult").val('');
+
+ }
+
+var img1 = document.createElement('img');
+var img2 = document.createElement('img');
+img1.style.width='100px';
+img1.style.height='30px';
+img2.style.width='100px';
+img2.style.height='30px';
+function edit()
+{
+    document.getElementById('editconpic').value = '';
+    var preid = $("#lsque").data("selid");
+    if(preid == "0")
+    {
+        return false;
+    }
+
+    if(img1.parentNode){
+      img1.parentNode.removeChild(img1);
+    }
+
+    $("#askid").val(preid);
+
+    var que = ajaxobj("/questions/instartexam/", "", "post", "#askeditform");
+    var jsondata = $.parseJSON(que);
+
+     if(jsondata.cando=="false"){
+            Showbo.Msg.alert("您没有权限编辑该题!");
+            return;
+    }else if(jsondata.result==1){
+            Showbo.Msg.alert("该题目已经在开启的竞赛中,不能编辑");
+            return;
+    }
+
+    var que = ajaxobj("/questions/askinfo/", "", "post", "#askeditform");
+    var jsondata = $.parseJSON(que);
+      
+    $("#qidedit").val(jsondata.qid);
+    $("#qtitleedit").val(jsondata.qtitle);
+    $("#qscoreedit").val(jsondata.qscore);
+    $('#editcontent').val(jsondata.qcontent);
+    $('#editresult').val(jsondata.qresult);
+    cp = jsondata.contentpic;
+    rp = jsondata.resultpic;
+
+    if(cp){
+      img1.setAttribute('src', '/'+cp);
+      document.getElementById('editconpic').parentNode.appendChild(img1)
+    }
+    if(rp){
+      img2.setAttribute('src', '/'+rp);
+      document.getElementById('editrepic').parentNode.appendChild(img2)
+    }
+    $('#myModal1').modal('show');
+}
+
+function submitformedit()
+  {
+
+    var preid = $("#lsque").data("selid");
+   
+    var editurl="/questions/askedit/"+preid+'/';
+     document.getElementById("askeditform").action=editurl;
+     return true;
+   }
+
+   function checkscore(){
+                 var sc = document.getElementById("qscore");
+                 var reg=/^[1-9][0-9]*$/;
+                 if(reg.test(sc.value)==false)
+                    sc.setCustomValidity("非0开头的正整数!");
+                  else if (parseInt(sc.value)<=0 || parseInt(sc.value)>100)
+                  sc.setCustomValidity("分值大于0小于或等于100!");
+                  else
+                    sc.setCustomValidity("");
+    }
+    function checkscoreedit(){
+                 var sc = document.getElementById("qscoreedit");
+                 var reg=/^[1-9][0-9]*$/;
+                 if(reg.test(sc.value)==false)
+                    sc.setCustomValidity("非0开头的正整数");
+                  else if (parseInt(sc.value)<=0 || parseInt(sc.value)>100)
+                  sc.setCustomValidity("分值大于0小于或等于100!");
+                  else
+                    sc.setCustomValidity("");
+    }
+</script>
+
+
+{% endblock %}

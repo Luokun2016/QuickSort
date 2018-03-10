@@ -1,0 +1,221 @@
+{% extends "templates/examclientindex.html" %}
+{% load i18n %} 
+{% load staticfiles%}
+
+{% block script %}
+    <script type="text/javascript">
+      function ajaxobj(_url, _tag, _way, _form)
+      {
+        var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+        var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+        var info = "";
+        $.ajax({
+          type:m,
+          url:_url,
+          data:par,
+          async: false,
+          error: function(request) {
+            //alert("Connection error");
+          },
+          success: function(data) {
+            //$(_tag).html(data);
+            //alert(data);
+            info = data;
+          }
+        });
+        return info;
+      }
+      function LoadDate()
+      {
+        $('.form_date').datetimepicker({
+          language:  'zh-CN',
+          weekStart: 1,
+          todayBtn:  1,
+          autoclose: 1,
+          todayHighlight: 1,
+          startView: 2,
+          minView: 2,
+          forceParse: 0
+        });
+      }
+      function savepwd()
+      {
+          var dev = ajaxobj("/modifypwd/", "", "post", "#userinfoform");
+          if(dev == "1")
+              alert("密码修改成功！");
+          else
+              alert("密码修改失败！");
+          $('#myModal1').modal('hide');
+      }
+      function userpwd()
+      {
+          $('#myModal1').modal('show');
+      }
+    </script>
+{% endblock %}
+{% block content1 %}
+ <div class="container" style="width:100%;height:100%;">
+      <div id="HomeContent" style="width:100%;height:100%;">
+       
+        <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+          <div class="panel-heading">团队信息</div>
+          <div class="panel-body" style="height:100%;">
+            <div id="tree" style="text-align:left; vertical-align:top;">
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">团队名称</div>
+                <div id = "gname" class="panel-body" style="height:100%;">
+                  <div id="hacker" style="text-align:left; vertical-align:top;">
+                    精灵鼠
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">团队排名</div>
+                <div id = "rank" class="panel-body" style="height:100%;">
+                  <div id="hacker" style="text-align:left; vertical-align:top; color:red;">
+                    1
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">团队队长</div>
+                <div id = "gmembercpt" class="panel-body" style="height:100%;">
+                  <div id="hacker" style="text-align:left; vertical-align:top;">
+                    HONEST LEE
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">团队成员</div>
+                <div id = "gmembers" class="panel-body" style="height:100%;">
+                  <div id="hacker" style="text-align:left; vertical-align:top;">
+                    HONEST LEE，SEA WANG
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">团队成绩</div>
+                <div id = "grades" class="panel-body" style="height:100%;">
+                  <div id="hacker" style="text-align:left; vertical-align:top;">
+                    理论题得分39，技能题得分41，渗透题得分27，总得分107。
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+      </div>
+  </div>
+
+
+<form id="information" action="/selcourse/" method='post'>
+  <input id='expid' name='expid' type='hidden' value='0'/>
+  <input id='courname' name='courname' type='hidden' value='0'/>
+  <input id='curexp' name='curexp' type='hidden' value='0'/>
+  <input id='curvms' name='curvms' type='hidden'  value='0'/>
+</form>
+<script type="text/javascript">
+setbackgroundcolor("groupcolor");
+    function open_vnc(fscreen, vmid) 
+    {
+        var preid = vmid;
+        var url = '/console/' + preid + '/vm?token=' + preid;
+        if(fscreen)
+          window.open(url,'','width=850,height=485');
+        else
+          document.getElementById("syssframe").src = url;
+    }
+</script>
+<script type="text/javascript">
+$(function(){
+
+  getteaminfo();
+});
+
+function getteaminfo()
+{
+  var teaminfo = ajaxobj("/getteaminfo/","","get","");
+  var data = $.parseJSON(teaminfo);
+  json = data["scoreall"]
+  var count = 1;
+  var setnu = 0;
+  for(i = 0;i<json.length;i++)
+  {
+    $.each(json[i], function(index, value) {
+       if(index == data.groupname)
+       {
+         setnu = 1;
+       }
+       if(index != data.groupname && setnu == 0)
+       {
+         count++;
+       }
+    });
+  }
+
+  tr='<div id="hacker" style="text-align:left; vertical-align:top;">'+data.groupname +'</div>';
+  if(data.captain)
+  {
+    cap ='<div id="hacker" style="text-align:left; vertical-align:top;">'+ data.captain +'</div>';
+  }
+  else
+  {
+    cap ='<div id="hacker" style="text-align:left; vertical-align:top;">'+ '队长被免职，当前无队长' +'</div>';
+  }
+  con = '<div id="hacker" style="text-align:left; vertical-align:top;">'+ data.members +'</div>';
+  content = '<div id="hacker" style="text-align:left; vertical-align:top;">基础题得分'+data.grades.choscore+'，简答题得分'+data.grades.askscore +'，技能题得分'+data.grades.skillscore +'，渗透题得分'+data.grades.infilscore +'，总得分'+data.grades.total+'。</div>';
+  trs ='<div id="hacker" style="text-align:left; vertical-align:top; color:red;">'+ count +'</div>'
+  $('#gname').html(tr);
+  $('#gmembercpt').html(cap);
+  $('#gmembers').html(con);
+  $('#grades').html(content);
+  $('#rank').html(trs);
+}
+
+function startBench()
+{
+    var client = ajaxobj("/startBench/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    var result = json.result;
+
+    if(result == 0 && clientid != 0)
+    {
+        open_vnc(false, clientid);
+        $("#curvms").val(clientid);
+        $("#btnstopexp").removeClass('disabled');
+        $("#btnmaxscreen").removeClass('disabled');
+        $("#btnstartexp").addClass('disabled');
+    }
+    else if (result == 2)
+        alert("系统资源无法满足当前请求，请联系管理员！");
+    else if(result == 1)
+        alert("请求失败，请联系管理员！");
+}
+function stopBench()
+{
+    var client = ajaxobj("/stopBench/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    $("#curvms").val("0");
+    document.getElementById("syssframe").src = "";
+    $("#btnstartexp").removeClass('disabled');
+    $("#btnstopexp").addClass('disabled');
+    $("#btnmaxscreen").addClass('disabled');
+}
+function fullscreen()
+{
+    var clientid = $("#curvms").val();
+    open_vnc(true, clientid);
+    //var client = ajaxobj("/fullscreen/", "", "post", "#information");
+}
+function timedCount()
+ {
+    var client = ajaxobj("/clientinfor/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    var t=setTimeout("timedCount()",60000);
+ }
+</script>
+{% endblock  %}

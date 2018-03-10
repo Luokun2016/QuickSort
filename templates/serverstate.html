@@ -1,0 +1,161 @@
+{% extends "templates/sysmgrmenu.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}系统服务器{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">系统服务器</span>
+</div>
+{% endblock %}
+{% block content1 %}
+<form action="/sysinfo/" method='get'>
+  {% csrf_token %}
+    <div >
+        <h3>系统服务器概况</h3>
+    </div>
+    <div class="panel-body" >
+        <ul class="nav nav-tabs">
+             {% for mhost in hosts %}
+              {% ifequal 2 mhost.id %}
+                <li class="dlgList active" id="{{mhost.hostname}}"><a data-toggle="tab" onclick="changehost({{mhost.id}})">主服务器</a>
+              {% else %}
+            <li class="dlgList" id="{{mhost.hostname}}"><a data-toggle="tab" onclick="changehost({{mhost.id}})">从服务器</a> 
+            </li>
+            {% endifequal %}
+            {% endfor %}  
+        </ul>
+        <table style="font-size:16px; vertical-align:middle; position:relative; ">
+            <!--<tr> 
+                <td style="height:40px; text-align:left; width:30%;">
+                    <p>主机</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                    <p><strong>{{ hostname }}</strong></p>
+                </td>
+            </tr>-->
+            <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                    <p>系统类型</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                    <p><strong>{{ arch }}</strong></p>
+                </td>
+            </tr>
+            <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                    <p>处理器型号</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                    <p><strong>{{ cpus }} x {{ cpu_model }}</strong></p>
+                </td>
+            </tr>
+            <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                    <p>CPU利用率</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px; padding-top:15px; vertical-align:middle; ">
+                <div class="progress" style="color:black">
+                    <span id="cpu-usage" style="text-align:center;"></span>
+                    <div class="progress-bar" id="cpu-usage-bar" style="width:{{ cpu_usage }}%; color:red;"></div>
+                </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                    <p>内存</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                    <p><strong>16×８Ｇ</strong></p>
+                </td>
+            </tr>
+                    <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                    <p>内存利用率</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px; padding-top:15px; vertical-align:middle; ">
+                <div class="progress" style="color:black">
+                    <span id="memory-usage" style="text-align: center;"></span>
+                    <div class="progress-bar" id="memory-usage-bar" style="width:{{ mem_percent }}%;"></div>
+                </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                    <p>硬盘</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                    <p><strong>Seagate 2000GB ST2000VX000</strong></p>
+                </td>
+            </tr>
+                    <!--<tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                    <p>连接类型</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                    <p><strong>{{ type_conn }}</strong></p>
+                </td>
+            </tr>
+                    <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                    <p>Libvirt 版本</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                    <p><strong>{{ libvirt_ver }}</strong></p>
+                </td>
+            </tr>-->
+        </table>
+    </div>
+</form>
+<script type="text/javascript">
+    setfontcolor("sysctrl");
+    setbackgroundcolor("syscolor");
+    var timeout = false; //启动及关闭按钮  
+    var m_host_id={{ host_id }};
+    function changehost(host_ip){
+        setBar($('#cpu-usage-bar'),$('#cpu-usage'),0);
+        setBar($('#memory-usage-bar'),$('#memory-usage'),0);
+        m_host_id=host_ip;
+    }
+    function cpu(){
+        $.get('/info/cpu/'+m_host_id, function(data) {
+            setBar($('#cpu-usage-bar'),$('#cpu-usage'),data);
+        });
+    }
+    function memory(){
+        $.get('/info/memory/'+m_host_id, function(data) {
+            setBar($('#memory-usage-bar'),$('#memory-usage'),data);
+        });
+    }
+    function setBar(bar,text,value){
+        text.text(value +'%').fadeIn();
+        bar.css({'width':value +'%'});
+        if (value < 50){
+            bar.attr('class', "progress-bar progress-bar-success");
+        }else if (value < 80){
+            bar.attr('class', "progress-bar progress-bar-warning");
+        }else if (value <= 100){
+            bar.attr('class', "progress-bar progress-bar-danger");
+        }
+    }
+    function refresh(){
+        cpu();
+        memory();
+    }
+
+    function timers()  
+    {  
+      if(timeout){return;}  
+      refresh();  
+      setTimeout(timers,{{ time_refresh }}); //timers是指本身,延时递归调用自己,100为间隔调用时间,单位毫秒  
+    } 
+
+    // $(function() {
+    //     refresh();
+    //     var timer=window.setInterval('refresh()', {{ time_refresh }});
+    // });
+    $(function() {
+        timers();
+    });
+</script>
+{% endblock %}

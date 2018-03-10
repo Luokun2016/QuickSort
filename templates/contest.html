@@ -1,0 +1,651 @@
+{% extends "templates/examclientindex.html" %}
+{% load i18n %} 
+{% load staticfiles%}
+
+
+
+{% block script %}
+<script type="text/javascript">
+   
+</script>
+{% endblock %}
+
+{% block content1 %}
+<!-- hiddendata保存竞赛id -->
+<input id="hiddendata" type="hidden" value="{{hhdata}}"/>
+   
+<form id="qtioninfo">
+    <input type="hidden" name="qtionid" id="qtionid" value=""/>
+    <div class="container" style="width:100%;height:100%;">
+        <!-- Static navbar -->
+        <div id="HomeContent" style="width:100%;height:100%;">
+            <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">基础题目(题目提交答案后不能修改，请慎重作答)</div>
+                <div id = "choiceid" class="panel-body" style="height:100%;">
+                    <div id="choice-questions" style="text-align:left; vertical-align:top;">
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">简答题(题目提交答案后不能修改，请慎重作答)</div>
+                <div id = "askid" class="panel-body" style="height:100%;">
+                    <div id="ask-questions" style="text-align:left; vertical-align:top;">
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">技能题目</div>
+                <div class="panel-body" style="height:100%;">
+                    <div id="skill-questions" style="text-align:left; vertical-align:top;">
+                    <!-- <button class="btn btn-warning" type="button" onclick="showskill()">当前未竞赛该页面为展示页面</button> -->
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">渗透题目</div>
+                <div id="infiltration-questions" class="panel-body" style="height:100%; padding: 15px"></div>
+                <!--<div class="panel-body" style="height:100%;">-->
+                    <!--&lt;!&ndash;<div id="infiltration-questions" style="text-align:left; vertical-align:top;">&ndash;&gt;-->
+                    <!--&lt;!&ndash;&lt;!&ndash; <button class="btn btn-warning" type="button" onclick="showtotal()">当前未竞赛该页面为展示页面</button> &ndash;&gt;&ndash;&gt;-->
+                    <!--&lt;!&ndash;</div>&ndash;&gt;-->
+                <!--</div>-->
+            </div>
+        </div>
+    </div>
+</form>
+  <!-- Bootstrap core JavaScript
+    ================================================== -->
+  <!-- Placed at the end of the document so the pages load faster -->
+  
+<form id="showflag"  method="post">
+  <input type="hidden" id="flaghidden" name="shidden" value=""/>
+  {% csrf_token %}
+  <div class="modal fade" id="flagsubmit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px; ">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="baseque">理论题09</h3>
+        </div>
+        <div>
+          <table id="flags" class="table topsec_tabletop">
+            
+          </table>
+          <div class="modal-footer">
+            <button class="btn btn-default" data-dismiss="modal" type="button">关闭</button>
+            <button class="btn btn-primary" type="button" onclick="submitflag()">提交</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<form id="showask" action="" method='post'>
+  <input type="hidden" id="askhidden" name="shidden" value=""/>
+  {% csrf_token %}
+  <div class="modal fade" id="askmodal" tabindex="-1" 
+      role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px; ">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="asklab">简答题</h3>
+        </div>
+        <div>
+          <table id = "asktb" class="table topsec_tabletop">
+            <tr><td id="asklabtital" colspan=2 style="text-align:left;">None</td></tr>
+            <tr><td colspan=2><img id="asklabimg" style="max-width: 560px;" src=""></td></tr>
+            <tr><td style="width:10%;">答案：</td><td><textarea id="askans" name="askans" required="required" style="background:transparent;color:#FFF;padding: 3px;resize:none;width:100%;"></textarea></td></tr>
+          </table>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button">关闭</button>
+          <button class="btn btn-primary" type="button" onclick="submitask()">提交</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<form id="showskill" method='post'>
+  <input type="hidden" id="skillhidden" name="shidden" value=""/>
+  {% csrf_token %}
+  <div class="modal fade" id="skillsubmit" tabindex="-1" 
+      role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px; ">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="skilllab">技能题02</h3>
+        </div>
+        <div>
+          <table id = "skilltb" class="table topsec_tabletop">
+            <tr><td id="skilllabtital" colspan="2" style="text-align:left;">None</td></tr>
+            <tr><td colspan="2" style="text-align:left;"><a id="skilllablink" target="_blank" href="">None</a></td></tr><tr><td style="width:100px; vertical-align:middle; text-align:right;">KEY：</td><td><input id="spwd1" name="spwd1" type="text" required="required" class="form-control topself_input"/><input type="text" style="display:none"/>  </td></tr>
+          </table>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button">关闭</button>
+          <button class="btn btn-primary" type="submit" onclick="submitskill();return false;">提交</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<form id="showtotal"  method='post'>
+  <input type="hidden" id="totalhidden" name="shidden" value=""/>
+  {% csrf_token %}
+  <div class="modal fade" id="totalsubmit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px;">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="infilib">渗透题01</h3>
+        </div>
+        <div>
+          <table id = "infitb" class="table topsec_tabletop">
+            <tr><td id="infilibtital" colspan="2" style="text-align:left;">None</td></tr>
+            <tr><td colspan="2" style="text-align:left;"><a id="infiliblink" target="_blank" href="">None</a></td></tr><tr><td style="width:100px; vertical-align:middle; text-align:right;">KEY：</td><td><input id="spwd2" name="spwd2" type="text" required="required" class="form-control topself_input"/><input type="text" style="display:none"/>  </td></tr>
+          </table>
+          <div class="modal-footer">
+            <button class="btn btn-default" data-dismiss="modal" type="button">关闭</button>
+            <button id="111" class="btn btn-primary" type="submit" onclick="submittotal();return false;">提交</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<form id="information" action="/selcourse/" method='post'>
+  <input id='expid' name='expid' type='hidden' value='0'/>
+  <input id='exam-id' name='exam_id' type='hidden' value='0'/>
+  <input id='curexp' name='curexp' type='hidden' value='0'/>
+  <input id='curvms' name='curvms' type='hidden'  value='0'/>
+</form>
+
+<script type="text/javascript">
+    setbackgroundcolor("examcolor");
+    function open_vnc(fscreen, vmid){
+        var preid = vmid;
+        var url = '/console/' + preid + '/vm?token=' + preid;
+        if(fscreen)
+          window.open(url,'','width=850,height=485');
+        else
+          document.getElementById("syssframe").src = url;
+    }
+</script>
+
+<script type="text/javascript">
+    function getQtion(id,i)
+    {
+        var char_array=["A","B","C","D","E","F","G","H","I","J"];
+        $("#qtionid").val(id);
+        var qtion = ajaxobj("/questions/getqtioninfo/", "", "post", "#qtioninfo");
+        var jsondata = $.parseJSON(qtion);
+        if(jsondata.qtype == 1)
+        {
+            var op="";
+            var h3text="理论题";
+
+            if(i<10)
+            {
+                h3text += '0' + i;
+            }
+            else
+            {
+                h3text += i;
+            }
+
+            $('#baseque').text(h3text);
+
+            tr= '<tr><td colspan="3" style="text-align:left;">'+ jsondata.content + '</td></tr>'
+
+            cp = jsondata.picdir;
+            if(cp){
+                tr+='<tr><td colspan=3><img style="max-width: 573px;" src="/'+cp+'"></td></tr>'
+             }
+
+            for(var i = 1; i <= jsondata.options.length; i++)
+            {
+                op = char_array[i-1];
+                tr+='<tr><td style="width:20px; vertical-align:middle; text-align:right;"><input name="checkoption" type="checkbox" value="'+i+'"/></td><td style="width:20px; vertical-align:middle; text-align:right;">'+ op +': </td><td style="text-align:left;">'+ jsondata.options[i-1]+'</td></tr>';
+            }
+            $('#flags').html(tr);
+            $('#flagsubmit').modal('show');
+        }
+        else if(jsondata.qtype == 4){
+             var h3text="简答题";
+            if(i<10)
+            {h3text += '0' + i;}else{h3text += i;}
+            $('#asklab').text(h3text);
+            cp = jsondata.conpic;
+            if(cp){
+              $('#asklabimg').removeAttr('hidden');
+              $('#asklabimg').attr("src",'/'+cp);
+             }
+             else
+             {
+                $('#asklabimg').attr("src",'');
+                $('#asklabimg').attr("hidden","hidden");
+             }
+            $('#asklabtital').text(jsondata.content);
+            document.getElementById('showask').reset();
+            $('#askmodal').modal('show');
+        }
+        else if(jsondata.qtype == 2)
+        {
+            var h3text="技能题";
+            if(i<10){h3text+='0'+i}else{h3text+=i}
+            $('#skilllab').text(h3text);
+            $('#skilllabtital').text(jsondata.qtitle);
+            $('#skilllablink').text(jsondata.link);
+            $('#skilllablink').attr("href",jsondata.link);
+            document.getElementById('showskill').reset();
+            $('#skillsubmit').modal('show');
+        }
+        else if(jsondata.qtype == 3)
+        {
+            var h3text="渗透题";
+            $('#infilib').text(h3text);
+            $('#infilibtital').text(jsondata.qtitle);
+            $('#infiliblink').text(jsondata.link);
+            $('#infiliblink').attr("href",jsondata.link);
+            document.getElementById('showtotal').reset(); 
+            $('#totalsubmit').modal('show');
+        }
+    }
+
+    $(function(){
+        var cour=document.getElementById("exam_id");
+        // 设置ajax方法为同步
+        $.ajaxSetup({
+            async:false
+        });
+        loadQuestions();
+    });
+
+    function renderQtion(qtionDiv, questionIds,answer)
+    {
+        var content = "";
+        for(var i = 1; i <= questionIds.length; i++)
+        {
+            var setnum = 0;
+            for(var j = 1; j<=answer.length; j++)
+            {
+                if(answer[j-1] == questionIds[i-1])
+                {
+                    setnum = 1;
+                    content += '<button style="width:44px; margin:0px 0px 5px 0px; padding-left:unset; padding-right:unset;" class="btn btn-warning disabled" type="button" id="' + 'qt' + questionIds[i-1] + '"' + ' onclick="getQtion(' + questionIds[i-1].toString() +','+ i.toString() +')">' + i.toString() + '</button>&nbsp;&nbsp;';
+                }
+            }
+            if(setnum == 0)
+            {
+                content += '<button style="width:44px; margin:0px 0px 5px 0px; padding-left:unset; padding-right:unset;" class="btn btn-default" type="button" id="' +'qt' + questionIds[i-1] + '"' + ' onclick="getQtion(' +  questionIds[i-1].toString() +','+ i.toString() +')">' + i.toString() + '</button>&nbsp;&nbsp;';
+            }
+        }
+        $("#" + qtionDiv).html(content);
+    }
+
+    // 添加渗透题
+    function add_infiltration(qtionDiv, questionIds,answer)
+    {
+        // 根据渗透题的个数创建
+        for(var i=0; i<questionIds.length; i++)
+        {
+            var title = "";
+            $.post("/getquestiontitle/", {"qid": questionIds[i]}, function(data){
+                title = $.parseJSON(data);
+            });
+
+            var item =  '<div class="panel panel-default self_top" style="height:100%; margin-top:0px;">' +
+                            '<div class="panel-heading">题目：' + title + '</div>' +
+                            '<div class="panel-body" style="height:100%;">' +
+                                '<div id="infq'+ i.toString()+'" style="text-align:left; vertical-align:top;"></div>' +
+                            '</div>' +
+                        '</div>';
+
+            $(item).appendTo($("#" + qtionDiv));
+
+            // 获取渗透题有几个小题
+            $.post("/infiltrationquestioninfo/", {"qid": questionIds[i]}, function(data){
+                result = $.parseJSON(data);
+                var newids = [];
+                for(var j=0; j<result; j++)
+                    newids[j] = questionIds[i] * 10 + (j + 1);
+                renderQtion("infq"+ i.toString(), newids, answer);
+            });
+        }
+    }
+
+    // 为了和渗透题按键的id统一，给每个按键都加上一个1，便于在getQtion中进行统一的处理
+    function get_new_id(questionIds)
+    {
+        for(var i=0; i<questionIds.length; i++)
+            questionIds[i] = questionIds[i] * 10 + 1;
+        return questionIds
+    }
+
+    function loadQuestions(){
+        var examId = $("#hiddendata").val();
+
+        $.ajax({
+            url: '/load-student-questions',
+            type: 'GET',
+            data: {exam_id: examId},
+            dataType: 'json',
+            success: function(data){
+                if(data.meta.error === true){
+                    Showbo.Msg.alert(data.meta.msg);
+                }
+                else{
+                    renderQtion("choice-questions", get_new_id(data.questions.choiceQuestionIds),data.answer.question);
+
+                    renderQtion("ask-questions", get_new_id(data.questions.askQuestionIds),data.answer.question);
+
+                    renderQtion("skill-questions", get_new_id(data.questions.skillQuestionIds),data.answer.question);
+                    add_infiltration("infiltration-questions", data.questions.infiltrationQuestionIds,data.answer.question);
+                }
+            }
+        });
+    }
+
+    function startBench(){
+        var client = ajaxobj("/startBench/", "", "post", "#information");
+        var json = $.parseJSON(client);
+        var clientid = json.clientid;
+        var result = json.result;
+
+        if(result == 0 && clientid != 0)
+        {
+            open_vnc(false, clientid);
+            $("#curvms").val(clientid);
+            $("#btnstopexp").removeClass('disabled');
+            $("#btnmaxscreen").removeClass('disabled');
+            $("#btnstartexp").addClass('disabled');
+        }
+        else if (result == 2)
+            Showbo.Msg.alert("系统资源无法满足当前请求，请联系管理员！");
+        else if(result == 1)
+            Showbo.Msg.alert("请求失败，请联系管理员！");
+    }
+  
+    function stopBench()
+    {
+        var client = ajaxobj("/stopBench/", "", "post", "#information");
+        var json = $.parseJSON(client);
+        var clientid = json.clientid;
+        $("#curvms").val("0");
+        document.getElementById("syssframe").src = "";
+        $("#btnstartexp").removeClass('disabled');
+        $("#btnstopexp").addClass('disabled');
+        $("#btnmaxscreen").addClass('disabled');
+    }
+
+    function fullscreen(){
+        var clientid = $("#curvms").val();
+        open_vnc(true, clientid);
+        //var client = ajaxobj("/fullscreen/", "", "post", "#information");
+    }
+ function answer(){
+        this.ans="";
+        this.qid="";
+        this.examid="";
+        this.istart="";
+    }
+    function skin()
+    {
+        this.qid="";
+        this.examid="";
+    }
+    function ajaxobj(_url, _tag, _way, _form)
+    {
+        var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+        var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+        var info = "";
+        $.ajax({
+            type: m,
+            url: _url,
+            data: par,
+            async: false,
+            error: function(request) {
+                //alert("Connection error");
+            },
+            success: function(data) {
+                //$(_tag).html(data);
+                //alert(data);
+                info = data;
+            }
+        });
+        return info;
+    }
+    function LoadDate()
+    {
+        $('.form_date').datetimepicker({
+            language:  'zh-CN',
+            weekStart: 1,
+            todayBtn:  1,
+            autoclose: 1,
+            todayHighlight: 1,
+            startView: 2,
+            minView: 2,
+            forceParse: 0
+        });
+    }
+    function showtotal()
+    {
+        $('#totalsubmit').modal('show');
+    }
+function submittotal()
+    {
+        var stuanswer = new answer();
+        stuanswer.ans =  $("input[name='spwd2']").val();
+        stuanswer.qid = Math.floor(parseInt($("#qtionid").val()));   // 修改
+        stuanswer.examid = $("#hiddendata").val();
+
+        $("#totalhidden").val(JSON.stringify(stuanswer));
+        var datas = ajaxobj("/submitexamque/", "", "post", "#showtotal");
+        data = $.parseJSON(datas);
+        if(data.istart == "true" && data.issave == "true")
+        {
+            $('#totalsubmit').modal('hide');
+
+            $("#qt"+$("#qtionid").val()).removeClass('btn-default');
+            $("#qt"+$("#qtionid").val()).addClass('btn-warning');
+            $("#qt"+$("#qtionid").val()).addClass('disabled');
+            return true
+        }
+        else if(data.istart == "false")
+        {
+            Showbo.Msg.alert("该竞赛已关闭或已暂停，禁止答题！");
+            $('#totalsubmit').modal('hide');
+            return true;
+        }
+        else if(data.issave == "false")
+        {
+          if(data.flag == -1)
+          {
+            Showbo.Msg.alert("该题已被作答,请刷新页面！");
+            $('#totalsubmit').modal('hide');
+          }
+          else if(data.flag == 0)
+          {
+            Showbo.Msg.alert("答案错误");
+            // $('#totalsubmit').modal('hide');
+          } 
+        }
+    }
+
+    function showskill()
+    {
+        $.ajax({
+            url: '/load-student-questions',//请求后台数据
+            type: 'GET',
+            data: {exam_id: examId},
+            dataType: 'json',
+            success: function(data){
+                if(data.meta.error === true){
+                    Showbo.Msg.alert(data.meta.msg);
+                }
+                else{
+                }
+            }
+        });
+        $('#skillsubmit').modal('show');
+    }
+function submitask(){
+        var stuanswer = new answer();
+        stuanswer.ans =  $("#askans").val();
+        stuanswer.qid = Math.floor(parseInt($("#qtionid").val()));   // 修改
+        stuanswer.examid = $("#hiddendata").val();
+
+        $("#askhidden").val(JSON.stringify(stuanswer));
+        var datas = ajaxobj("/submitexamque/", "", "post", "#showask");
+        data = $.parseJSON(datas);
+        if(data.istart == "true" && data.issave == "true")
+        {
+            $('#askmodal').modal('hide');
+            $("#qt"+$("#qtionid").val()).removeClass('btn-default');
+            $("#qt"+$("#qtionid").val()).addClass('btn-warning');
+            $("#qt"+$("#qtionid").val()).addClass('disabled');
+            return true
+        }
+        else if(data.istart == "false")
+        {
+            Showbo.Msg.alert("该竞赛已关闭或已暂停，禁止答题！");
+            $('#askmodal').modal('hide');
+            return true;
+        }
+        else if(data.issave == "false")
+        {
+          if(data.flag == -1)
+          {
+            Showbo.Msg.alert("该题已被作答,请刷新页面！");
+            $('#askmodal').modal('hide');
+          }
+          else if(data.flag == 0)
+          {
+            Showbo.Msg.alert("答案错误");
+            $('#askmodal').modal('hide');
+          }
+        }
+
+
+       
+}
+function submitskill()
+    {
+        var stuanswer = new answer();
+        stuanswer.ans =  $("input[name='spwd1']").val();
+        stuanswer.qid = Math.floor(parseInt($("#qtionid").val()));   // 修改
+        stuanswer.examid = $("#hiddendata").val();
+
+        $("#skillhidden").val(JSON.stringify(stuanswer));
+        var datas = ajaxobj("/submitexamque/", "", "post", "#showskill");
+        // $("#showskill").attr("action","/submitexamque/");
+        data = $.parseJSON(datas);
+        if(data.istart == "true" && data.issave == "true")
+        {
+            $('#skillsubmit').modal('hide');
+            $("#qt"+$("#qtionid").val()).removeClass('btn-default');
+            $("#qt"+$("#qtionid").val()).addClass('btn-warning');
+            $("#qt"+$("#qtionid").val()).addClass('disabled');
+            return true
+        }
+        else if(data.istart == "false")
+        {
+            Showbo.Msg.alert("该竞赛已关闭或已暂停，禁止答题！");
+            $('#skillsubmit').modal('hide');
+            return true;
+        }
+        else if(data.issave == "false")
+        {
+          if(data.flag == -1)
+          {
+            Showbo.Msg.alert("该题已被作答,请刷新页面！");
+            $('#skillsubmit').modal('hide');
+          }
+          else if(data.flag == 0)
+          {
+            Showbo.Msg.alert("答案错误");
+            // $('#skillsubmit').modal('hide');
+          }
+        }
+    }
+
+function showflag()
+    {
+        // 获取题目信息
+        $.ajax({
+            url: '/load-student-questions',//请求后台数据
+            type: 'GET',
+            data: {exam_id: examId},
+            dataType: 'json',
+            success: function(data){
+                if(data.meta.error === true){
+                    Showbo.Msg.alert(data.meta.msg);
+                }
+                else{
+                }
+            }
+        });
+
+        $('#flagsubmit').modal('show');
+    }
+
+function submitflag()
+    {
+        var stuanswer = new answer();
+        var stuans="";
+        // 提交题目的选项判断题
+
+        $("input:checkbox").each(function(){
+            if($(this).is(':checked')){
+                stuans+= $(this).val();
+            }
+        });
+        if(stuans == "")
+        {
+          Showbo.Msg.alert("请选择答案！");
+          return false;
+        }
+        stuanswer.ans = stuans;
+        stuanswer.qid = Math.floor(parseInt($("#qtionid").val()));   // 修改
+        stuanswer.examid = $("#hiddendata").val();
+        // 将stuanswer解析成字符串，传递给后台处理
+        $("#flaghidden").val(JSON.stringify(stuanswer));
+        var datas = ajaxobj("/submitexamque/", "", "post", "#showflag");
+        data = $.parseJSON(datas);
+        if(data.istart == "true" && data.issave == "true")
+        {
+            $('#flagsubmit').modal('hide');
+            // 下面3行被修改
+            $("#qt"+$("#qtionid").val()).removeClass('btn-default');
+            $("#qt"+$("#qtionid").val()).addClass('btn-warning');
+            $("#qt"+$("#qtionid").val()).addClass('disabled');
+
+            return true
+        }
+        else if(data.istart == "false")
+        {
+            Showbo.Msg.alert("该竞赛已关闭或已暂停，禁止答题！");
+            $('#flagsubmit').modal('hide');
+            return true;
+        }
+        if(data.issave == "false")
+        {
+          if(data.flag == -1)
+          {
+            Showbo.Msg.alert("该题已被作答,请刷新页面！");
+            $('#flagsubmit').modal('hide');
+          }
+          else if(data.flag == 0)
+          {
+            Showbo.Msg.alert("答案错误");
+            $('#flagsubmit').modal('hide');
+          }
+        }
+
+    }
+</script>
+{% endblock  %}

@@ -1,0 +1,1258 @@
+{% extends "templates/coursedesign.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}课程设计{% endblock %}
+{% block css %}
+<style type="text/css">
+ul.dynatree-container
+{
+  height: auto;
+  max-height: 480px;
+}
+</style>
+{% endblock %}
+{% block script1 %}
+    <script src='/statics/js/jquery.custom.js' type="text/javascript"></script>
+    <script src='/statics/js/jquery.cookie.js' type="text/javascript"></script>
+    <script src='/statics/js/jquery.dynatree.js' type="text/javascript"></script>
+{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png' style="padding-bottom:8px;"/></a>&nbsp;
+  <span style="font-size:28px;color:#fff;">实验大纲</span>
+</div>
+{% endblock %}
+{% block content1 %}
+<form id='outlineform' action="/outlines/" method='get'>
+  <!--  {% csrf_token %} -->
+  <div class="bs-docs-section">
+    <table width="100%">
+      <tr>
+        <td >
+          <div style="text-align:left;">
+            <button class="btn btn-primary" title="添加大纲" onclick='outlineadd()' data-toggle="modal" type="button"><span class="glyphicon glyphicon-plus"></span></button>
+            <button type="button" title="编辑大纲" onclick='outlineedit()' data-toggle="modal" class="btn btn-primary disabled" id='editsuccess'><span class="glyphicon glyphicon-pencil"></span></button>
+            <button type="button"  onclick='details()'   title="大纲详情" data-toggle="modal" class="btn btn-primary disabled" id='detailsuccess'><span class="glyphicon glyphicon-info-sign"></span></button>
+            <button id="btndel" type="button" title="删除大纲"  class="btn btn-danger disabled" onclick='submitdelformedit()' ><span class="glyphicon glyphicon-remove"></span></button>
+          </div>
+        </td>
+        <td align="right">
+          <div style="text-align:right;">
+            <input id='querytext' name='querytext' type='text' class="form-control topself_input" placeholder="请输入大纲名称关键字" style="width:185px; display:inline;" value="{{outselect}}"/>
+            <button id="btnquery" type="submit" title="查找大纲" class="btn btn-danger" formaction="/outlines/" ><span class="glyphicon glyphicon-search"></span></button>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="panel-body" style="padding-left:0px; padding-right:0px;">
+    <!-- Glyphicons
+  ================================================== -->
+    <table id='lsout' class="table table-striped topsec_tabletop table-hover"  data-selid="0" data-selcolor="#FFF" data-sepage ="{{ page }}">
+      <tr>
+        <th>大纲编号</th>
+        <th>大纲名称</th>
+        <th>创建者</th>
+       <!--  <th>创建时间</th>
+        <th>最后修改时间</th> -->
+        <th>备注</th>
+      </tr>
+      {% for out in outlines %}
+      <tr  id="{{out.id}}">
+        <td>{{out.onid}}</td>
+        <td>{{out.onname|truncatechars:10}}</td>
+        <td>{{out.teacherid.teaname}}</td>
+        <!-- <td>{{out.createtime|date:"Y-m-d H:i:s" }}</td>
+        <td>{{out.edittime|date:"Y-m-d H:i:s" }}</td> -->
+        <td title={{out.remark}}>{{out.remark}}</td>
+      </tr>
+      {% endfor %}
+    </table>
+            <div class="flickr">
+                {% if outlines.has_previous %}
+                <a  href="?page={{ outlines.previous_page_number }}{% ifnotequal outselect '' %}&outlineselect={{outselect}}{% endifnotequal %}">上一页</a>
+                 {% else %}
+              <span>上一页</span>
+                {% endif %}
+                <span>
+              {% for p in page_range %}
+
+              {% ifequal p outlines.number %}
+                    <span class="current">{{p}}</span>
+                    {% else %}
+                    <a href="?page={{p}}{% ifnotequal outselect '' %}&outlineselect={{outselect}}{% endifnotequal %}" title="第{{p}}页">{{p}}</a>
+                    {% endifequal %}
+
+                {% endfor %}
+                </span>
+                {% if outlines.has_next %}
+                <a  href="?page={{ outlines.next_page_number }}{% ifnotequal outselect '' %}&outlineselect={{outselect}}{% endifnotequal %}">下一页</a>
+                 {% else %}
+              <span>下一页</span>
+                {% endif %}
+            </div>
+    
+    <input id='myoutlineid' name='outid' type='hidden'/>
+  </div>
+</form>
+<form  id='outlineaddform' action="/outlineadd/" method='post'>
+ <!--  {% csrf_token %} -->
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">添加大纲</h3>
+        </div>
+        <div>
+          <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:100px; vertical-align:middle;"><font color="#FF0000">*</font>大纲编号：</td>
+              <td style="width:370px; ">
+                <input id='txtBH' name='txtBH' type='text' required="required" maxLength="20" onchange='checkonid()' class="form-control topself_input"/>
+              </td>
+              <td style="width:100px; vertical-align:middle;"><font color="#FF0000">*</font>大纲名称：</td>
+              <td style="width:370px; ">
+                <input id='txtName' name='txtName' type='text' required="required" maxLength="20" onchange='checkonname()' class="form-control topself_input"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:100px;  vertical-align:middle;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;备注：</td>
+              <td colspan=3>
+                <input id='txtremark' name='txtremark' type='text' maxLength="50" class="form-control topself_input"/>
+              </td>
+            </tr>
+            <tr>
+          	  <td colspan=2 style="text-align:left; vertical-align:top;">
+      	  	    <div id="tree" style="text-align:left; vertical-align:top;"></div>
+            	</td>
+            	<td colspan=2 style="vertical-align:top;">
+            		<table style="text-align:left; vertical-align:top; border:0px; width:100%;">
+              		<tr style="height:26px;">
+                		<td style="vertical-align:middle; border:0px;">
+                		  <button id="addfile" class="btn btn-default"  onclick="addchild()" data-toggle="modal" type="button" title='添加'><span class="glyphicon glyphicon-plus"></span></button>
+                		  <button id="delout" class="btn btn-default" data-toggle="modal" type="button" onclick="del()" title='删除'><span class="glyphicon glyphicon-remove"></span></button>
+                		</td>
+              		</tr>
+              		<tr>
+                		<td style="vertical-align:top; border:0px;">
+                		  <div id="outlinetree" style="text-align:left; vertical-align:top; width:420px;"></div>
+                		</td>
+              		</tr>
+            		</table>
+            	</td>
+            </tr>
+          </table>
+          <div class="modal-footer">
+            <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+            <button class="btn btn-primary" type="submit" onclick="submitoutline()" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+            <button class="btn btn-default" onclick="outlineadd()" type="reset" title='重置'><span class="glyphicon glyphicon-retweet"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+    <div id='outlineadd'></div>
+</form>
+
+<form id='detailsform'>
+ <!--  {% csrf_token %} -->
+  <div class="modal fade" id="myModalDetails" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">大纲详情</h3>
+        </div>
+            <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:100px; vertical-align:middle;">大纲编号：</td>
+              <td style="width:370px; ">
+                <input id='outiddetails'  type='text' class="form-control topself_input" readOnly/>
+              </td>
+              <td style="width:100px; vertical-align:middle;">大纲名称：</td>
+              <td style="width:370px; ">
+                <input id='onnamedetails'  type='text' class="form-control topself_input" readOnly/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:100px;  vertical-align:middle;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;备注：</td>
+              <td colspan=3>
+                <input id='txtremarkdetails'  type='text' class="form-control topself_input" readOnly/>
+              </td>
+            </tr>
+                    
+          </table>
+          <table>
+            <tr>
+       <td>
+        <div id="outlinetreedetail" style="text-align:left; vertical-align:top;"></div>
+         </td>
+           </tr>
+          </table>
+
+         <input id='outid' name='outid' type='hidden'/>
+         <input id='outidDetail' name='outidDetail' type='hidden'/>
+                 <div class="modal-footer">
+
+          <button class="btn btn-default"   data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+          <!-- <button class="btn btn-primary"   data-dismiss="modal" type="button" onclick='outlineedit()' id='detailedit' title='编辑'><span class="glyphicon glyphicon-pencil"></span></button> -->
+          </div>
+        </div>
+      </div>
+    </div>
+</form>
+
+<form  id='outlineeditform' action="/outlineedit/" method='post'>
+  <!-- {% csrf_token %} -->
+  <div class="modal fade" id="myModaledit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">编辑大纲</h3>
+        </div>
+        <div>
+          <table class="table topsec_tabletop" style="width:950px;">
+            <tr>
+              <td style="width:15%; vertical-align:middle;"><font color="#FF0000">*</font>大纲编号：</td>
+              <td style="width:39%;">
+                <input id='outiddetailsedit' width="100px" name='txtBH' type='text' required="required" maxLength="20" onchange='checkonidedit()' class="form-control topself_input" readonly />
+              </td>
+              <td style="width:10%; vertical-align:middle;"><font color="#FF0000">*</font>大纲名称：</td>
+              <td  style="width:39%;">
+                <input id='onnamedetailsedit' width="100px"  name='txtName' type='text' required="required" maxLength="20" onchange='checkonnameedit()' class="form-control topself_input"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:15%; vertical-align:middle;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;备注：</td>
+              <td colspan=3>
+                <input id='txtremarkedit' name='txtremark' type='text' maxLength="50" class="form-control topself_input"/>
+              </td>
+            </tr>
+            <tr>
+              <td colspan=2 style="text-align:left; vertical-align:top;">
+                <div id="treeedit" style="text-align:left; vertical-align:top;"></div>
+              </td>
+              <td colspan=2 style="vertical-align:top;">
+                <table style="text-align:left; vertical-align:top; border:0px;">
+                <tr style="height:26px;">
+                <td style="vertical-align:middle; border:0px;">
+                <button id="addEditfile" class="btn btn-default"  onclick="addchildedit()" data-toggle="modal" type="button" title='添加'><span class="glyphicon glyphicon-plus"></span></button>
+                <button id="delEditOut" class="btn btn-default" data-toggle="modal" type="button" onclick="deledit()" title='删除'><span class="glyphicon glyphicon-remove"></span></button>
+                </td>
+                </tr>
+                <tr>
+                <td style="vertical-align:top; border:0px;">
+                <div id="outlinetreeedit" style="text-align:left; vertical-align:top;width:410px;" ></div>
+                </td>
+                </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+         <input id='outidedit' name='outid' type='hidden'/>
+         <input id='outidDetailedit' name='outidDetail' type='hidden'/>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" type="submit" onclick="submitoutlineedit()" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <div id='outlineedit'>         
+    </div>
+</form>
+
+<script type="text/javascript">
+$(function() {
+        setfontcolor("couctrl");
+        setbackgroundcolor("outcolor");
+        $("#tree").dynatree({
+                onActivate: function(node) {
+                        // $("#outlinetree").dynatree("getRoot").visit(function(node){
+                        //   });
+                        // A DynaTreeNode object is passed to the activation handler
+                        // Note: we also get this event, if persistence is on, and the page is reloaded.
+                        //var tree = $("#tree").dynatree("getTree");
+                        //var rootNode = $("#tree").dynatree("getRoot");
+                },
+                persist: true,
+                children: [ // Pass an array of nodes.
+                {
+                        title: '实验体系',
+                        key: "root",
+                        isFolder: true,
+                        expand: true
+                }],
+                dnd: {
+                        revert: false,
+                        // true: slide helper back to source if drop is rejected
+                        onDragStart: function(node) {
+
+                                /** This function MUST be defined to enable dragging for the tree.
+       *  Return false to cancel dragging of node.
+       */
+                                //logMsg("tree.onDragStart(%o)", node);
+                                //if(node.data.isFolder){
+                                //return false;
+                                //}
+                                node.focus();
+                                if (node.data.key == 'root') {
+                                        return false;
+                                }
+                                return true;
+                        },
+                        onDragStop: function(node) {
+                                //logMsg("tree.onDragStop(%o)", node);
+                        }
+
+                        //-------------------------
+                }
+        });
+
+        $("#outlinetreedetail").dynatree({
+                //var OutName =$("#txtName").val();
+                children: [ // Pass an array of nodes.
+                {
+                        title: '自定义大纲',
+                        key: "root",
+                        isFolder: true,
+                        expand: true
+                }],
+
+        });
+
+        $("#outlinetree").dynatree({
+                onActivate: function(node) {
+                        // $("#outlinetree").dynatree("getRoot").visit(function(node){
+                        //  });
+                        if (node.data.key != "root") {
+                                $("#txtolName2").val(node.data.title);
+                                $('#delout').removeClass('disabled');
+                        }
+                        if (node.data.key == 'root') {
+                                $('#delout').addClass('disabled');
+                        }
+                        if (node.data.isFolder == false) {
+                                $('#addfile').addClass('disabled');
+                        } else {
+                                $('#addfile').removeClass('disabled');
+                        }
+                },
+                persist: true,
+                children: [{
+                        title: "自定义大纲",
+                        key: "root",
+                        isFolder: true,
+                        expand: true
+                }],
+                dnd: {
+                        onDragStart: function(node) {
+                                /** This function MUST be defined to enable dragging for the tree.
+     *  Return false to cancel dragging of node.
+     */
+                                //logMsg("tree.onDragStart(%o)", node);
+                                return true;
+                        },
+                        onDragStop: function(node) {
+                                // This function is optional.
+                                //logMsg("tree.onDragStop(%o)", node);
+                        },
+                        autoExpandMS: 1000,
+                        preventVoidMoves: true,
+                        // Prevent dropping nodes 'before self', etc.
+                        onDragEnter: function(node, sourceNode) {
+                                /* sourceNode may be null for non-dynatree droppables.
+     * Return false to disallow dropping on node. In this case
+     * onDragOver and onDragLeave are not called.
+     * Return 'over', 'before, or 'after' to force a hitMode.
+     * Any other return value will calc the hitMode from the cursor position.
+     */
+                                //logMsg("tree.onDragEnter(%o, %o)", node, sourceNode);
+                                // For the sake of this example deny dropping over folders
+                                //if(node.data.isFolder){
+                                //return false;
+                                //}
+                                return true;
+                                //                return "over";
+                        },
+                        onDragOver: function(node, sourceNode, hitMode) {
+                                /* Return false to disallow dropping this node.*/
+                                //         if(node.data.isFolder){
+                                //           var dd = $.ui.ddmanager.current;
+                                //           dd.cancel();
+                                //         }
+                                logMsg("tree.onDragOver(%o, %o, %o)", node, sourceNode, hitMode);
+                        },
+                        onDrop: function(node, sourceNode, hitMode, ui, draggable) {
+                                /* This function MUST be defined to enable dropping of items on the tree.
+     * sourceNode may be null, if it is a non-Dynatree droppable.
+     */
+                                logMsg("tree.onDrop(%o, %o)", node, sourceNode);
+                                var copynode;
+                                if (sourceNode) {
+                                        copynode = sourceNode.toDict(true,
+                                        function(dict) {
+                                                //if(dict.isFolder)
+                                                //dict.title = "Copy of " + dict.title;
+                                                //delete dict.key; // Remove key, so a new one will be created
+                                        });
+                                } else {
+                                        copynode = {
+                                                title: "This node was dropped here (" + ui.helper + ")."
+                                        };
+                                }
+                                if (hitMode == "over") {
+                                        // Append as child node
+                                        if (node.data.isFolder) {
+                                                node.addChild(copynode);
+                                                // expand the drop target
+                                                node.expand(true);
+                                                //copynode.remove() 
+                                        } else {
+                                                return false;
+                                        }
+                                } else if (hitMode == "before") {
+                                        // Add before this, i.e. as child of current parent
+                                        if (node.data.key != 'root') {
+                                                node.parent.addChild(copynode, node);
+                                                //copynode.remove() 
+                                        } else {
+                                                return false;
+                                        }
+                                } else if (hitMode == "after") {
+                                        // Add after this, i.e. as child of current parent
+                                        if (node.data.key != 'root') {
+                                                node.parent.addChild(copynode, node.getNextSibling());
+                                                //copynode.remove() 
+                                        } else {
+                                                return false;
+                                        }
+                                }
+                        },
+                        onDragLeave: function(node, sourceNode) {
+                                /** Always called if onDragEnter was called.
+             */
+                                //logMsg("tree.onDragLeave(%o, %o)", node, sourceNode);
+                        }
+                },
+                onClick: function(node, event) {
+                        if (event.shiftKey) {
+                                if (node.data.key != 'root') editNode(node);
+                                return false;
+                        }
+                },
+                onDblClick: function(node, event) {
+                        if (node.data.key != 'root') editNode(node);
+                        return false;
+                },
+                onKeydown: function(node, event) {
+                        switch (event.which) {
+                        case 113:
+                                // [F2]
+                                if (node.data.key != 'root') editNode(node);
+                                return false;
+                        case 13:
+                                // [enter]
+                                if (isMac) {
+                                        editNode(node);
+                                        return false;
+                                }
+                        }
+                }
+        });
+
+        $("#treeedit").dynatree({
+                onActivate:
+                function(node) {
+                        // $("#outlinetree").dynatree("getRoot").visit(function(node){
+                        //   });
+                        // A DynaTreeNode object is passed to the activation handler
+                        // Note: we also get this event, if persistence is on, and the page is reloaded.
+                        //var tree = $("#tree").dynatree("getTree");
+                        //var rootNode = $("#tree").dynatree("getRoot");
+                },
+                persist: true,
+                children: [{
+                        title: "实验体系",
+                        key: "root",
+                        isFolder: true,
+                        expand: true
+                }],
+                dnd: {
+                        revert: false,
+                        // true: slide helper back to source if drop is rejected
+                        onDragStart: function(node) {
+                                /** This function MUST be defined to enable dragging for the tree.
+       *  Return false to cancel dragging of node.
+       */
+                                //logMsg("tree.onDragStart(%o)", node);
+                                //if(node.data.isFolder){
+                                //return false;
+                                //}
+                                node.focus();
+                                if (node.data.key == 'root') return false;
+                                return true;
+                        },
+                        onDragStop: function(node) {
+                                //logMsg("tree.onDragStop(%o)", node);
+                        }
+
+                        //-------------------------
+                }
+        });
+
+        $("#outlinetreeedit").dynatree({
+                onActivate: function(node) {
+                        // $("#outlinetree").dynatree("getRoot").visit(function(node){
+                        //  });
+                        if (node.data.key != "root") {
+                                $("#txtolName2").val(node.data.title);
+                                $('#delEditOut').removeClass('disabled');
+                        }
+                        if (node.data.key == 'root') {
+                                $('#delEditOut').addClass('disabled');
+                        }
+                        if (node.data.isFolder == false) {
+                                $('#addEditfile').addClass('disabled');
+                        } else {
+                                $('#addEditfile').removeClass('disabled');
+                        }
+                },
+                persist: true,
+                children: [{
+                        title: "自定义大纲",
+                        key: "root",
+                        isFolder: true,
+                        expand: true
+                }],
+                dnd: {
+                        onDragStart: function(node) {
+                                /** This function MUST be defined to enable dragging for the tree.
+     *  Return false to cancel dragging of node.
+     */
+                                //logMsg("tree.onDragStart(%o)", node);
+                                return true;
+                        },
+                        onDragStop: function(node) {
+                                // This function is optional.
+                                //logMsg("tree.onDragStop(%o)", node);
+                        },
+                        autoExpandMS: 1000,
+                        preventVoidMoves: true,
+                        // Prevent dropping nodes 'before self', etc.
+                        onDragEnter: function(node, sourceNode) {
+                                /* sourceNode may be null for non-dynatree droppables.
+     * Return false to disallow dropping on node. In this case
+     * onDragOver and onDragLeave are not called.
+     * Return 'over', 'before, or 'after' to force a hitMode.
+     * Any other return value will calc the hitMode from the cursor position.
+     */
+                                //logMsg("tree.onDragEnter(%o, %o)", node, sourceNode);
+                                // For the sake of this example deny dropping over folders
+                                //if(node.data.isFolder){
+                                //return false;
+                                //}
+                                return true;
+                                //                return "over";
+                        },
+                        onDragOver: function(node, sourceNode, hitMode) {
+                                /* Return false to disallow dropping this node.*/
+                                //         if(node.data.isFolder){
+                                //           var dd = $.ui.ddmanager.current;
+                                //           dd.cancel();
+                                //         }
+                                logMsg("tree.onDragOver(%o, %o, %o)", node, sourceNode, hitMode);
+                        },
+                        onDrop: function(node, sourceNode, hitMode, ui, draggable) {
+                                /* This function MUST be defined to enable dropping of items on the tree.
+     * sourceNode may be null, if it is a non-Dynatree droppable.
+     */
+                                logMsg("tree.onDrop(%o, %o)", node, sourceNode);
+                                var copynode;
+                                if (sourceNode) {
+                                        copynode = sourceNode.toDict(true,
+                                        function(dict) {
+                                                //if(dict.isFolder)
+                                                //dict.title = "Copy of " + dict.title;
+                                                //delete dict.key; // Remove key, so a new one will be created
+                                        });
+                                } else {
+                                        copynode = {
+                                                title: "This node was dropped here (" + ui.helper + ")."
+                                        };
+                                }
+                                if (hitMode == "over") {
+                                        // Append as child node
+                                        if (node.data.isFolder) {
+                                                node.addChild(copynode);
+                                                // expand the drop target
+                                                node.expand(true);
+                                                //copynode.remove() 
+                                        } else {
+                                                return false;
+                                        }
+                                } else if (hitMode == "before") {
+                                        // Add before this, i.e. as child of current parent
+                                        if (node.data.key != 'root') {
+                                                node.parent.addChild(copynode, node);
+                                                //copynode.remove() 
+                                        } else {
+                                                return false;
+                                        }
+                                } else if (hitMode == "after") {
+                                        // Add after this, i.e. as child of current parent
+                                        if (node.data.key != 'root') {
+                                                node.parent.addChild(copynode, node.getNextSibling());
+                                                //copynode.remove() 
+                                        } else {
+                                                return false;
+                                        }
+                                }
+                        },
+                        onDragLeave: function(node, sourceNode) {
+                                /** Always called if onDragEnter was called.
+             */
+                                //logMsg("tree.onDragLeave(%o, %o)", node, sourceNode);
+                        }
+                },
+                onClick: function(node, event) {
+                        if (event.shiftKey) {
+                                if (node.data.key != 'root') editNode(node);
+                                return false;
+                        }
+                },
+                onDblClick: function(node, event) {
+                        if (node.data.key != 'root') editNode(node);
+                        return false;
+                },
+                onKeydown: function(node, event) {
+                        switch (event.which) {
+                        case 113:
+                                // [F2]
+                                if (node.data.key != 'root') editNode(node);
+                                return false;
+                        case 13:
+                                // [enter]
+                                if (isMac) {
+                                        editNode(node);
+                                        return false;
+                                }
+                        }
+                }
+        });
+});
+/*
+function judgenull()
+{
+    var txt = $("#txtolName")[0].value;
+
+    if (txt == '')
+    {    
+      document.getElementById("txtolName").setCustomValidity("节点不能为空！"); 
+    }
+    else
+    {
+     
+      document.getElementById("txtolName").setCustomValidity("");
+    }
+}
+*/
+
+function addchild()
+{
+	var tree = $("#outlinetree").dynatree("getTree");
+	var node = tree.getActiveNode();
+	var txt = '自定义节点';
+      if (node.data.isFolder)
+      {
+      node.addChild({title: txt, isFolder: true});
+      nodes = node.getChildren();
+      curnode = nodes[nodes.length-1];
+      node.deactivate();
+      curnode.activate();
+      curnode.focus();
+      editNode(curnode);
+      return false;
+    }
+}
+
+function addchildedit()
+{
+  var tree = $("#outlinetreeedit").dynatree("getTree");
+  var node = tree.getActiveNode();
+  var txt = '自定义节点';
+  if (node.data.isFolder)
+  {
+      node.addChild({title: txt, isFolder: true});
+      nodes = node.getChildren();
+      curnode = nodes[nodes.length-1];
+      node.deactivate();
+      curnode.activate();
+      curnode.focus();
+      editNode(curnode);
+      return false;
+    }
+}
+
+function del()
+{
+  var tree = $("#outlinetree").dynatree("getTree");
+  var node = tree.getActiveNode();
+  if(node.data.key == 'root'){
+    return;
+  }     
+  Showbo.Msg.oncallback = delcallback;
+  Showbo.Msg.confirm("您确定要删除该节点吗？");
+}
+function delcallback()
+{
+  var tree = $("#outlinetree").dynatree("getTree");
+  var node = tree.getActiveNode();
+  node.remove();
+}
+
+function deledit()
+{ 
+  var tree = $("#outlinetreeedit").dynatree("getTree");
+  var node = tree.getActiveNode();
+  if(node.data.key == 'root'){
+    return;
+  }        
+  Showbo.Msg.oncallback = deleditcallback;
+  Showbo.Msg.confirm("您确定要删除该节点吗？");
+}
+function deleditcallback()
+{
+  var tree = $("#outlinetreeedit").dynatree("getTree");
+  var node = tree.getActiveNode();
+  node.remove();
+}
+
+function rename()
+{ 
+	var tree = $("#outlinetree").dynatree("getTree");
+	var node = tree.getActiveNode();
+	if(node.data.key != "root")
+	{	
+		node.setTitle($("#txtolName2")[0].value);
+	}
+}
+function submitoutline()
+{    
+     var nodecount = 1;
+     var outlinestring='';
+     var tree = $("#outlinetree").dynatree("getTree");
+     var node = tree.getNodeByKey("root") ;
+     node.visit(function(node){
+      if(node.data.isFolder )
+      {
+      expid = '0';
+      }
+      else
+      {
+      expid = node.data.key;
+      }
+      outlinestring += nodecount;
+      node.data.key = nodecount;
+      outlinestring += '$$';
+      nodecount++;
+      outlinestring += expid;
+      outlinestring += '$$';
+      outlinestring += node.data.title;
+      outlinestring += '$$';
+      if(node.getParent()==$("#outlinetree").dynatree("getTree").getNodeByKey("root"))
+      {
+         outlinestring += '0@@';
+      }
+      else
+      {
+       outlinestring += node.getParent().data.key;
+       outlinestring +='@@';
+      }
+      });
+     if(outlinestring=='')
+     {
+      outlinestring = 'null';
+     }
+     else
+     {
+       outlinestring = outlinestring.substring(0, outlinestring.length-2);
+     }
+     insertText = "<input   name='outlinestring'  type = 'hidden'  value= '"+outlinestring+"'/>";
+     
+     
+    document.getElementById("outlineadd").innerHTML = document.getElementById("outlineadd").innerHTML + insertText;
+
+    //document.getElementById("outlineaddform").submit();
+}
+
+function submitoutlineedit()
+{
+    var nodecount = 1;
+    var outlinestring='';
+     var tree = $("#outlinetreeedit").dynatree("getTree");
+     var node = tree.getNodeByKey("root") ;
+     node.visit(function(node){
+      if(node.data.isFolder )
+      {
+      expid = '0';
+      }
+      else
+      {
+      expid = node.data.key;
+      }
+      outlinestring += nodecount;
+      node.data.key = nodecount;
+      outlinestring += '$$';
+      nodecount++;
+      outlinestring += expid;
+      outlinestring += '$$';
+      outlinestring += node.data.title;
+      outlinestring += '$$';
+      if(node.getParent()==$("#outlinetreeedit").dynatree("getTree").getNodeByKey("root"))
+      {
+         outlinestring += '0@@';
+      }
+      else
+      {
+       outlinestring += node.getParent().data.key;
+       outlinestring +='@@';
+      }
+      });
+     if(outlinestring=='')
+     {
+      outlinestring = 'null';
+     }
+     else
+     {
+       outlinestring = outlinestring.substring(0, outlinestring.length-2);
+     }
+     insertText = "<input   name='outlinestring'  type = 'hidden'  value= '"+outlinestring+"'/>";
+     
+    var preid = $("#lsout").data("selid");
+    var editurl="/outlineedit/"+preid+'/';
+    var currentPage = $("#lsout").data("sepage");//获取当前页码
+    // alert("当前页码为"+currentPage);
+    //    if(currentPage>1)
+    //      {
+    //        window.location.href="/outlines/?page = currentPage";
+    //      }
+    //      else
+    //      {
+    //        window.location.href="/outlines/?page=1";
+    //      }
+    document.getElementById("outlineeditform").action=editurl;
+    document.getElementById("outlineedit").innerHTML = document.getElementById("outlineedit").innerHTML + insertText;
+    
+    
+
+   // document.getElementById("outlineeditform").submit();
+}
+
+function submitdelformedit(){
+      var preid = $("#lsout").data("selid");
+      if(preid == "0")
+        return false;
+      var candel = ajaxobj("/candeloutline/"+preid, "", "get", "");
+      var jsondata = $.parseJSON(candel);//返回团队中是否有此学生
+
+      if(jsondata.cando == 'false'){
+        Showbo.Msg.alert("您没有权限删除该大纲!");
+        return
+      }
+      //查看有没有与大纲联系的课程
+      var selected = ajaxobj("/selectoutline/"+preid, "", "get", "");
+      var jsondata = $.parseJSON(selected);
+      if(jsondata.select == 'true')
+      {
+        Showbo.Msg.oncallback = deloutlinecallback;
+        Showbo.Msg.confirm("大纲已添加到课程,确定删除吗？");
+      }
+      else
+      {
+        Showbo.Msg.oncallback = deloutlinecallback;
+        Showbo.Msg.confirm("确定删除吗？");
+      }
+}
+function deloutlinecallback(){
+      var preid = $("#lsout").data("selid");
+      var delurl="/outlinedel/"+preid+'/';
+      document.getElementById("outlineform").action=delurl;
+      document.getElementById("outlineform").submit();
+}
+setTableEvent("lsout", true);
+
+function setTableEvent(tableid, singleSelect) {
+ var tr = "#" + tableid + ">tbody>tr";
+ var trSelected = tr + ".success";
+ $(tr).click(function(event) {
+  if($(this).attr('id') == undefined)
+      return;
+  //var id = $("td:first-child", $(this)).text();
+  // single-select
+  if (singleSelect) {
+      $(trSelected).removeClass('success');
+  }
+
+  if($("#editsuccess").hasClass('disabled'))
+  {
+    $("#editsuccess").removeClass('disabled');
+    $("#btndel").removeClass('disabled');
+    $("#detailedit").removeClass('disabled');
+    $("#detailsuccess").removeClass('disabled');
+  }
+  $(this).addClass('success');
+  $("#lsout").data("selid", $(this).attr('id'));
+  $("#btndel").attr('formaction', '/outlinedel/' + $(this).attr('id'));
+
+  var preid = $("#lsout").data("selid");
+  $("#myoutlineid").val(preid);
+  var teacheridcheck = ajaxobj("/teacheridcheck/", "", "post", "#outlineform");
+  var jsoniddata = $.parseJSON(teacheridcheck);
+  var teacherid=jsoniddata.teacherid;
+  var tea = ajaxobj("/roletypecheck/", "", "get", "");
+  var jsondata = $.parseJSON(tea);
+  var roletype=jsondata.roletype;
+  // if(roletype==0)
+  // {
+    // if(teacherid!=jsondata.id)
+    // {
+    //     $("#editsuccess").addClass('disabled');
+    //     $("#btndel").addClass('disabled');
+    //     $("#detailedit").addClass('disabled');
+    //  }
+    //  else
+    //  {
+      $("#editsuccess").removeClass('disabled');
+      $("#btndel").removeClass('disabled');
+      $("#detailedit").removeClass('disabled');
+     // }
+    // }
+
+   });
+   }
+
+function details()
+{
+
+    //$("#outlinetreedetail").dynatree("option", "autoCollapse", false);
+
+    var tree = $("#outlinetreedetail").dynatree("getTree");
+    var rmnode = tree.getNodeByKey("root");
+    rmnode.removeChildren();
+    var preid = $("#lsout").data("selid");
+    if(preid == "0")
+    {
+        return false;
+    }
+
+    $("#outid").val(preid);
+    $("#outidDetail").val(preid);
+    var out = ajaxobj("/outlineinfo/", "", "post", "#detailsform");
+    var outdetail = ajaxobj("/outlineinfoDetails/", "", "post", "#detailsform");
+    var jsondata = $.parseJSON(out);
+    var jsontreedetail = $.parseJSON(outdetail);
+    var outrela = jsontreedetail.key;
+    $("#outiddetails").val(jsondata.outid);
+    $("#onnamedetails").val(jsondata.onname);
+    $("#txtremarkdetails").val(jsondata.remark);
+    //$("#sex1").val(jsondata.sex);
+    //$("#roletype1").val(jsondata.roletype);
+    // $("#email1").val(jsondata.email);
+    //$("#mobile1").val(jsondata.mobile);
+    //$("#otherlink1").val(jsondata.otherlink);
+    //var tree = $("#outlinetreedetail").dynatree("getTree");
+    //var node = tree.getRoot();
+    var node = tree.getNodeByKey("root");
+    var nodechild; 
+    var parent;
+    //node = node.getChildren();
+    node.setTitle(jsondata.onname);
+      //var txt = $("#txtolName")[0].value;
+      //node.addChild({title: txt, isFolder: true});
+  for (var i=0;i<=outrela.length-1;i++)
+  {
+ 
+    if (outrela[i][2]=='None')
+    {
+      if(outrela[i][3]==0)
+      {
+        node.addChild({title: outrela[i][1], key: outrela[i][0], isFolder: true});
+      }
+      else
+      {
+        node.addChild({title: outrela[i][1], isFolder: false});
+      }
+    }
+    else
+    {
+      for (var j=0;j<=outrela.length-1;j++)
+      {
+        if(outrela[i][2]==outrela[j][0])
+        {
+            parent = outrela[j][0];
+            break;
+        }
+      }
+      nodechild = tree.getNodeByKey(parent);
+      if(outrela[i][3]==0)
+        nodechild.addChild({title: outrela[i][1],  key: outrela[i][0] ,isFolder: true});
+      else
+        nodechild.addChild({title: outrela[i][1], isFolder: false});
+    }
+  }
+  //node.visit(function(node1){
+ //  });
+ $('#myModalDetails').modal('show');
+}
+
+function outlineedit()
+{
+    var tree = $("#outlinetreeedit").dynatree("getTree");
+    var rmnode = tree.getNodeByKey("root");
+    rmnode.removeChildren();
+    var preid = $("#lsout").data("selid");
+    if(preid == "0")
+    {
+        return false;
+    }
+    $('#addEditfile').addClass('disabled');
+    $('#delEditOut').addClass('disabled');
+    $("#outidedit").val(preid);
+    $("#outidDetailedit").val(preid);
+    var out = ajaxobj("/outlineinfo/", "", "post", "#outlineeditform");
+    var jsondata = $.parseJSON(out);
+
+    if(jsondata.cando == 'false'){
+    Showbo.Msg.alert("您没有权限编辑该大纲!");
+    return
+    }
+
+
+    var outdetail = ajaxobj("/outlineinfoDetails/", "", "post", "#outlineeditform");
+    var expdetail= ajaxobj("/outlineExp/", "", "get", "");
+
+    var jsontreedetail = $.parseJSON(outdetail);
+    var jsonexp= $.parseJSON(expdetail).key;
+    var exptree = $("#treeedit").dynatree("getTree");
+    var expnode = exptree.getNodeByKey("root");
+    expnode.removeChildren();       
+    for (var i = 0;i < jsonexp.length;i++)
+    {
+      if (jsonexp[i][2] == -1)
+      {
+        expnode.addChild({title:jsonexp[i][1],key:jsonexp[i][0],isFolder:jsonexp[i][3]});
+      }
+      else
+      {
+        var expnodechild = exptree.getNodeByKey( jsonexp[i][2]);
+        expnodechild.addChild({title: jsonexp[i][1],key:jsonexp[i][0],isFolder:jsonexp[i][3]});
+      }
+    }
+     var outrela = jsontreedetail.key;
+
+    $("#outiddetailsedit").val(jsondata.outid);
+    $("#onnamedetailsedit").val(jsondata.onname);
+     $("#txtremarkedit").val(jsondata.remark);
+    //$("#sex1").val(jsondata.sex);
+    //$("#roletype1").val(jsondata.roletype);
+   // $("#email1").val(jsondata.email);
+    //$("#mobile1").val(jsondata.mobile);
+    //$("#otherlink1").val(jsondata.otherlink);
+    //var tree = $("#outlinetreedetail").dynatree("getTree");
+    //var node = tree.getRoot();
+    var node = tree.getNodeByKey("root");
+    var nodechild; 
+    var parent;
+    //node = node.getChildren();
+    node.setTitle(jsondata.onname);
+      //var txt = $("#txtolName")[0].value;
+      //node.addChild({title: txt, isFolder: true});
+  for (var i=0;i<=outrela.length-1;i++)
+  {
+    if (outrela[i][2]=='None')
+    {
+      if(outrela[i][3]==0)
+      {
+        node.addChild({title: outrela[i][1], key: outrela[i][0], isFolder: true});
+      }
+      else
+      {
+        node.addChild({title: outrela[i][1],  key: (outrela[i][3]+'*' ), isFolder: false});
+      }
+    }
+    else
+    {
+      for (var j=0;j<=outrela.length-1;j++)
+      {
+        if(outrela[i][2]==outrela[j][0])
+        {
+            parent = outrela[j][0];
+            break;
+        }
+      }
+      nodechild = tree.getNodeByKey(parent);
+      if(outrela[i][3]==0)
+        nodechild.addChild({title: outrela[i][1],  key: outrela[i][0] ,isFolder: true});
+      else
+        nodechild.addChild({title: outrela[i][1] , key: (outrela[i][3]+'*' ), isFolder: false});
+    }
+  }
+
+  node.visit(function(node){
+     if(node.data.isFolder==false)
+     {
+  
+        var nodekeytemp=node.data.key;
+        nodekeytemp=nodekeytemp.substring(0,nodekeytemp.length-1);
+        node.data.key= nodekeytemp;
+    }
+    });
+  //node.visit(function(node1){
+ //  });
+ $('#myModaledit').modal('show');
+}
+
+function outlineadd()
+{ 
+    $("#txtBH").val('');
+    $("#txtName").val('');
+    $("#txtremark").val('');
+    var tree= $("#outlinetree").dynatree("getTree");
+    var node = tree.getNodeByKey("root");
+    node.removeChildren();
+    node.setTitle("自定义大纲");//设置改变树形图默认选项名称       
+    var expdetail= ajaxobj("/outlineExp/", "", "get", "");
+    var jsonexp= $.parseJSON(expdetail).key;
+    var exptree = $("#tree").dynatree("getTree");
+    var expnode = exptree.getNodeByKey("root");
+    expnode.removeChildren();
+    $('#addfile').addClass('disabled');
+    $('#delout').addClass('disabled');
+    for (var i = 0;i < jsonexp.length;i++)
+    {
+      if (jsonexp[i][2] == -1)
+      {
+        expnode.addChild({title: jsonexp[i][1], key: jsonexp[i][0] ,isFolder: jsonexp[i][3]});
+      }
+      else
+      {
+        var expnodechild = exptree.getNodeByKey( jsonexp[i][2]);
+        expnodechild.addChild({title: jsonexp[i][1], key: jsonexp[i][0] ,isFolder: jsonexp[i][3]});
+      }
+    }
+
+  $('#myModal').modal('show');
+}
+
+function editNode(node){
+  var prevTitle = node.data.title,
+    tree = node.tree;
+  // Disable dynatree mouse- and key handling
+  tree.$widget.unbind();
+  // Replace node with <input>
+  //$(".dynatree-title", node.span).html("<input id='editNode' value='" + prevTitle + "'>");
+  $(".dynatree-title", node.span).replaceWith("<input id='editNode' maxLength='20' value='" + prevTitle + "'>");
+  // Focus <input> and bind keyboard handler
+  $("input#editNode")
+    .focus()
+    .keydown(function(event){
+      switch( event.which ) {
+      case 27: // [esc]
+        // discard changes on [esc]
+        $("input#editNode").val(prevTitle);
+        $(this).blur();
+        break;
+      case 13: // [enter]
+        // simulate blur to accept new value
+        $(this).blur();
+        break;
+      }
+    })
+    .blur(function(event){
+      // Accept new value, when user leaves <input>
+      var title = $("input#editNode").val();
+      node.setTitle(title);
+      // Re-enable mouse and keyboard handlling
+      tree.$widget.bind();
+      node.focus();
+    })
+}
+
+ function checkonname(){
+
+     var onname=document.getElementById("txtName");
+     var judgeadd;
+     var out = ajaxobj("/outlineOnname/", "", "post", "#outlineaddform");
+     var jsondata = $.parseJSON(out);
+     judgeadd=jsondata.judgeonname;
+     var reg=/^[A-Za-z0-9]+$/;
+    // if(reg.test(onname.value)==false)
+      //onname.setCustomValidity("只能输入数字或字母");
+    if(judgeadd==1)
+      onname.setCustomValidity("已存在的大纲!");
+    else
+      onname.setCustomValidity("");
+    var tree = $("#outlinetree").dynatree("getTree");
+    var node = tree.getNodeByKey("root");
+    node.setTitle(onname.value);//设置改变树形图默认选项名称
+    }
+
+ function checkonnameedit(){
+     var onname=document.getElementById("onnamedetailsedit");
+     var judgeedit;
+     var out = ajaxobj("/outlineOnname/", "", "post", "#outlineeditform");
+     var jsondata = $.parseJSON(out);
+     judgeedit=jsondata.judgeonname;
+     var reg=/^[A-Za-z0-9]+$/;
+
+    // if(reg.test(onname.value)==false)
+      //onname.setCustomValidity("只能输入数字或字母");
+    if(judgeedit==1)
+      onname.setCustomValidity("已存在的大纲!");
+    else
+      onname.setCustomValidity("");
+    var tree = $("#outlinetreeedit").dynatree("getTree");
+    var node = tree.getNodeByKey("root");
+    node.setTitle(onname.value);//设置改变树形图默认选项名称
+    }
+
+ function checkonid(){
+     var onid=document.getElementById("txtBH");
+     var judgeadd;
+     var out = ajaxobj("/outlineOnid/", "", "post", "#outlineaddform");
+     var jsondata = $.parseJSON(out);
+     judgeadd=jsondata.judgeonid;
+
+    var reg=/^[A-Za-z0-9]+$/;
+
+    if(reg.test(onid.value)==false)
+      onid.setCustomValidity("只能输入数字或字母");
+    else if(judgeadd==1)
+      onid.setCustomValidity("已存在的编号!");
+    else
+      onid.setCustomValidity("");
+    }
+
+ function checkonidedit(){
+     var onid=document.getElementById("outiddetailsedit");
+     var judgeedit;
+     var out = ajaxobj("/outlineOnid/", "", "post", "#outlineeditform");
+     
+     var jsondata = $.parseJSON(out);
+     judgeedit=jsondata.judgeonid;
+     var reg=/^[A-Za-z0-9]+$/;
+
+    if(reg.test(onid.value)==false)
+      onid.setCustomValidity("只能输入数字或字母");
+    else if(judgeedit==1)
+      onid.setCustomValidity("已存在的编号!");
+    else
+      onid.setCustomValidity("");
+    }
+</script>
+{% endblock %}

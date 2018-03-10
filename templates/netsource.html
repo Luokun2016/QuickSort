@@ -1,0 +1,355 @@
+{% extends "templates/hackclientindex.html" %}
+{% load i18n %}
+{% load staticfiles %}  
+
+{% block script %}
+  <script src='/statics/js/jquery.custom.js' type="text/javascript"></script>
+  <script src='/statics/js/jquery.cookie.js' type="text/javascript"></script>
+  <script src='/statics/js/jquery.dynatree.js' type="text/javascript"></script>
+  <script type="text/javascript" src="/statics/myflow/lib/raphael.js"></script>
+  <script type="text/javascript" src="/statics/myflow/myflowdetail.js"></script>
+  <script type="text/javascript" src="/statics/myflow/myflow.jpdl4detail.js"></script>
+  <script type="text/javascript" src="/statics/myflow/myflow.editorsdetail.js"></script>
+  <link type="text/css" href="/statics/myflow/lib/jquery-ui-1.8.4.custom.css" rel="stylesheet" />
+  <script type="text/javascript">height = 570;width = 800;</script>
+{% endblock %}
+      
+{% block content1 %}
+<form action="" method='get' id="netsource">
+  <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-15px;">
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs">
+      <li  class="active" id="vmserverli">
+        <a href="#vmservers" data-toggle="tab">我方设备</a>
+      </li >
+      <li id="vmtypeli">
+        <a href="#vmtypes" data-toggle="tab">我方设备拓扑</a>
+      </li>
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content" style="position: relative; top:10px;">
+      <div class="tab-pane fade in active" id="vmservers">
+        <div class="bs-docs-section">
+         <table width="100%">
+          <tr>
+            <td >
+              <div style="text-align:left;">
+                
+                <button id="btnconsole" type="button" class="btn btn-primary disabled" onclick="open_vnc()" title='console'>console</button>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; ">
+            <!-- Glyphicons
+            ================================================== -->
+            <input type="hidden" name="tabtype" id="tabtype" value="{{tabtype}}" />
+            <table id="lsvm" class="table table-striped topsec_tabletop table-hover" data-selid="0" data-vmstate="-1">
+              <tr>
+                <th>设备名称</th>
+                <th>镜像名称</th>
+                <th>镜像类型</th>
+                <th>管理ip</th>
+              </tr>
+              {% for re in res %}
+              <tr id="{{re.id}}" data-rtype="{{ re.rtype }}" data-rname="{{ re.rname}}">
+                <td>{{ re.rname | truncatechars:13}}</td>
+                <td>{{ re.insname | truncatechars:13}}</td>
+                <td>{{ re.rtype | truncatechars:13}}</td>
+                <td>{{ re.addr }}</td>
+             </tr>
+             {% endfor %}
+
+          </table>
+        </div>
+      </div>
+      <div id="vmtypes" class="tab-pane fade" style="height:100%; width:100%;">
+         <div id="myflow_propsdetail"
+        style="position: absolute;  right: 30px; background-color: #fff; width: 220px; padding: 3px; margin-top:80px;"  class="ui-widget-content">
+                    <div id="myflow_props_handledetail" style="color:black;" class="ui-widget-header">属性</div>
+                        <table border="1" width="100%" cellpadding="0" cellspacing="0">
+                              <tr>
+                                <td></td>
+                              </tr>
+                              <tr>
+                                <td></td>
+                              </tr>
+                        </table>
+                    </div>
+                    <div id="myflowdetail" ></div>
+            </div>
+      </div>
+    </div>
+</form>
+<script type="text/javascript">
+   $(function()
+    {
+       myflowdetail = $('#myflowdetail').myflowdetail(
+       {
+          basePath : "",
+          restore : "",
+          tools : 
+          {
+
+          }
+       });
+   });
+  function ajaxobj(_url, _tag, _way, _form)
+  {
+    var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+    var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+    var info = "";
+    $.ajax({
+      type:m,
+      url:_url,
+      data:par,
+      async: false,
+      error: function(request) {
+        //alert("Connection error");
+      },
+      success: function(data) {
+        //$(_tag).html(data);
+        //alert(data);
+        info = data;
+      }
+    });
+    return info;
+  }
+  function open_vnc()
+  {
+      //#vm:imgls/vgate:imgvgtls
+      var vtype = $("#lsvm>tbody>tr.success").data('rtype');
+      var name = $("#lsvm>tbody>tr.success").data('rname');
+
+      $.post(/getVMId/, {'name': name, "type": vtype}, function(re){
+          var info = JSON.parse(re).split(":");
+          var id = info[0];
+          var ip = info[1];
+          var url = "";
+          if(vtype == "imgls"){
+            url = "http://" + ip + '/console/' + id + '/vm?token=' + id;
+          }
+          else if(vtype == "imgvgtls") {
+            url = "http://" + ip + '/console/' + id + '/vgt?token=' + id;
+          }
+          window.open(url,'','width=850,height=485');
+      });
+ 
+        //    var vdate=ajaxobj('/Getid/'+vtype+'/'+name+"/", "", "post", "#lsvm");
+        //    var jsonresult = "";
+        //    var url ="";
+        //    jsonresult = $.parseJSON(vdate);
+        //
+        //    if(jsonresult != "")
+        //    {
+        //      if(vtype == "imgls"){
+        //        url ='/console/' + jsonresult.vmid + '/vm?token=' + jsonresult.vmid;
+        //      }
+        //      if(vtype == "imgvgtls")
+        //      {
+        //        url = '/console/' + jsonresult.vgtid + '/vgt?token=' + jsonresult.vgtid;
+        //      }
+        //    }
+        //    window.open(url,'','width=850,height=485');
+  }
+
+</script>
+<script type="text/javascript" src="/statics/js/ajaxProgressUpload.js"></script>
+
+<script type="text/javascript">
+   setbackgroundcolor("netsourcecolor");
+
+  $(function()
+  {
+    var teaminfo = ajaxobj("/getteamess/","","get","");
+    var jsondata = $.parseJSON(teaminfo);
+    $('#myflowdetail').empty();
+    if(jsondata.topo != null)
+    {
+      myflowdetail = $('#myflowdetail').myflowdetail(
+      {
+        basePath : "",
+        restore : eval("(" + jsondata.topo + ")")      
+      });
+
+      // -----------------如果存在拓扑图，对其添加右键菜单----------------------------
+      var menu_methods = menuMethods.call(myflowdetail[0]);
+      myflowdetail[0].children[0].oncontextmenu = function(evt){
+        $(evt.target).trigger("click");
+        if(evt.target.tagName === 'image' && getType === "imgls"){
+          menu_methods.showMenu(evt);
+        }
+        return false;
+      };
+      document.onmousedown = function(evt){
+        if(!(evt.target.id === ("menu" + myflowdetail[0].id) || evt.target.parentNode.id === ("menu" + myflowdetail[0].id))){
+          menu_methods.hiddenMenu();
+        }
+      };
+    }
+    else
+    {
+      myflowdetail = $('#myflowdetail').myflowdetail(
+      {
+        basePath : "",
+        restore : "",  
+      });
+    }
+
+    tabtype = $('#tabtype').val();
+    if(tabtype=='img')
+    {
+      $('#vmservers').removeClass('in');
+      $('#vmservers').removeClass('active');
+      $('#vmtypes').addClass('in');
+      $('#vmtypes').addClass('active');
+
+      $('#vmserverli').removeClass('active');
+      $('#vmtypeli').addClass('active');
+    }
+  });
+  setTableEvent("lsvm", true, "vmdel");
+  setTableEvent("lsimg", true, "imgdel");
+  setfontcolor("souctrl");
+  setbackgroundcolor("vmcolor");
+  function setTableEvent(tableid, singleSelect, url) {
+
+   var tr = "#" + tableid + ">tbody>tr";
+   var trSelected = tr + ".success";
+
+   $(tr).click(function(event) {
+    if($(this).attr('id') == undefined)
+      return;
+      if (singleSelect) {
+       $(trSelected).removeClass('success');
+      }
+      $(this).addClass('success');
+      $("#" + tableid).data("selid", $(this).attr('id'));
+
+      $("#btn"+url).attr('formaction', '/' + url + '/' + $(this).attr('id'));
+
+      if($(this).data('rtype')=="imgvshls")
+      {
+        $("#btnconsole").addClass('disabled');
+      }
+      else
+      {
+         $("#btnconsole").removeClass('disabled');
+      }   
+    });
+  }
+
+    // 右键菜单模块
+    function menuMethods() {
+        var methods = {},
+            menu = null,
+            parent = null,
+            liobj = null,
+            that = this;
+
+        // 生成右键菜单内容
+        function nodeMenu() {
+            function openConsole() {
+                $.post(/getVMId/, {'name': getVMIns, "type": getType}, function(re){
+                    var info = JSON.parse(re).split(":");
+                    var id = info[0];
+                    var ip = info[1];
+                    var url = 'http://'+ ip +'/console/' + id + '/vm?token=' + id;
+                    window.open(url,'','width=850,height=485');
+                });
+                menu.style.display = 'none';
+            }
+
+            return [{
+                text: '控制台',
+                method: openConsole
+            }
+            ];
+        }
+
+        // 创建一个菜单，返回一个无序列表ul对象
+        function createMenu(menuContent) {
+            var menu = document.createElement('ul');
+            menu.setAttribute('id', 'menu' + that.id);
+            menu.setAttribute('oncontextmenu', 'return false');
+
+            for (var i = 0; i < menuContent.length; i++) {
+                var li = document.createElement('li');
+                li.innerHTML = menuContent[i].text;
+                li.onclick = menuContent[i].method;
+                li.onmouseover = liMouseover;
+                li.onmouseout = liMouseout;
+                li.setAttribute('oncontextmenu', 'return false');
+                menu.appendChild(li);
+                liobj = li;
+            }
+
+            function liMouseover(evt) {
+                evt.target.style.backgroundColor = 'rgba(212, 212, 111, 0.3)';
+                evt.target.style.boxShadow = '1px 1px 2px rgba(0, 0, 0, 0.55)';
+            }
+
+            function liMouseout(evt) {
+                evt.target.style.backgroundColor = '';
+                evt.target.style.boxShadow = '';
+            }
+
+            return menu;
+        }
+
+        // 显示菜单
+        function showMenu(evt) {
+            // menu不存在？创建
+            if (!menu) {
+                menu = createMenu(nodeMenu());
+                that.appendChild(menu);
+                
+                $(that).parents().each(function(){
+                  if($(this).css('position') === "absolute" || $(this).css('position') === "relative") {
+                    parent = this;
+                    return false;
+                  }
+                });
+
+                $("#menu" + that.id).css({
+                  "list-style-type": "none",
+                  "margin": "0",
+                  "position": "absolute",
+                  "background-color": "#3C3C3C",
+                  "padding": "2px",
+                  "font-size": "16px",
+                  "border-radius": "3px",
+                  "box-shadow": "2px 2px 4px rgba(0, 0, 0, 0.6)"
+                });
+
+                $("#menu" + that.id + " li").css({
+                  // "width": "110px",
+                  "text-align": "left",
+                  "cursor": "pointer",
+                  "padding": "2px 12px 2px 12px",
+                  "border-radius": "1px"
+                });
+            }
+
+            liobj.innerHTML = "控制台|" + getVMIns;
+            menu.style.display = 'block'; // 显示菜单
+            menu.style.left = (evt.clientX - $(parent).offset().left) + 'px';
+            menu.style.top = (evt.clientY - $(parent).offset().top) + 'px';
+        }
+
+        // 隐藏菜单
+        function hiddenMenu() {
+            // 如果菜单被显示，那么就隐藏
+            if (menu && menu.style.display !== 'none') {
+                menu.style.display = 'none';
+            }
+        }
+
+        methods.showMenu = showMenu;
+        methods.hiddenMenu = hiddenMenu;
+
+        return methods;
+    }
+</script>
+{% endblock %}

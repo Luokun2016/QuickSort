@@ -1,0 +1,1982 @@
+{% extends "templates/coursedesign.html" %}
+{% load i18n %} 
+{% load staticfiles%}
+{% block title %}课程设计{% endblock %}
+{% block css %}
+<style type="text/css">
+ul.dynatree-container
+{
+  height: auto;
+  max-height: 480px;
+}
+</style>
+{% endblock %}
+ 
+{% block script1%}
+<script src='/statics/js/jquery.custom.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.cookie.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.dynatree.js' type="text/javascript"></script>
+<script type="text/javascript" src="/statics/js/ajaxProgressUpload.js"></script>
+<script src='/statics/js/uploadfile.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.pagination.js' type="text/javascript"></script>
+
+<script type="text/javascript">
+var g_coursesInfo=null;
+var g_studentIds= null;
+var g_teacherIds =null;
+var g_status=false;//ture :add false:edit
+var g_isEnable=false;
+var g_studentsPage=null;
+var g_teachersPage=null;
+var g_outlinesPage=null;
+var g_outlineId=-1;
+var g_viewJson =null;
+var g_jsonresult =null;
+var g_viewStudentPage = null;
+var clickfile = null;
+$(function () {
+  setfontcolor("couctrl");
+  setbackgroundcolor("coucolor");
+  setTableEvent("view_id_stdown_list", true);
+  g_coursesInfo = null;
+  g_studentIds =null;
+  g_teacherIds =null;
+  g_status =false;
+  g_isEnable =false;
+  g_studentsPage=null;
+  g_teachersPage=null;
+  g_outlinesPage=null;
+  g_outlineId=-1;
+  g_viewJson =null;
+  g_viewStudentPage = null;
+  clickfile = new Array()
+
+  var tea = $("#id_coursedata").attr("value");
+  if(tea!="")
+  {
+    var jsondata = $.parseJSON(tea);
+    RefreshPagination(jsondata.page.count,jsondata.page.max,jsondata.page.page,pageselectCallback);
+    RefreshCoursesTable(jsondata);
+    $("#id_coursedata").attr("value","");
+    $("#id_coursePage").val(0);
+  }
+
+   $("#id_student_tree").dynatree({
+      onClick: function(node, event) {
+        SaveStudentIds();
+        if(!node.data.isFolder)
+        {
+          var cId=node.data.key;
+          g_studentsPage = new page();
+          checkcla(cId,g_studentsPage);
+          RefreshStudentsPagination(g_studentsPage.totallCount,g_studentsPage.perPageCount,g_studentsPage.currentPage,StudentspageselectCallback);
+          SelectedStudents();
+        }
+        else
+        {
+          $("#id_student_list").html("<tbody> <tr><th>学号</th><th>姓名</th><th>性别</th> <th>所属班级</th></tbody>");
+          $("#id_students_Page").html("");
+        }
+     },
+   });
+});
+
+function RefreshPagination(totallCount,perPageCount,currentPage,_fcallback)
+{
+  $("#id_crouses_Page").pagination(totallCount,{
+    callback: _fcallback,//PageCallback() 为翻页调用次函数。
+    prev_text: " 上一页",
+    next_text: "下一页 ",
+    items_per_page: perPageCount, //每页的数据个数
+    num_display_entries: 3, //两侧首尾分页条目数
+    current_page: currentPage,   //当前页码
+    num_edge_entries: 2, //连续分页主体部分分页条目数
+  });
+};
+
+function pageselectCallback(page_id, jq) {
+ $("#id_coursePage").val(page_id); //回调函数，进一步使用请参阅说明文档
+ var result = ajaxobj("/CouresPageChage/", "", "post", "#InfoForm");
+ var jsondata = $.parseJSON(result);
+ RefreshPagination(jsondata.page.count,jsondata.page.max,jsondata.page.page,pageselectCallback);
+ RefreshCoursesTable(jsondata);
+ };
+ 
+function SaveStudentIds()
+{
+  var str =  ","+g_studentIds.join(",")+ ",";
+  $("#id_student_list>tbody>tr.success").each(
+    function(){
+      if(str.indexOf( ","+$(this).data("tag")+ ",") <0)
+        {
+          g_studentIds.push($(this).data("tag"));
+        }
+    });
+};
+
+function SelectedStudents()
+{
+  str =  ","+g_studentIds.join(",")+ ",";
+  $("#id_student_list>tbody>tr").each(
+    function(){
+      if(str.indexOf( ","+$(this).data("tag")+ ",") >=0)
+      {
+        $(this).addClass('success');
+      }
+      else
+      {
+        $(this).removeClass('success');
+      }
+    });
+}
+
+function ViewButtonClick () {
+  delstyle();
+  var selection = $("#id_courses_list>tbody>tr.success");
+   if( selection.length ==0)
+   {
+    return false;
+   }
+   else
+   {
+      var courseId= 0;
+      selection.each(function(){courseId = $(this).data("tag");});
+      $("#id_coursedata").attr("value",courseId);
+      result =  ajaxobj("/GetViewConfig/", "", "post", "#InfoForm");
+      var jsonresult= $.parseJSON(result);
+      $("#view_course_name").val(jsonresult.cname);
+      $("#view_start_time").val(jsonresult.begintime);
+      $("#view_end_time").val(jsonresult.endtime);
+      $("#view_id_outlines").val(jsonresult.outlinename);
+      $("#view_id_teachers").val(jsonresult.teachers.join("; "));
+      $("#view_creator").val(jsonresult.creater);
+      $("#view_careateTime").val(jsonresult.createtime);
+      $("#view_editTime").val(jsonresult.edittime);
+      $("#view_id_comments").val(jsonresult.comments);
+
+      g_viewJson=jsonresult;
+      g_viewStudentPage = new page();
+      UpdateViewStudentsTable(g_viewStudentPage,g_viewJson);
+      
+      RefreshViewStudentsPagination("id_viewStudent_Page",g_viewStudentPage.totallCount,g_viewStudentPage.perPageCount,g_viewStudentPage.currentPage,ViewStudentspageselectCallback);
+
+      NavigatButtonClick("view_class_baseinfo","view_id_basicinfo_tab");
+      $("#viewModal").modal('show');
+  }
+};
+
+function AddButtonClick()
+{ 
+  var tea = ajaxobj("/courseGetConfig/", "", "get", "");
+  g_coursesInfo = $.parseJSON(tea);
+  InitializationAddModelDlg(g_coursesInfo);
+  g_studentIds = new Array();
+  g_teacherIds = new Array();
+  g_outlineId=-1;
+  
+  g_status = true;
+  
+  $('#course_name').removeAttr('readonly','readonly');
+  $("#addModal").modal('show');
+};
+
+
+
+function EditButtonClick () {
+  var selection = $("#id_courses_list>tbody>tr.success");
+  if( selection.length ==0)
+  {
+    return;
+  }
+  else
+  {
+    var courseId= 0;
+    selection.each(function(){courseId = $(this).data("tag");});
+    $("#id_coursedata").attr("value",courseId);
+    result =  ajaxobj("/GetEditConfig/", "", "post", "#InfoForm");
+    g_coursesInfo = $.parseJSON(result);
+    if(g_coursesInfo.result==2)
+    {
+      Showbo.Msg.alert("有学生正在使用本课程！");
+    }
+    if(g_coursesInfo.result!=1)
+    {
+      InitializationAddModelDlg(g_coursesInfo);
+      ShowSelectStu();//编辑课程时候显示已选中的学生信息
+      $("#course_name").val(g_coursesInfo.edit.cname);
+      $("#course_startTime").val(g_coursesInfo.edit.begintime);
+      $("#course_endTime").val(g_coursesInfo.edit.endtime);
+      $("#id_comments").val(g_coursesInfo.edit.comments);
+
+      g_studentIds = g_coursesInfo.edit.students;
+      g_teacherIds =g_coursesInfo.edit.teachers;
+      g_outlineId =g_coursesInfo.edit.outlineid;
+      SelectedOutline();
+      SelectedTeachers();
+      g_status = false;
+ 
+      $('#course_name').attr('readonly','readonly');
+      $("#addModal").modal('show');
+    }
+    else
+    {
+        g_coursesInfo =null;
+    }
+  }
+};
+
+function DeleteButtonClick()
+{
+  var selection = $("#id_courses_list>tbody>tr.success");
+  if( selection.length ==0)
+    return;
+
+  var courseId= 0;
+  selection.each(function(){courseId = $(this).data("tag");});
+  $("#id_coursedata").attr("value",courseId);
+  result =  ajaxobj("/GetEditConfig/", "", "post", "#InfoForm");
+  g_coursesInfo = $.parseJSON(result);
+  Showbo.Msg.oncallback = DeleteButtonCallback;
+
+  if(g_coursesInfo.result==2)
+    {
+       Showbo.Msg.confirm("有学生正在使用本课程,确定删除吗？");
+    }
+  else
+  {
+    Showbo.Msg.confirm("确定删除吗？");
+  }
+};
+function DeleteButtonCallback()
+{
+  var selection = $("#id_courses_list>tbody>tr.success");
+  if( selection.length ==0)
+  {
+    return;
+  }
+    var courseId= 0;
+    selection.each(function(){courseId = $(this).data("tag");});
+    $("#id_coursedata").attr("value",courseId);
+    result =  ajaxobj("/RemoveCourses/", "", "post", "#InfoForm");
+    if(result !="")
+    {
+      var jsondata = $.parseJSON(result);
+      RefreshCoursesTable(jsondata);
+      RefreshPagination(jsondata.page.count,jsondata.page.max,jsondata.page.page,pageselectCallback);
+      $("#id_coursedata").attr("value","");
+      $("#id_coursePage").val(jsondata.page.page); 
+    }
+  var editurl="/courses/";
+  document.getElementById("InfoForm").action=editurl;
+  document.getElementById("InfoForm").submit();
+};
+
+
+function RefreshCoursesTable(json)
+{
+  var rowMark='<tr data-tag=%id% onclick="singlebackcolor(\'id_courses_list\',this)">%rowmark%</tr>';
+  var colMark="<td>%colmark%</td>";
+  var innerHtml ="<tbody> <tr><th>课程名称</th><th>创建者</th> <th>任课教练</th><th>开始时间</th><th>结束时间</th><th>创建时间</th><th>最后修改时间</th></tr>";
+  if(json.courses.length !=0)
+  {
+    for (var i =0; i <  json.courses.length ; i++) 
+    {
+      var row="";
+      var cNames =json.courses[i].cname;
+      if(cNames.length > 8)
+      {
+        //判断课程名称长度，进行截取显示     
+        cNames = cNames.substring(0,8)+"...";
+      }
+      row += colMark.replace("%colmark%",cNames);
+
+      row += colMark.replace("%colmark%",json.courses[i].creater);
+      var teacherNames=(json.courses[i].teachers.join(";"));
+      if(teacherNames.length > 8)
+      {
+        //判断任课教练长度，进行截取显示
+        teacherNames = teacherNames.substring(0,8)+"...";
+      }
+      row += colMark.replace("%colmark%",teacherNames);
+      row += colMark.replace("%colmark%",json.courses[i].begintime);
+      row += colMark.replace("%colmark%",json.courses[i].endtime);
+      row += colMark.replace("%colmark%",json.courses[i].createtime);
+      row += colMark.replace("%colmark%",json.courses[i].edittime);
+      row=rowMark.replace("%rowmark%",row);
+      row=row.replace("%id%",json.courses[i].id);
+      innerHtml+=row;
+    };
+  }
+  innerHtml +="</tbody>";
+  $("#id_courses_list").html(innerHtml);
+};
+
+function InitializationAddModelDlg(json)
+{
+  $(".topself_input").each(function() {
+    this.value="";
+  });
+  $(".form_datetime").datetimepicker({
+            format: "yyyy-mm-dd hh:ii",
+            language:  'zh-CN',
+            todayBtn:  1,
+            autoclose: 1,
+            todayHighlight: 1,
+            pickerPosition: "bottom-left",
+            startDate: new Date(),});
+   
+  g_outlinesPage = new page();
+
+  UpdateOutlineTable(g_outlinesPage,json)
+
+  RefreshOutlinesPagination(g_outlinesPage.totallCount,g_outlinesPage.perPageCount,g_outlinesPage.currentPage,OutlinespageselectCallback);
+
+  g_teachersPage = new page();
+
+  UpdateTeacherTable(g_teachersPage,json);
+
+  RefreshTeachersPagination(g_teachersPage.totallCount,g_teachersPage.perPageCount,g_teachersPage.currentPage,TeacherspageselectCallback);
+
+  var innerHtml ='<tbody> <tr><th>学号</th><th>姓名</th><th>性别</th> <th>所属班级</th>';
+  $("#id_student_list").html(innerHtml);
+  $("#id_students_Page").html("");
+  var students = new Array();
+  if(json.students.length !=0)
+  {
+    var temp=null;
+    for (var i =0; i <  json.students.length ; i++) 
+    {
+      var departmentId=json.students[i].departmentid;
+      var hasdepartmentId = false;
+      for (var k=0; k< students.length; k++) 
+      {
+        if( students[k].departmentId== departmentId)
+        {
+          hasdepartmentId = true;
+          temp= students[k];
+          break;
+        }
+      };
+      if(hasdepartmentId != true)
+      {
+        temp = new NoteDepartment(json.students[i].departmentid,json.students[i].departmentname);
+        students.push(temp); 
+      }
+      var tempClass = temp.addGrade(json.students[i].grade);
+      tempClass.addClass(json.students[i].clasid,json.students[i].claname);
+    };
+  }
+  var tree = $("#id_student_tree").dynatree("getTree").getRoot();
+  if(tree.childList!=null)
+  {
+    tree.removeChildren();
+  }
+  var notes=null;
+  var curnode =null;
+  var root=null;
+  for (var k = 0; k<students.length; k++) 
+  {
+    tree.addChild({title: students[k].departmentName, isFolder: true});
+    nodes = tree.getChildren();
+    root = nodes[nodes.length-1];
+    for (var k1 = 0; k1<students[k].grades.length; k1++)
+    {
+      root.addChild({title: students[k].grades[k1].gradId, isFolder: true});
+      nodes = root .getChildren();
+      curnode = nodes[nodes.length-1];
+      for (var k2= 0; k2<students[k].grades[k1].classes.length;k2++) 
+      {
+        curnode.addChild({title: students[k].grades[k1].classes[k2].classname, isFolder: false, key:students[k].grades[k1].classes[k2].classId});
+      };
+    };
+  };
+NavigatButtonClick('class_baseinfo','id_basicInfo_tab');
+};
+
+function NoteDepartment(id,name)
+{
+  this.departmentId= id;
+  this.departmentName=name;
+  this.grades = new Array();
+  this.addGrade = function (id,name)
+  {
+    var i = 0;
+    var temp;
+    for (i = 0; i<this.grades.length; i++) 
+    {
+      if(id==this.grades[i].gradId)
+      {
+        temp =this.grades[i];
+        break;
+      }
+    };
+
+    if(i==this.grades.length)
+    {
+      temp = new NoteGrade(id,name);
+      this.grades.push(temp);
+    }
+    return temp;
+  };   
+};
+
+function NoteGrade(id)
+{
+    this.gradId= id;
+    this.classes = new Array();
+    this.addClass= function (id,name)
+    {
+      var i = 0;
+      for (i = 0; i<this.classes.length; i++) {
+          if(id==this.classes[i].classId)
+          {
+            break;
+          }
+      };
+
+      if(i==this.classes.length)
+      {
+          this.classes.push(new NoteClass(id,name));
+      }
+    };
+};
+
+function NoteClass(id,name)
+{
+  this.classId= id;
+  this.classname=name;
+};
+
+function CourseInfo()
+{
+  this.id=-1;
+  this.name="";
+  this.startTime="";
+  this.endTime="";
+  this.comments="";
+  this.outlineId=-1;
+  this.teacherIds=new Array();
+  this.studentIds=new Array();
+}
+
+function SetTableControlTab(id)
+{
+  $(".dlgList").removeClass('active');
+  $("#"+id).addClass('active');
+};
+
+function SetTaleConrolContent(id)
+{
+  $(".tab-pane.fade").removeClass('in');
+  $(".tab-pane.fade").removeClass('active');
+  $("#"+id).addClass('in');
+  $("#"+id).addClass('active');
+}
+
+function NavigatButtonClick(nextId,myselfId)
+{
+  var validation = true;
+  var msg=new Array();
+  var name=document.getElementById("course_name");
+  name.setCustomValidity("");          
+  switch(myselfId)
+  {
+    case "id_outline_tab":
+      if($("#course_name")[0].value =="" )
+      {
+        $('#hidebtn').click();
+        return
+      }
+      else if($("#course_name")[0].value.length >= 20)
+      {
+        msg.push("课程名称长度须小于20字符");
+        validation = false;
+      }
+      if($("#course_startTime")[0].value=="")
+      {
+        msg.push("请填写课程开始时间。");
+        validation =false;
+      }
+      if($("#course_endTime")[0].value=="")
+      {
+        msg.push("请填写课程结束时间。");
+        validation=false;
+      }
+      var start=$("#course_startTime")[0].value;
+      var end=$("#course_endTime")[0].value;
+      if(start >= end)
+      {
+        msg.push("课程结束时间需大于开始时间。");
+        validation=false;
+      }
+      if($("#id_comments")[0].value.length>=1024)
+      {
+        msg.push("备注的长度须小于1024");
+        validation=false;
+      }
+      if(g_status == true){
+          // info.comments = $("#id_comments")[0].value;
+          var Cname = ajaxobj("/CourseCheckCname/", "", "post", "#AddForm");
+          var jsondata = $.parseJSON(Cname);
+          
+          judgeadd=jsondata.judgeCname;
+          
+          var reg=/^[a-zA-Z0-9\u4e00-\u9fa5]+$/;
+
+          if(reg.test(name.value)==false)
+          {
+            name.setCustomValidity("请不要输入特殊字符！");
+            $('#hidebtn').click();
+            return
+          }
+          else if(judgeadd==1)
+          {
+            name.setCustomValidity("已存在的课程名称!");
+            $('#hidebtn').click();
+            return
+          }
+          else
+            name.setCustomValidity("");
+      }
+      break;
+    case "id_theacher_tab":
+      SaveOutlineId();
+      if(g_outlineId ==-1)
+      {
+        msg .push("请选择大纲。");
+        validation = false;
+      }
+    break;
+              
+    case "id_student_tab":
+      SaveTeacherIds();
+     
+      if( g_teacherIds.length==0)
+      {
+        msg .push("请选择教练。");
+        validation = false;
+      }  
+    break;
+  }
+  if(validation==true)
+  {
+      SetTableControlTab(nextId);
+      SetTaleConrolContent(myselfId);
+  }
+  else
+  {
+      Showbo.Msg.alert(msg.join("\r\n"));
+  }
+};
+
+function ShowSelectStu()
+{
+  var selection = $("#id_courses_list>tbody>tr.success");
+     
+  var courseId= 0;
+
+  selection.each(function(){courseId = $(this).data("tag");});
+
+  $("#id_coursedata").attr("value",courseId);
+
+  result =  ajaxobj("/GetViewConfig/", "", "post", "#InfoForm");
+
+  var jsonresult= $.parseJSON(result);
+
+  g_viewJson=jsonresult;
+
+  g_viewStudentPage = new page();
+
+  UpdateStuTable(g_viewStudentPage,g_viewJson);
+
+  RefreshStudentsPagination(g_viewStudentPage.totallCount,g_viewStudentPage.perPageCount,g_viewStudentPage.currentPage,EidtStupageselectCallback);
+
+  //$("#id_student_list>tbody>tr").removeAttr('onClick');
+      
+}
+
+function EidtStupageselectCallback(page_id, jq)
+ {
+  //回调函数，进一步使用请参阅说明文档
+  g_viewStudentPage.currentPage = page_id;
+ 
+  UpdateStuTable(g_viewStudentPage,g_viewJson);
+
+  RefreshViewStudentsPagination("id_viewStudent_Page",g_viewStudentPage.totallCount,g_viewStudentPage.perPageCount,page_id,EidtStupageselectCallback);
+ }; 
+
+function UpdateStuTable(page,json)
+{
+  if(json == null)
+  {
+    return false;
+  }
+  if(page.totallCount ==-1)
+  {
+    page.totallCount = json.students.length;
+    page.perPageCount =7;
+    page.currentPage =0;
+  }
+  var colMark="<td>%colmark%</td>";
+  var rowMark="<tr>%rowmark%</tr>";
+  var innerHtml ='<tbody> <tr><th>学号</th><th>姓名</th><th>性别</th> <th>所属班级</th></tr>';
+    if(json.students.length !=0)
+    {
+        var totallcount =0;
+        var pagecount=0;
+        for (var i =0; i <  json.students.length ; i++) 
+        {
+          totallcount++;
+          
+          if(totallcount<=page.currentPage * page.perPageCount)
+          {
+            continue;
+          }
+          pagecount++
+          if(pagecount>page.perPageCount)
+          {
+            break;
+          }
+          var row="";
+          row += colMark.replace("%colmark%",json.students[i].stuno);
+          row += colMark.replace("%colmark%",json.students[i].stuname);
+          row += colMark.replace("%colmark%",json.students[i].sex ==0?"男":"女");
+          row += colMark.replace("%colmark%",json.students[i].claname);
+          row=rowMark.replace("%rowmark%",row);
+          innerHtml +=row;
+          };
+      }
+      innerHtml +="</tbody>";
+      $("#id_student_list").html(innerHtml);
+};
+
+function multibackcolor(tableName,sender)
+{ 
+  var sid = $(sender).data("tag");//获取当前选中行id
+  var str;
+  if(tableName=='id_student_list')
+  {
+    str = ","+g_studentIds.join(",")+",";
+  }
+  else if(tableName=='id_theacher_list')
+  {
+    str = ","+g_teacherIds.join(",")+",";
+  }
+
+  var trSelected = "#" + tableName +">tbody>tr.success";
+
+  var rows = $(trSelected);
+  
+  $(sender).addClass('success');
+  
+  rows.each(function()
+  {
+    if(this==sender)
+    {
+      if(tableName=='id_student_list')
+      {
+        index=str.indexOf("," + sid+",");
+        if(index>=0){
+          g_studentIds. splice(index, 1); //移除选中数组中的id
+        }
+      }
+      else if(tableName=='id_theacher_list')
+      {
+        index=g_teacherIds.indexOf(sid);
+        if(index>=0){
+          g_teacherIds. splice(index, 1);//移除选中数组中的id
+        }
+      }    
+      $(this).removeClass('success');
+    }
+    else
+    {
+        $(this).addClass('success');
+    }
+ });
+}
+
+function singlebackcolor(tableName,sender)
+ {
+  var trSelected = "#" + tableName +">tbody>tr.success";
+  $(trSelected).removeClass('success');
+  $(sender).addClass('success');
+
+  if(tableName == "id_courses_list")
+  {
+    var courseId= 0;
+    $(trSelected).each(function(){courseId = $(this).data("tag");});
+    $("#id_coursedata").attr("value",courseId);
+    result =  ajaxobj("/RoleCheck/", "", "post", "#InfoForm");
+    var jsonresult= $.parseJSON(result);
+    $("#viewButton").removeClass('disabled');
+    $("#editButton").removeClass('disabled');
+    $("#deleteButton").removeClass('disabled');
+    //根据是教练员1还是管理员0的角色类型判断是否有权限，暂时没用
+    // if(jsonresult.hasRole==1)
+    // {
+
+    //   $("#viewButton").removeClass('disabled');
+    //   $("#editButton").removeClass('disabled');
+    //   $("#deleteButton").removeClass('disabled');
+    // }
+    // else
+    // {
+    //   $("#viewButton").addClass('disabled');
+    //   $("#editButton").addClass('disabled');
+    //   $("#deleteButton").addClass('disabled');
+    // }
+  }
+}
+
+function savedata()
+{
+  var info = new CourseInfo();
+  $("#id_courses_list>tbody>tr.success").each(function(){ info.id=$(this).data("tag");});
+  info.name = $("#course_name")[0].value;
+  info.startTime = $("#course_startTime")[0].value;
+  info.endTime = $("#course_endTime")[0].value;
+  info.comments = $("#id_comments")[0].value;
+  info.outlineId =g_outlineId;
+
+  SaveStudentIds();
+  info.studentIds = g_studentIds;
+
+  info.teacherIds=g_teacherIds;
+ 
+  if(info.studentIds.length ==0)
+  {
+      Showbo.Msg.alert("请选择学员。")
+      return 0;
+  }
+  else
+  {
+    $("#addModal").modal('hide');
+  }
+  var result="";
+  $("#id_coursedata").attr("value",JSON.stringify(info));
+  if(g_status == true)
+  {  
+    result =  ajaxobj("/AddNewCourses/", "", "post", "#InfoForm");
+  }
+  else
+  {
+     result = ajaxobj("/UpdateCourses/", "", "post", "#InfoForm");
+  }
+
+  if(result != "")
+  {
+     var jsondata = $.parseJSON(result );
+     RefreshPagination(jsondata.page.count,jsondata.page.max,jsondata.page.page,pageselectCallback);
+     RefreshCoursesTable(jsondata);
+     $("#id_coursePage").val(jsondata.page.page); 
+     location.reload();
+  }
+  else
+  {
+    //更新失败
+    Showbo.Msg.alert("更新失败");
+  }
+}
+
+function checkcla(claid,page)
+{
+  if(g_coursesInfo == null)
+  {
+      return false;
+  }
+  var colMark="<td>%colmark%</td>";
+  var rowMark="<tr data-tag=%id% onclick=\"multibackcolor('id_student_list',this)\">%rowmark%</tr>";
+  var innerHtml ='<tbody> <tr><th>学号</th><th>姓名</th><th>性别</th> <th>所属班级</th>';
+  if(page.totallCount ==-1)
+  {
+      var count=0;
+       for (var i =0; i <  g_coursesInfo.students.length ; i++) {
+                  if(claid == g_coursesInfo.students[i].clasid)
+                  {
+                      count++;
+                  }
+                }
+      page.claid = claid;
+      page.totallCount = count;
+      page.perPageCount =7;
+      page.currentPage =0;
+  }
+  if(g_coursesInfo.students.length !=0)
+  {
+    var totallcount =0;
+    var pagecount=0;
+     for (var i =0; i <  g_coursesInfo.students.length ; i++) {
+
+              if(claid == g_coursesInfo.students[i].clasid)
+              {
+              totallcount++;
+              if(totallcount<=page.currentPage * page.perPageCount)
+              {
+                  continue;
+              }
+              pagecount++
+              if(pagecount>page.perPageCount)
+              {
+                break;
+              }
+              var row="";
+              row += colMark.replace("%colmark%",g_coursesInfo.students[i].stuno);
+              row += colMark.replace("%colmark%",g_coursesInfo.students[i].stuname);
+              row += colMark.replace("%colmark%",g_coursesInfo.students[i].sex ==0?"男":"女");
+              row += colMark.replace("%colmark%",g_coursesInfo.students[i].claname);
+              row=rowMark.replace("%rowmark%",row);
+              row=row.replace("%id%",g_coursesInfo.students[i].id);
+              innerHtml +=row;
+            }
+      };
+  }
+  innerHtml +="</tbody>";
+  $("#id_student_list").html(innerHtml);
+  return true;
+};
+
+function RefreshStudentsPagination(totallCount,perPageCount,currentPage,_fcallback)
+{
+  $("#id_students_Page").pagination(totallCount,{
+    callback: _fcallback,//PageCallback() 为翻页调用次函数。
+    prev_text: " 上一页",
+    next_text: "下一页 ",
+    items_per_page: perPageCount, //每页的数据个数
+    num_display_entries: 3, //两侧首尾分页条目数
+    current_page: currentPage,   //当前页码
+    num_edge_entries: 2, //连续分页主体部分分页条目数
+  });
+};
+
+ function StudentspageselectCallback(page_id, jq)
+{
+  //回调函数，进一步使用请参阅说明文档
+ g_studentsPage.currentPage = page_id;
+
+ SaveStudentIds();
+ checkcla(g_studentsPage.claid,g_studentsPage);
+ SelectedStudents();
+ RefreshStudentsPagination(g_studentsPage.totallCount,g_studentsPage.perPageCount,page_id,StudentspageselectCallback);
+ }; 
+
+function RefreshTeachersPagination(totallCount,perPageCount,currentPage,_fcallback)
+{
+    $("#id_teachers_Page").pagination(totallCount,{
+      callback: _fcallback,//PageCallback() 为翻页调用次函数。
+      prev_text: " 上一页",
+      next_text: "下一页 ",
+      items_per_page: perPageCount, //每页的数据个数
+      num_display_entries: 3, //两侧首尾分页条目数
+      current_page: currentPage,   //当前页码
+      num_edge_entries: 2, //连续分页主体部分分页条目数
+    });
+};
+
+function TeacherspageselectCallback(page_id, jq) 
+{
+    //回调函数，进一步使用请参阅说明文档
+   g_teachersPage.currentPage = page_id;
+ 
+   SaveTeacherIds();
+   UpdateTeacherTable(g_teachersPage,g_coursesInfo);
+   SelectedTeachers();
+
+   RefreshTeachersPagination(g_teachersPage.totallCount,g_teachersPage.perPageCount,page_id,TeacherspageselectCallback);
+ }; 
+
+// 向页面添加教师信息
+function UpdateTeacherTable(page,json)
+{
+  if(json == null)
+  {
+    return false;
+  }
+
+  if(page.totallCount ==-1)
+  {
+    page.totallCount = json.teachers.length;
+    page.perPageCount =7;
+    page.currentPage =0;
+  }
+  var colMark="<td>%colmark%</td>";
+  var teacherrowMark="<tr data-tag=%id% onclick=\"multibackcolor('id_theacher_list',this)\">%rowmark%</tr>";
+  var theacherinnerHtml ='<tbody> <tr><th>姓名</th><th>性别</th> <th>Email</th><th>电话</th></tr>';
+    if(json.teachers.length !=0)
+    {
+      var totallcount =0;
+      var pagecount=0;
+       for (var i =0; i <  json.teachers.length ; i++) 
+       {          
+          totallcount++;
+          if(totallcount<=page.currentPage * page.perPageCount)
+          {
+            continue;
+          }
+          pagecount++
+          if(pagecount>page.perPageCount)
+          {
+            break;
+          }
+          var row="";
+          row += colMark.replace("%colmark%",json.teachers[i].teaname);
+          row += colMark.replace("%colmark%",json.teachers[i].sex ==0?"男":"女");
+          row += colMark.replace("%colmark%",json.teachers[i].email);
+          row += colMark.replace("%colmark%",json.teachers[i].mobile);
+          row=teacherrowMark.replace("%rowmark%",row);
+          row=row.replace("%id%",json.teachers[i].id);
+          theacherinnerHtml +=row;
+        };
+    }
+    theacherinnerHtml +="</tbody>";
+    $("#id_theacher_list").html(theacherinnerHtml);
+};
+
+// 记录当前选择教师的id
+function SaveTeacherIds()
+{
+  // g_teacherIds=[];
+  var str =  ","+g_teacherIds.join(",")+ ",";
+
+  $("#id_theacher_list>tbody>tr.success").each(
+    function(){
+        if(str.indexOf( ","+$(this).data("tag")+ ",") <0)
+          {
+            g_teacherIds.push($(this).data("tag"));
+          }
+          // else
+          // {
+          //   g_teacherIds.remove($(this).data("tag"));
+          // }
+    });
+};
+
+// 点击教师，增加或删除选中效果
+function SelectedTeachers()
+{
+  str =  ","+g_teacherIds.join(",")+ ",";
+  $("#id_theacher_list>tbody>tr").each(
+    function(){
+      if(str.indexOf( ","+$(this).data("tag")+ ",") >=0)
+      {
+        $(this).addClass('success');
+      }
+      else
+      {
+        $(this).removeClass('success')
+      }
+    });
+}
+
+// 大纲翻页控件
+function RefreshOutlinesPagination(totallCount,perPageCount,currentPage,_fcallback)
+{
+  $("#id_outlines_Page").pagination(totallCount,{
+    callback: _fcallback,//PageCallback() 为翻页调用次函数。
+    prev_text: " 上一页",
+    next_text: "下一页 ",
+    items_per_page: perPageCount, //每页的数据个数
+    num_display_entries: 3, //两侧首尾分页条目数
+    current_page: currentPage,   //当前页码
+    num_edge_entries: 2, //连续分页主体部分分页条目数
+  });
+};
+
+function OutlinespageselectCallback(page_id, jq)
+{
+  //回调函数，进一步使用请参阅说明文档
+ g_outlinesPage.currentPage = page_id;
+
+ SaveOutlineId();
+ UpdateOutlineTable(g_outlinesPage,g_coursesInfo);
+ SelectedOutline();
+
+ RefreshOutlinesPagination(g_outlinesPage.totallCount,g_outlinesPage.perPageCount,page_id,OutlinespageselectCallback);
+}; 
+
+// 向页面添加大纲信息
+function UpdateOutlineTable(page,json)
+{
+  if(json == null)
+  {
+    return false;
+  }
+
+  if(page.totallCount ==-1)
+  {
+    page.totallCount = json.outlines.length;
+    page.perPageCount =7;
+    page.currentPage =0;
+  }
+ var colMark="<td>%colmark%</td>";
+  var outlinerowMark="<tr data-tag=%id% onclick=\"singlebackcolor('id_outline_list',this)\">%rowmark%</tr>";
+  var outlineinnerHtml ='<tbody> <tr><th>大纲编号</th><th>大纲名称</th> <th width="8%">创建者</th><th width="15%">创建时间</th><th width="15%">最后修改时间</th><th>备注</th></tr>';
+    if(json.outlines.length !=0)
+    {
+      var totallcount =0;
+      var pagecount=0;
+       for (var i =0; i <  json.outlines.length ; i++) {
+          
+        totallcount++;
+        
+        if(totallcount<=page.currentPage * page.perPageCount)
+        {
+          continue;
+        }
+        pagecount++
+         if(pagecount>page.perPageCount)
+          {
+            break;
+          }
+           var row="";
+          row += colMark.replace("%colmark%",json.outlines[i].onid);
+          if(json.outlines[i].onname.length>13)
+          {
+            row += colMark.replace("%colmark%",json.outlines[i].onname.substring(0,13)+"...");
+          }
+          else
+          {
+            row += colMark.replace("%colmark%",json.outlines[i].onname);
+          }
+          row += colMark.replace("%colmark%",json.outlines[i].teacher);
+          row += colMark.replace("%colmark%",json.outlines[i].createtime);
+          row += colMark.replace("%colmark%",json.outlines[i].edittime);
+          if(json.outlines[i].remark.length>10)
+          {
+            row += colMark.replace("%colmark%",json.outlines[i].remark.substring(0,10)+"...");
+          }
+          else
+          {
+            row += colMark.replace("%colmark%",json.outlines[i].remark);
+          }
+          //ls replace remark content null
+          // row += colMark.replace("%colmark%",'null');
+          row=outlinerowMark.replace("%rowmark%",row);
+          row=row.replace("%id%",json.outlines[i].id);
+          outlineinnerHtml +=row;
+        };
+    }
+    outlineinnerHtml +="</tbody>";
+    $("#id_outline_list").html(outlineinnerHtml);
+ };
+
+// 记录当前选择的大纲id
+function SaveOutlineId()
+{
+  $("#id_outline_list>tbody>tr.success").each(
+    function(){ 
+      g_outlineId=$(this).data("tag");
+    });
+};
+
+// 点击大纲，增加或删除选中效果
+function SelectedOutline()
+{
+  $("#id_outline_list>tbody>tr").each(
+  function(){
+    if($(this).data("tag")==g_outlineId)
+      {
+        $(this).addClass('success');
+      }
+      else
+      {
+         $(this).removeClass('success')
+      }
+  });
+};
+
+// 学生翻页控件
+function RefreshViewStudentsPagination(page_id,totallCount,perPageCount,currentPage,_fcallback)
+{
+    $("#"+page_id).pagination(totallCount,{
+      callback: _fcallback,//PageCallback() 为翻页调用次函数。
+      prev_text: " 上一页",
+      next_text: "下一页 ",
+      items_per_page: perPageCount, //每页的数据个数
+      num_display_entries: 3, //两侧首尾分页条目数
+      current_page: currentPage,   //当前页码
+      num_edge_entries: 2, //连续分页主体部分分页条目数
+    });
+};
+
+function RefreshViewPagination(totallCount,perPageCount,currentPage,_fcallback)
+{
+    $("#id_view_Page").pagination(totallCount,{
+      callback: _fcallback,//PageCallback() 为翻页调用次函数。
+      prev_text: " 上一页",
+      next_text: "下一页 ",
+      items_per_page: perPageCount, //每页的数据个数
+      num_display_entries: 3, //两侧首尾分页条目数
+      current_page: currentPage,   //当前页码
+      num_edge_entries: 2, //连续分页主体部分分页条目数
+    });
+};
+function ViewStudentspageselectCallback(page_id, jq)
+{
+  //回调函数，进一步使用请参阅说明文档
+  g_viewStudentPage.currentPage = page_id;
+ 
+  UpdateViewStudentsTable(g_viewStudentPage,g_viewJson);
+
+  RefreshViewStudentsPagination("id_viewStudent_Page",g_viewStudentPage.totallCount,g_viewStudentPage.perPageCount,page_id,ViewStudentspageselectCallback);
+ };
+
+function ViewpageselectCallback(page_id, jq)
+{
+  //回调函数，进一步使用请参阅说明文档
+  g_page.currentPage = page_id;
+ 
+  UpdateViewTable(g_page,g_jsonresult);
+
+  RefreshViewStudentsPagination("id_view_Page",g_page.totallCount,g_page.perPageCount,page_id,ViewpageselectCallback);
+ }; 
+
+function UpdateViewStudentsTable(page,json)
+{
+  if(json == null)
+  {
+    return false;
+  }
+
+  if(page.totallCount ==-1)
+  {
+    page.totallCount = json.students.length;
+    page.perPageCount =7;
+    page.currentPage =0;
+  }
+  var colMark="<td>%colmark%</td>";
+  var rowMark="<tr  onclick=\"multibackcolor('view_id_student_list',this)\">%rowmark%</tr>";
+  var innerHtml ='<tbody> <tr><th>学号</th><th>姓名</th><th>性别</th> <th>所属班级</th><th>年级</th><th>系</th></tr>';
+  if(json.students.length !=0)
+  {
+        var totallcount =0;
+        var pagecount=0;
+        for (var i =0; i <  json.students.length ; i++) 
+        {
+          totallcount++;
+          
+          if(totallcount<=page.currentPage * page.perPageCount)
+          {
+            continue;
+          }
+          pagecount++
+          if(pagecount>page.perPageCount)
+          {
+            break;
+          }
+          var row="";
+          row += colMark.replace("%colmark%",json.students[i].stuno);
+          row += colMark.replace("%colmark%",json.students[i].stuname);
+          row += colMark.replace("%colmark%",json.students[i].sex ==0?"男":"女");
+          row += colMark.replace("%colmark%",json.students[i].claname);
+          row += colMark.replace("%colmark%",json.students[i].grade);
+          row += colMark.replace("%colmark%",json.students[i].departmentname);
+          row=rowMark.replace("%rowmark%",row);
+          innerHtml +=row;
+        };
+  }
+  innerHtml +="</tbody>";
+  $("#view_id_student_list").html(innerHtml);
+};
+
+ function page()
+ {
+    this.currentPage=-1;
+    this.totallCount=-1;
+    this.perPageCount=-1;
+    this.claid=-1;
+ };
+
+function uploadStudents()
+{
+  clearuploadfile();
+  $("#addModal").modal('hide');
+  $("#myModalstusadd").modal('show');    
+};
+
+function clearuploadfile()
+{
+  $("#image_file").val("");
+  document.getElementById("currentProgress").style.width=0+'%'
+  document.getElementById("progress_percent").innerHTML = '0%';
+};
+
+function CloseUpload()
+{
+  $("#myModalstusadd").modal('hide');
+  $("#addModal").modal('show');
+  $("#id_message").html("");
+  clearuploadfile();
+};
+
+function startUploadingstudent(strURL, progress_percent, currentProgress, upload_form)
+{
+  if($("#image_file").val() == "")
+    return;
+  pgpercent = progress_percent;
+  progress = currentProgress;
+  // cleanup all temp states
+  iPreviousBytesLoaded = 0;
+
+  document.getElementById(pgpercent).innerHTML = '';
+  /*var oProgress = document.getElementById(progress);
+  oProgress.style.display = 'block';
+  oProgress.style.width = '0px';*/
+
+  // get form data for POSTing
+  //var vFD = document.getElementById('upload_form').getFormData(); // for FF3
+  var vFD = new FormData(document.getElementById(upload_form)); 
+
+  // create XMLHttpRequest object, adding few event listeners, and POSTing our data
+  var oXHR = new XMLHttpRequest();        
+  oXHR.upload.addEventListener('progress', uploadProgress, false);
+  oXHR.addEventListener('load', uploadFinishself, false);
+  oXHR.open('POST', strURL);
+  oXHR.send(vFD);
+
+  // set inner timer
+  oTimer = setInterval(doInnerUpdates, 300);
+};
+
+function uploadFinishself(e) 
+{ // upload successfully finished
+    //var oUploadResponse = document.getElementById('upload_response');
+    //oUploadResponse.innerHTML = e.target.responseText;
+    //oUploadResponse.style.display = 'block';
+    document.getElementById(progress).style.width=100+'%'
+    document.getElementById(pgpercent).innerHTML = '100%';
+    //document.getElementById('progress').style.width = '400px';
+    //document.getElementById('filesize').innerHTML = sResultFileSize;
+    //document.getElementById('remaining').innerHTML = '| 00:00:00';
+    strjsondata=e.target.responseText;
+    try
+    {
+
+        var allstudents = new Array();
+        var errorStudents= new Array();
+        if (strjsondata !="") {
+            var jsondata =  $.parseJSON(strjsondata);
+            for(var i =0; i<g_coursesInfo.students.length;i++)
+            {
+                  allstudents.push(g_coursesInfo.students[i].stuno);
+            }
+            var strAllstudents=","+allstudents.join(",")+",";
+            var strSelectedstds=","+g_studentIds.join(",")+",";
+             for(var i =0; i<jsondata.students.length;i++)
+            {
+                  if(strAllstudents.indexOf(","+jsondata.students[i].stdno+",")<0)
+                  {
+                    errorStudents.push(jsondata.students[i]);
+                  }
+                  else
+                  {
+                    if(strSelectedstds.indexOf(","+jsondata.students[i].stdno+",")<0)
+                    {
+                      g_studentIds.push(jsondata.students[i].stdno);
+                    }
+                  }
+            }
+        }
+        var innerHtml='<span> 导入成功</span> <span style=\"color:Green; font-weight:bold;\">' + (jsondata.students.length - errorStudents.length)+'</span><span>条, 失败</span><span style=\"color:Red; font-weight:bold;\">'+errorStudents.length +'</span><span>条.</span><br/>';
+        for (var i = 0 ; i<errorStudents.length;i++) {
+            innerHtml +='<span style=\"color:Red;\">Excel 第'+ errorStudents[i].line +'条数据，学号[' + errorStudents[i].stdno +']导入失败。</span><br/>'
+              }
+        $("#id_message").html(innerHtml);
+    }
+    catch(exception)
+    {
+       $("#id_message").html('<span style=\"color:Red;\"> 导入失败，请确认文件格式及名字。</span>');
+    }
+    clearInterval(oTimer);
+};
+
+function addstyle()
+{
+  $("#downbtn").css("visibility","visible");
+
+  $("#inputmsg").css("visibility","visible");
+  $("#querytext").val("");
+  $("#view_id_stdown_list tbody").empty();
+}
+
+function delstyle()
+{
+  $("#inputmsg").css("visibility","hidden");
+  $("#downbtn").css("visibility","hidden");   
+}
+
+function setTableEvent(tableid, singleSelect)
+{
+  var tr = "#" + tableid + ">tbody>tr";//#tableid 定位表 tbody定位表主体； tr定位表中某一行
+  var trSelected = tr + ".success";//表中class=success的行
+
+  $(tr).click(function(event) {//表中发生点击事件
+    if($(this).attr('id') == undefined)//如果点击的行的id为空
+      return;
+    if(singleSelect){
+      $(trSelected).removeClass('success');//删除class=success行的success属性
+    }
+    if($("#btnedit").hasClass('disabled')){//点击后将修改、删除、详情按钮置高亮（删除disabled属性）
+      $("#btnedit").removeClass('disabled');
+      $("#btndel").removeClass('disabled');
+      $("#btndisplay").removeClass('disabled');
+    }
+    $(this).addClass('success');//点击的行添加success属性
+    $("#view_id_stdown_list").data("selid", $(this).attr('id'));//设置data-selid 的值为当前id
+    //$("#btndel").attr('formaction', '/paperdel/' + $(this).attr('id')+'/');//???????
+  });
+}
+function UpdateViewTable(page,json)
+{
+  if(json == null)
+  {
+    return false;
+  }
+  if(page.totallCount ==-1)
+  {
+    page.totallCount = total;
+    page.perPageCount =7;
+    page.currentPage =0;
+  }
+  var innerHtml="<tr><th>实验名称</th><th>报告名称</th><th>下载</th></tr>";
+  var totallcount =0;
+  var pagecount=0;
+  if($("#querytext").val()=="")
+  {
+    for(var i=0;i<json.file.length;i++)
+    {//确定实验名称
+
+      //确定该实验多少学生上传了实验
+      for(var j=0;j<json.file[i][1].length;j++)
+      {
+        totallcount++;
+        
+        if(totallcount<=page.currentPage * page.perPageCount)
+        {
+          continue;
+        }
+        pagecount++
+        if(pagecount>page.perPageCount)
+        {
+          break;
+        }
+        
+        path = json.file[i][2]+'/'+json.file[i][1][j];
+        len =path.indexOf("/document");
+        path=path.substr(len);
+        // alert(path)
+        innerHtml += '<tr data-tag="'+json.file[i][0]+' '+json.file[i][1][j]+' "onclick=\"setbackcolor(this)\"><td>'+json.file[i][0]+'</td><td>'+json.file[i][1][j]+'</td><td><a href="'+path+'">下载</a></td></tr>';
+      }
+    }
+  }
+  else
+  {
+    for(var i=0;i<total;i++)
+    {//确定实验名称
+      // alert("33333");
+      totallcount++;
+
+      
+      if(totallcount<=page.currentPage * page.perPageCount)
+      {
+        continue;
+      }
+      pagecount++;
+      if(pagecount>page.perPageCount)
+      {
+        break;
+      }
+     
+      path = json.file[i][2]+'/'+json.file[i][1];
+      len =path.indexOf("/document");
+      path=path.substr(len);
+      // alert(path)
+      innerHtml += '<tr data-tag="'+json.file[i][0]+' '+json.file[i][1] +'" onclick=\"setbackcolor(this)\"><td>'+json.file[i][0]+'</td><td>'+json.file[i][1]+'</td><td><a href="'+path+'">下载</a></td></tr>';
+      var tr = json.file[i][0]+' '+json.file[i][1];
+    }
+  }
+  $("#view_id_stdown_list").html(innerHtml);
+  //分页后记录前面选中的信息
+  Selectedfiles();  
+
+}
+var total =0;
+var g_page = null;
+function Selectedfiles()
+{
+
+  str =  ","+clickfile.join(",")+ ",";
+  $("#view_id_stdown_list>tbody>tr").each(
+    function(){
+      if(str.indexOf( ","+$(this).data("tag")+ ",") >=0)
+      {
+         $(this).addClass('success');
+      }
+    });
+}
+
+function selecourse()
+{
+  
+  var inputval = $("#querytexts").val();
+  $("#selecourse").val(inputval);
+  result =  ajaxobj("/selectcourse/", "", "post", "#InfoForm");
+  jsonresult= $.parseJSON(result);
+  // alert(jsonresult.courses.length)
+  // RefreshPagination(jsonresult.courses.length,2,0,pageselectCallback);
+  RefreshCoursesTable(jsonresult);
+}
+
+function huntfile()
+{
+  clickfile = [];
+  total = 0;
+  $("#downbtn").addClass('disabled');
+  var inputval = $("#querytext").val();
+  $("#huntfile").val(inputval)
+  $("#downfile").val("")
+
+  var innerHtml="<tr><th>实验名称</th><th>报告名称</th><th>下载</th></tr>";
+  result =  ajaxobj("/fileCheck/", "", "post", "#InfoForm");
+  jsonresult= $.parseJSON(result);
+  g_jsonresult = jsonresult;
+  // alert(jsonresult.file);
+  
+  if(inputval=="")
+  {
+      for(var i=0;i<g_jsonresult.file.length;i++)
+      {
+          for(var j=0;j<g_jsonresult.file[i][1].length;j++)
+          {
+            total+=1;
+          }
+      }
+  }
+  else
+  {
+
+    total = g_jsonresult.file.length
+  }
+
+  g_page = new page();
+  
+  //添加分页数据
+  
+  UpdateViewTable(g_page,g_jsonresult);
+      
+  RefreshViewStudentsPagination("id_view_Page",g_page.totallCount,g_page.perPageCount,g_page.currentPage,ViewpageselectCallback);
+    
+}
+clickfile = new Array()
+function setbackcolor(sender)
+{
+  // alert($(sender).data("name"))
+  var list = ","+clickfile.join(",")+",";
+  var str = $(sender).data("tag");
+  $(sender).addClass('success');
+   
+  if(list.indexOf($(sender).data("tag"))>=0)
+  {
+      $(sender).removeClass('success');
+
+      for(var i = 0; i < clickfile.length; i++)
+      {
+       
+        if(str == clickfile[i] )
+        {
+            clickfile.splice(i, 1);
+            break;
+        }
+      }
+  }
+  else
+  {
+    $(sender).addClass('success');
+    clickfile.push($(sender).data("tag"));  
+  }
+  if(clickfile.length>0)
+  {
+    $("#downbtn").removeClass('disabled');
+  }
+  else{
+    $("#downbtn").addClass('disabled');
+  }
+
+};
+
+function downlist()
+{
+  var inputval = $("#querytext").val();
+  // alert(inputval);
+  $("#huntfile").val(inputval)
+  $("#downfile").val(clickfile)
+  result =  ajaxobj("/fileDown/", "", "post", "#InfoForm");
+  var jsonresult= $.parseJSON(result);
+  
+  len=jsonresult.downfile.toString().indexOf("/document");
+  window.location.href=jsonresult.downfile.toString().substr(len);
+  // window.location.href="/document/upfile/downfile.zip";
+}
+
+</script>
+
+{% endblock %}
+
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">课程安排</span>
+</div>
+{% endblock %}
+
+{% block content1 %}
+<form id="InfoForm">
+  <input type="hidden" name="Info" value="{{data}}" id="id_coursedata"/>
+  <input type="hidden" name="page" value="0" id="id_coursePage" />
+  <input type="hidden" name="huntfile" value="" id="huntfile" />
+  <input type="hidden" name="downfile" value="" id="downfile" />
+  <input type="hidden" name="selecourse" value="" id="selecourse" />
+</form>
+<form action="/courses/" method='post'>
+<div class="bs-docs-section">
+  <table width="100%">
+    <tr>
+      <td>
+        <div style="text-align:left;">
+          <button id="addButton" class="btn btn-primary" type="button" onclick="AddButtonClick()"
+            data-backdrop="static" data-toggle="modal" title="添加课程">
+            <span class="glyphicon glyphicon-plus"></span>
+          </button>
+          <button id="editButton" type="button" class="btn btn-primary disabled" onclick="EditButtonClick()" title="编辑课程">
+          <span class="glyphicon glyphicon-pencil"></span>
+          </button>
+          <button id="viewButton" type="button" data-toggle="modal" class="btn btn-primary disabled" onclick="ViewButtonClick()" title="课程详情">
+            <span class="glyphicon glyphicon-info-sign"></span>
+          </button>
+         <button id="deleteButton" type="button" class="btn btn-danger disabled" onclick="DeleteButtonClick()" title="删除课程">
+          <span class="glyphicon glyphicon-remove"></span>
+          </button>
+        </div>
+      </td>
+      <td align="right">
+        <div style="text-align:right;">
+            <input id='querytexts' name='querytexts' type='text' class="form-control topself_input" placeholder="请输入课程名称关键字" style="width:185px; display:inline;"></input>
+
+            <button id="selectcourse" type="button" title="查找课程" class="btn btn-danger" onclick="selecourse()" ><span class="glyphicon glyphicon-search"></span></button>
+          </div>
+        </td>
+    </tr>
+  </table>
+
+</div>
+<div class="panel-body" style="padding-left: 0px; padding-right: 0px;">
+    <!-- Glyphicons
+  ================================================== -->
+    <table id="id_courses_list" class="table table-striped topsec_tabletop table-hover">
+        <tr>
+            <th>
+                课程名称
+            </th>
+            <th>
+                创建者
+            </th>
+            <th>
+                任课教练
+            </th>
+            <th>
+                开始时间
+            </th>
+            <th>
+                结束时间
+            </th>
+            <th>
+                创建时间
+            </th>
+            <th>
+                最后修改时间
+            </th>
+        </tr>
+    </table>
+    <div id="id_crouses_Page" class="flickr"></div>
+</div>
+</form>
+
+<form id="AddForm">
+  <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+      aria-hidden="true" tabindex="-1" style="display: none;">
+      <div class="modal-dialog" style="width: 1000px">
+          <div class="modal-content" style="width: 950px;">
+              <div class="modal-header">
+                  <button type="button" id="close" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                  <h3 class="modal-title" id="myModalLabel">课程信息</h3>
+              </div>
+              <div class="modal-body">
+
+                   <ul class="nav nav-tabs">
+                      <li class="dlgList active" id="class_baseinfo"><a>基本信息</a> </li>
+                      <li class="dlgList " id="class_outlines"><a>大纲信息</a> </li>
+                      <li class="dlgList " id="class_teachers"><a>教练信息</a> </li>
+                      <li class="dlgList " id="class_students"><a>学员信息</a> </li>
+                  </ul>
+                  <div class="tab-content">
+                      <div class="tab-pane fade in active" id="id_basicInfo_tab">
+                          <table class="table  topsec_tabletop">
+                              <tr>
+                                  <td style="width: 90px; border-top: 0px">
+                                     <font color="#FF0000">*</font>课程名称:
+                                  </td>
+                                  <td style="border-top: 0px">
+                                      <input name="name" id="course_name" type="text" maxlength="20" required="required" class="form-control topself_input">
+                                  </td>
+                                  <td style="width: 90px; border-top: 0px">
+                                       <font color="#FF0000">*</font>开始时间:
+                                  </td>
+                                  <td style="border-top: 0px">
+                                      <div class="input-append date form_datetime" data-date-format="yyyy-mm-dd hh:ii">
+                                          <input id="course_startTime" size="16" type="text" style="cursor:default; opacity: 1;" required="required" class="topself_input form-control "
+                                              value="" readonly/>
+                                          <span class="add-on"><i class="icon-th"></i></span>
+                                      </div>
+                                  </td>
+                                  <td style="width: 90px; border-top: 0px">
+                                       <font color="#FF0000">*</font>结束时间:
+                                  </td>
+                                  <td style="border-top: 0px">
+                                      <div class="input-append date form_datetime" data-date-format="yyyy-mm-dd hh:ii">
+                                          <input id="course_endTime" size="16" type="text" required="required" style="cursor:default; opacity: 1;" class="topself_input form-control "
+                                              value="" readonly/>
+                                          <span class="add-on"><i class="icon-th"></i></span>
+                                      </div>
+                                  </td>
+                              </tr>
+                              <tr>
+                                  <td>
+                                      备注:
+                                  </td>
+                                  <td colspan="5">
+                                      <input name="comments" id="id_comments" maxlength="50" type="text" class="form-control topself_input">
+                                  </td>
+                              </tr>
+                          </table>
+                          <div class="modal-footer">
+                            <button id="hidebtn" type="submit" onclick="" hidden>kkk</button>
+                              <button type="button" onclick="NavigatButtonClick('class_outlines','id_outline_tab')"
+                                  class="btn btn-primary" title="下一步">
+                                  <span class="glyphicon glyphicon-arrow-right"></span>
+                              </button>
+                          </div>
+                      </div>
+                      <div class="tab-pane fade" id="id_outline_tab">
+                          <form id="worker_addr_info">
+                          <div id="table_worker_addr">
+                              <table id="id_outline_list" class="table table-striped topsec_tabletop table-hover"
+                                  data-selid="0">
+                              </table>
+                               <div id="id_outlines_Page" class="flickr"></div>
+                          </div>
+                          </form>
+                          <div class="modal-footer">
+                              <button type="button" onclick="NavigatButtonClick('class_baseinfo','id_basicInfo_tab')"
+                                  class="btn btn-primary" title="上一步">
+                                  <span class="glyphicon glyphicon-arrow-left"></span></button>
+                              <button type="button" onclick="NavigatButtonClick('class_teachers','id_theacher_tab')"
+                                  class="btn btn-primary" title="下一步">
+                                  <span class="glyphicon glyphicon-arrow-right"></span></button>
+                          </div>
+                      </div>
+                      <div class="tab-pane fade" id="id_theacher_tab">
+                          <div id="id_theacher_div">
+                              <table id="id_theacher_list" class="table table-striped topsec_tabletop table-hover"
+                                  data-selid="0">
+                              </table>
+                              <div id="id_teachers_Page" class="flickr"></div>
+                          </div>
+                          <div class="modal-footer">
+                              <button type="button" onclick="NavigatButtonClick('class_outlines','id_outline_tab')"
+                                  class="btn btn-primary"title="上一步">
+                                  <span class="glyphicon glyphicon-arrow-left"></span></button>
+                              <button type="button" onclick="NavigatButtonClick('class_students','id_student_tab')"
+                                  class="btn btn-primary" title="下一步">
+                                  <span class="glyphicon glyphicon-arrow-right"></span></button>
+                          </div>
+                      </div>
+                      <div class="tab-pane fade" id="id_student_tab">
+                          <div id="id_student_div">
+                              <table data-selid="0" style="width: 100%">
+                                  <tr>
+                                      <td style="text-align: left; vertical-align: top; width: 30%">
+                                          <div style="text-align: left;">
+                                              <div id="id_student_tree">
+                                              </div>
+                                          </div>
+                                      </td>
+                                      <td style="vertical-align: top; width: 70%">
+                                          <table id="id_student_list" class="table table-striped topsec_tabletop table-hover"
+                                              data-selid="0">
+                                              <tr>
+                                                  <th width="0">
+                                                  </th>
+                                                  <th>
+                                                      学号
+                                                  </th>
+                                                  <th>
+                                                      姓名
+                                                  </th>
+                                                  <th>
+                                                      性别
+                                                  </th>
+                                                  <th>
+                                                      所属班级
+                                                  </th>
+                                              </tr>
+                                          </table>
+                                          <div id="id_students_Page" class="flickr"></div>
+                                      </td>
+                                  </tr>
+                              </table>
+                          </div>
+                          <div class="modal-footer">
+                              <button type="button" onclick="NavigatButtonClick('class_teachers','id_theacher_tab')"
+                                  class="btn btn-primary" title="上一步">
+                                  <span class="glyphicon glyphicon-arrow-left"></span></button>
+                              <button type="button" onclick="savedata()" class="btn btn-primary" title="保存">
+                                  <span class="glyphicon glyphicon-floppy-save"></span></button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</form>
+<div class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+    aria-hidden="true" tabindex="-1" style="display: none;">
+    <div class="modal-dialog" style="width: 1000px">
+        <div class="modal-content" style="width: 950px;">
+            <div class="modal-header">
+                <button type="button" id="close" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 class="modal-title" id="myModalLabel">课程详情</h3>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs">
+                    <li class="dlgList active"  onclick="delstyle()" id="view_class_baseinfo"><a data-toggle="tab" href="#view_id_basicinfo_tab">
+                        基本信息</a> </li>
+                    <li class="dlgList " onclick="delstyle()" id="view_class_students"><a data-toggle="tab" href="#view_id_student_tab">
+                        学员信息</a> </li>
+                    <li class="dlgList " onclick="addstyle(),huntfile()" id="view_class_stdown"><a data-toggle="tab" href="#view_id_stdown_tab">
+                        报告下载</a> </li>
+
+                <div id="inputmsg" style="text-align:right;visibility:hidden">
+            <input id='querytext' name='querytext' type='text' class="form-control topself_input" placeholder="输入课程、报告名称" value="" style="width:185px; display:inline;"></input>
+
+
+            <button id="btnquery" type="button" class="btn btn-danger" onclick="huntfile()" title="查找报告" ><span class="glyphicon glyphicon-search"></span></button>
+          </div>
+
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade in active" id="view_id_basicinfo_tab">
+                        <table class="table  topsec_tabletop">
+                            <tr>
+                                <td style="width: 80px; border-top: 0px">
+                                    课程名称
+                                </td>
+                                <td style="border-top: 0px">
+                                    <input name="name" id="view_course_name" type="text" class="form-control topself_input" 
+                                        readonly>
+                                </td>
+                                <td style="width: 140px; border-top: 0px">
+                                    开始时间
+                                </td>
+                                <td style="border-top: 0px">
+                                    <input id="view_start_time" type="text" class="form-control  topself_input" value=""
+                                        readonly />
+                                </td>
+                                <td style="width: 140px; border-top: 0px">
+                                    结束时间
+                                </td>
+                                <td style="border-top: 0px">
+                                    <input id="view_end_time" type="text" class="form-control  topself_input" value=""
+                                        readonly />
+                                </td>
+                            </tr>
+                            <tr class="basicInfo_readonly">
+                                <td>
+                                    大纲
+                                </td>
+                                <td colspan="5">
+                                    <input name="outlines" id="view_id_outlines" type="text" class="form-control topself_input"
+                                        readonly>
+                                </td>
+                            </tr>
+                            <tr class="basicInfo_readonly">
+                                <td>
+                                    任课教练
+                                </td>
+                                <td colspan="5">
+                                    <input name="teachers" id="view_id_teachers" type="text" class="form-control topself_input"
+                                        readonly>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    备注
+                                </td>
+                                <td colspan="5">
+                                    <input name="comments" id="view_id_comments" type="text" class="form-control topself_input" readonly>
+                                </td>
+                            </tr>
+                            <tr class="basicInfo_readonly">
+                                <td>
+                                    创建者
+                                </td>
+                                <td>
+                                    <input name="creator" id="view_creator" type="text" class="form-control topself_input"
+                                        readonly>
+                                </td>
+                                <td>
+                                    创建时间
+                                </td>
+                                <td>
+                                    <input name="createTime" id="view_careateTime" type="text" class="form-control topself_input"
+                                        readonly>
+                                </td>
+                                <td>
+                                    最后修改时间
+                                </td>
+                                <td>
+                                    <input name="editTime" id="view_editTime" type="text" class="form-control topself_input"
+                                        readonly>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="view_id_student_tab">
+                        <table id="view_id_student_list" class="table table-striped topsec_tabletop table-hover"
+                            data-selid="0">
+                            <tr>
+                                <th>
+                                    学号
+                                </th>
+                                <th>
+                                    姓名
+                                </th>
+                                <th>
+                                    性别
+                                </th>
+                                <th>
+                                    所属班级
+                                </th>
+                            </tr>
+                        </table>
+                         <div id="id_viewStudent_Page" class="flickr"></div>
+                    </div>
+                    <!-- 学生实验报告下载 -->
+                    <div class="tab-pane fade" id="view_id_stdown_tab">
+                        <table id="view_id_stdown_list" class="table table-striped topsec_tabletop table-hover"
+                            data-selid="0">
+                           <tr>
+                                <th>
+                                    实验名称
+                                </th>
+                                <th>
+                                    报告名称
+                                </th>
+                                <th>
+                                    下载
+                                </th>
+                            </tr>
+                        </table>
+                         <div id="id_view_Page" class="flickr"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-primary disabled" id = "downbtn" title="一键下载" type="button" onclick = "downlist()" >
+               <!--  <a id="hiddenhtref" href="" hiddne="true"></a> -->
+
+              <span class="glyphicon btn-primary">一键下载</span>
+              </button>
+              <button class="btn btn-default" title="关闭" type="button" data-dismiss="modal">
+              <span class="glyphicon glyphicon-remove"></span>
+              </button>
+            </div>
+        </div>
+    </div>
+</div>
+<form id="upload_form" enctype="multipart/form-data" method="" action="">
+  {% csrf_token %}
+ <div class="modal fade" id="myModalstusadd" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+         <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px;">
+        <div class="modal-header" style="background-color: #FFFFFF">
+          <button type="button" class="close" aria-hidden="true" onclick="CloseUpload()">×</button>
+          <h3 id="myModalLabel">批量添加</h3>
+        </div>
+        <div>
+           <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;">学员模板：</td>
+              <td style="width:670px; text-align:left;">
+                <a href="/download" >学员模板下载</a>               
+              </td>
+            </tr>
+            <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;">选择模板：</td>
+              <td style="width:670px; vertical-align:middle;">
+                <!--<input id='pic'  type="file" required="required" name='pic' value=""  />-->
+                <table>
+                  <tr>
+                      <td style="border:0px; width:400px;"><input type="file" name="image_file" id="image_file" onchange="fileSelected(this);" /></td>
+                      <td style="border:0px;">
+                        <button class="btn btn-default"  title="上传" type="button" onclick="startUploadingstudent('/UpdateStudents/', 'progress_percent', 'currentProgress', 'upload_form')"><span class="glyphicon glyphicon-upload"></span></button>
+                      </td>
+                  </tr>
+                  
+                </table>
+                <div class="upload_form_cont">
+                    
+                </div>
+                </td>
+            </tr>
+            <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle; height:30px; vertical-align:middle;">
+                完成：
+              </td>
+              <td style="width:670px; height:30px; padding:0px; vertical-align:middle;">
+                <table style="width:100%; height:30px; margin:0px; padding:0px;">
+                    <tr>
+                      <td style="width:52%; border:0px; margin:0px; padding:0px; vertical-align:middle;">
+                        <div class="progress progress-striped" style="margin:0px; padding:0px;">
+                          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="currentProgress">
+                          </div>
+                        </div>
+                      </td>
+                      <td style="width:48%; border:0px; vertical-align:middle;"><div id="progress_percent" ></div>
+                      </td>
+                    </tr>
+                </table>
+              </td>
+            </tr>                 
+           </table>
+           <table style="width:100%; height:30px; margin:0px; padding:0px;">
+              <tr>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                <td>
+                 <table id='studentsaddtable'  border="1" style="text-align:center;">
+
+                 </table>
+                 </td>
+              </tr>   
+           </table>     
+           <input id='nan' name='nan' type='hidden' value='男'/>
+           <input id='nv' name='nv' type='hidden' value='女'/>
+          <div class="modal-footer">
+          <button class="btn btn-primary" type="submit" onclick="clearuploadfile()"> 确定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </form>
+  {% endblock %}

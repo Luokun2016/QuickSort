@@ -1,0 +1,1381 @@
+{% extends "templates/index.html" %}<!--继承index.html-->
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}竞赛组卷{% endblock %}
+{% block css %}{% endblock %}
+{% block script %}
+<script src='/statics/js/jquery.custom.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.cookie.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.dynatree.js' type="text/javascript"></script>
+<script type="text/javascript" src="/statics/js/ajaxProgressUpload.js"></script>
+<script src='/statics/js/uploadfile.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.pagination.js' type="text/javascript"></script>
+{% endblock %}
+{% block maincontent %}{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">竞赛组卷</span>
+</div>
+{% endblock %}
+{% block content %}
+<form id="InfoForm" method='post'>
+	 {% csrf_token %}
+	<input type='hidden' name="Info" value="{{data}}" id="postpapid" />
+	<input type="hidden" name="num" value="" id="autonum"/>
+    <input type="hidden" name="name" value="" id="name" />
+    <input type="hidden" name="choose" value="" id="auchoose" />
+    <input type="hidden" name="ask" value="" id="auask" />
+    <input type="hidden" name="skill" value="" id="auskill" />
+    <input type="hidden" name="infil" value="" id="auinfil" />
+</form>
+
+<form id='paperform' action="/papers/" method='get' style="position: relative; top:-10px;">
+	<!--添加增删改查搜索按键-->
+	<div class="bs-docs-sction">
+	  <table width="100%">
+      	<tr>
+     		<td >
+          		<div style="text-align:left;">
+					<!--按键：添加试题-->
+					<button id="btnadd" type="button" class="btn btn-primary" data-backdrop="static" data-toggle="modal" title="添加试题" onclick='AddButtonClick()'>
+						<span class="glyphicon glyphicon-plus"></span>
+					</button>
+					<button id="autoadd" type="button" class="btn btn-primary" data-backdrop="static" data-toggle="modal" title="一键组卷" onclick='AutoButtonClick()'>一键组卷
+						<!-- <span class="glyphicon glyphicon-plus"></span> --> 
+					</button>
+					<!--按键：编辑试题  disabled:这是按钮不可用(暗)-->
+					<button type="button" class="btn btn-primary disabled"  onclick='EditButtonClick()' title="编辑试题" data-toggle="modal" id='btnedit'>
+						<span class="glyphicon glyphicon-pencil"></span>
+					</button>
+					<!--按键：查看试卷详细信息-->
+					<button id="btndisplay" type="button" class="btn btn-primary disabled" onclick="displayButtonClick()" title="详情">
+						<span class="glyphicon glyphicon-info-sign"></span>
+					</button>
+					<!--按键：预览试卷-->
+					<button id="btnpreview" type="button" title="试卷预览" onclick="gotoShowstate()" class="btn btn-primary disabled">
+                        <span class="glyphicon glyphicon-eye-open"></span>
+                      </button>
+					<!--按键：删除试题-->
+					<button id="btndel" type="button" class="btn btn-danger disabled" title="删除试题" onclick='DeleteButtonClick()'>
+						<span class="glyphicon glyphicon-remove"></span>
+					</button>
+				</div>
+        	</td>
+        	<td align="right">
+        		<div style="text-align:right;">
+					<!--输入框：查询输入框-->
+					<input id='querytext' name='querytext' type='text' class="form-control topself_input"  placeholder="请输入编号、名称关键字" value="{{papselect}}" style="width:185px; display:inline;"/>
+					<!--按键：查询按键-->
+					<button id="querysuccess" type="submit" onclick="search()" class="btn btn-danger" formaction="/papers/"  title="查找试卷" >
+						<span class="glyphicon glyphicon-search"></span>
+					</button>
+				</div>
+			</td>
+        </tr>
+      </table>
+	</div>
+
+
+	<!--主窗口，展示试卷列表-->
+	<div class="panel-body" style="padding-left:0px; padding-right:0px;">
+	<!--创建表:展示试卷信息-->
+		<table id = "lspap" class="table table-striped topsec_tabletop table-hover" data-selid="0" >
+			<tr>
+				<th align="center">编号</th>
+				<th align="center">名称</th>
+				<th align="center">总分</th>
+				<th align="center">创建者</th>
+				<th align="center">使用次数</th>
+				<th align="center">最后修改时间</th>
+			</tr>
+			<!--循环展示试卷信息 td:换列-->
+			{% for paper in paperls.object_list %}
+			<tr id="{{paper.id}}">
+				<td>{{paper.papid}}</td>
+        		<td>{{paper.papname}}</td>
+        		<td>{{paper.score}}</td>
+       		<td>{{paper.creatorid.teaname}}</td>
+        		<td>{{paper.frequency}}</td>
+        		<td>{{paper.edittime|date:"Y-m-d H:i:s"}}</td>
+			</tr>
+			{% endfor %}
+		</table>
+		<!--添加页数信息 colspan:N 横跨N列-->
+		<!--<span> 标签被用来组合文档中的行内元素。-->
+			
+		<div class="flickr">
+			{% if paperls.has_previous %}
+			<a href="?page={{ paperls.previous_page_number}}{% ifnotequal papselect '' %}&paperselect={{papselect}}{% endifnotequal %}">上一页</a>
+			{% else %}
+			<span>上一页</span>
+			{% endif %}
+
+			<span>
+			{% for p in page_range %}
+			{% ifequal p paperls.number %}
+			<span class="current">{{p}}</span>
+			{% else %}
+			<a href="?page={{p}}{% ifnotequal papselect '' %}&paperselect={{papselect}}{% endifnotequal %}" title="第{{p}}页">{{p}}</a>
+			<!--title="第{{p}}页":光标放到该页处时，提示第p页-->
+			{% endifequal %}
+			{% endfor %}
+			</span>
+
+			{% if paperls.has_next %}
+	  		<a href="?page={{ paperls.next_page_number }}{% ifnotequal papselect '' %}&paperselect={{papselect}}{% endifnotequal %}">下一页</a>
+	 	{% else %}
+	  	<span>下一页</span>
+	 	{% endif %}
+	 	</div>
+		
+	</div>
+</form>
+
+
+<!-- 自动组卷模块-->
+<form method="post" >
+<div class="modal fade" id="autoaddModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+	<div class="modal-dialog" style="width: 1000px">
+		<div class="modal-content" style="width: 950px;">
+			<div class="modal-header">
+				<button type="button" id="close" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 class="modal-title" id="automyModalLabel">一键组卷</h3>
+			</div>
+
+			<div class="modal-body">
+		
+					<!--add base information div-->
+					<table class="table topsec_tabletop">
+						<tr>
+							<td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>编号：</td>
+							<td style="width:370px; ">
+								<input id='autoaddpapno' name='addpapno' type='text'  class="form-control topself_input" required="required" maxLength="20"/>
+          				</td>
+
+          				<td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>名称：</td>
+          				<td style="width:370px; ">
+            				<input id='autoaddpapname' name='addpapname' type='text' class="form-control topself_input" required="required" maxLength="20"/>
+          				</td>
+						</tr>
+
+						<tr>
+							<td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>基础题个数：</td>
+							<td style="width:370px; ">
+								<input id='autochooseinfo' name='chooseinfo' type='text'  class="form-control topself_input" required="required"  />
+          				</td>
+
+						<tr>
+							<td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>简答题个数：</td>
+							<td style="width:370px; ">
+								<input id='autoaskinfo' name='askinfo' type='text'  class="form-control topself_input"required="required"  />
+          				</td>
+
+          				<td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>技能题个数：</td>
+          				<td style="width:370px; ">
+            				<input id='autoskillinfo' name='skillinfo' type='text' class="form-control topself_input" required="required" />
+          				</td>
+						</tr>
+
+						<tr>
+							<td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>渗透题个数：</td>
+          				<td style="width:370px; ">
+            				<input id='autoinfiltrationinfo' name='infiltrationinfo' type='text' class="form-control topself_input" required="required"/>
+          				</td>
+
+          			</tr>
+
+      				<tr>
+          				<td style="width:130px; text-align:right;  vertical-align:middle;">说明：</td>
+          				<td colspan=3>
+            				<input id='autoaddpapremark' name='addpapremark' type='text'   class="form-control topself_input"/>
+          				</td>
+        				</tr>
+					</table>
+
+					<div class="modal-footer">
+
+                  <button type="submit" onclick="return autosubmitPapInfo()" class="btn btn-primary" title="保存">
+                  <span class="glyphicon glyphicon-floppy-save"></span></button>
+            	
+				</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</form>
+
+<!--添加试题-->
+<form method="post" >
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+	<div class="modal-dialog" style="width: 1000px">
+		<div class="modal-content" style="width: 950px;">
+			<div class="modal-header">
+				<button type="button" id="close" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 class="modal-title" id="myModalLabel">添加试卷</h3>
+			</div>
+
+			<div class="modal-body">
+				<ul class="nav nav-tabs">
+					<li class="dlgList  active" id="add_paper_queinfo"><a>基础题</a> </li>
+					<li class="dlgList  active" id="add_paper_ask"><a>简答题</a> </li>			
+					<li class="dlgList  active" id="add_paper_skill"><a>技能题</a> </li>
+					<li class="dlgList  active" id="add_paper_infiltration"><a>渗透题</a> </li>
+					<li class="dlgList" id="add_paper_baseinfo"><a>基本信息</a> </li>
+				</ul>
+		
+				<div class="tab-content">
+
+					<!--add questions  information div-->
+					<div class="tab-pane fade" id="add_paper_queinfo_tab">
+
+						<!--filter questions div-->
+						<!-- <div id="search_questions_div">
+							
+							<input id='que_search_text' name='que_search_text' type='text' class="form-control topself_input" style="width:120px; margin-left:700px; margin-top:-35px;"/>
+							
+							<button id="que_search_button" type="button" class="btn btn-danger" onclick="SearchQueButtonClick()" title="查找试卷" style="margin-left:830px; margin-top:-65px;">
+								<span class="glyphicon glyphicon-search"></span>
+							</button>
+						</div>-->
+
+						<!--display all questions div-->
+						<div id="add_que_div">
+							<table id="add_que_list" class="table table-striped topsec_tabletop table-hover" data-selid="0"></table>
+							<div id="add_que_page" class="flickr"></div>
+						</div>
+
+						<!--button div-->
+						<div class="modal-footer">
+          				<button type="button" onclick="NavigatButtononClick('add_paper_ask','add_paper_ask_tab')"class="btn btn-primary" title="下一步">
+              				<span class="glyphicon glyphicon-arrow-right"></span>
+              			</button>
+      					</div>
+      				</div>
+
+      				<div class="tab-pane fade" id="add_paper_ask_tab">
+
+						<!--display all questions div-->
+						<div id="add_que_div">
+							<table id="add_que_list1" class="table table-striped topsec_tabletop table-hover" data-selid="0"></table>
+							<div id="add_que_page1" class="flickr"></div>
+						</div>
+
+						<!--button div-->
+						<div class="modal-footer">
+
+						<button type="button" onclick="NavigatButtononClick('add_paper_queinfo','add_paper_queinfo_tab')"class="btn btn-primary"title="上一步">
+                          <span class="glyphicon glyphicon-arrow-left"></span>
+                      </button>
+                      	
+          				<button type="button" onclick="NavigatButtononClick('add_paper_skill','add_paper_skill_tab')"class="btn btn-primary" title="下一步">
+              				<span class="glyphicon glyphicon-arrow-right"></span>
+              			</button>
+      					</div>
+      				</div>
+
+      				<div class="tab-pane fade" id="add_paper_skill_tab">
+
+						<!--display all questions div-->
+						<div id="add_que_div">
+							<table id="add_que_list2" class="table table-striped topsec_tabletop table-hover" data-selid="0"></table>
+							<div id="add_que_page2" class="flickr"></div>
+						</div>
+
+						<!--button div-->
+						<div class="modal-footer">
+
+						<button type="button" onclick="NavigatButtononClick('add_paper_ask','add_paper_ask_tab')"class="btn btn-primary"title="上一步">
+                          <span class="glyphicon glyphicon-arrow-left"></span>
+                      </button>
+                      	
+          				<button type="button" onclick="NavigatButtononClick('add_paper_infiltration','add_paper_infiltration_tab')"class="btn btn-primary" title="下一步">
+              				<span class="glyphicon glyphicon-arrow-right"></span>
+              			</button>
+      					</div>
+      				</div>
+
+      				<div class="tab-pane fade" id="add_paper_infiltration_tab">
+
+						<!--display all questions div-->
+						<div id="add_que_div">
+							<table id="add_que_list3" class="table table-striped topsec_tabletop table-hover" data-selid="0"></table>
+							<div id="add_que_page3" class="flickr"></div>
+						</div>
+
+						<!--button div-->
+						<div class="modal-footer">
+						<button type="button" onclick="NavigatButtononClick('add_paper_skill','add_paper_skill_tab')"class="btn btn-primary"title="上一步">
+                          <span class="glyphicon glyphicon-arrow-left"></span>
+                      	</button>
+
+          				<button type="button" onclick="NavigatButtononClick('add_paper_baseinfo','add_paper_baseinfo_tab')"class="btn btn-primary" title="下一步">
+              				<span class="glyphicon glyphicon-arrow-right"></span>
+              			</button>
+      					</div>
+      				</div>
+
+					<!--add base information div-->
+					<div class="tab-pane fade" id="add_paper_baseinfo_tab">
+						<table class="table topsec_tabletop">
+							<tr>
+								<td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>编号：</td>
+								<td style="width:370px; ">
+									<input id='addpapno' name='addpapno' type='text'  class="form-control topself_input" required="required" maxLength="20"/>
+              				</td>
+
+              				<td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>名称：</td>
+              				<td style="width:370px; ">
+                				<input id='addpapname' name='addpapname' type='text' class="form-control topself_input" required="required" maxLength="20"/>
+              				</td>
+							</tr>
+
+							<tr>
+								<td style="width:130px; text-align:right; vertical-align:middle;">基础题：</td>
+								<td style="width:370px; ">
+									<input id='chooseinfo' name='chooseinfo' type='text'  class="form-control topself_input"  readonly/>
+              				</td>
+
+							<tr>
+								<td style="width:130px; text-align:right; vertical-align:middle;">技能题：</td>
+								<td style="width:370px; ">
+									<input id='askinfo' name='askinfo' type='text'  class="form-control topself_input"  readonly/>
+              				</td>
+
+              				<td style="width:130px; text-align:right; vertical-align:middle;">渗透题：</td>
+              				<td style="width:370px; ">
+                				<input id='skillinfo' name='skillinfo' type='text' class="form-control topself_input" readonly/>
+              				</td>
+							</tr>
+
+							<tr>
+								<td style="width:130px; text-align:right; vertical-align:middle;">简答题：</td>
+              				<td style="width:370px; ">
+                				<input id='infiltrationinfo' name='infiltrationinfo' type='text' class="form-control topself_input" readonly/>
+              				</td>
+
+								<td style="width:130px; text-align:right; vertical-align:middle;">总分：</td>
+              				<td "width:370px; ">
+                  				<input type='text' class="form-control topself_input" id='addpapscore' name='addpapscore' readonly>
+              				</td>
+              			</tr>
+
+          				<tr>
+              				<td style="width:130px; text-align:right;  vertical-align:middle;">说明：</td>
+              				<td colspan=3>
+                				<input id='addpapremark' name='addpapremark' type='text'   class="form-control topself_input"/>
+              				</td>
+            				</tr>
+						</table>
+
+						<div class="modal-footer">
+                      <button type="button" onclick="NavigatButtononClick('add_paper_infiltration','add_paper_infiltration_tab')"class="btn btn-primary"title="上一步">
+                          <span class="glyphicon glyphicon-arrow-left"></span>
+                      </button>
+
+                      <button type="submit" onclick="submitPapInfo()" class="btn btn-primary" title="保存">
+                          <span class="glyphicon glyphicon-floppy-save"></span></button>
+                	</div>
+				</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</form>
+<!--详细信息-->
+<div  class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+	<div class="modal-dialog" style="width: 1000px">
+		<div class="modal-content" style="width: 950px;">
+			<div class="modal-header">
+				<button type="button" id="close" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            	<h3 class="modal-title" id="myModalLabel">试卷详情</h3>
+			</div>
+
+			<div class="modal-body">
+				<ul class="nav nav-tabs">
+					<li class="dlgList active" id="display_paper_baseinfo"><a data-toggle="tab" href="#display_paper_baseinfo_tab">基本信息</a></li>
+					<li class="dlgList " id="display_paper_questions"><a data-toggle="tab" href="#display_paper_questions_tab">试题信息</a></li>
+				</ul>
+				<!--display paper base info-->
+				<div class="tab-content">
+					<div class="tab-pane fade in active" id="display_paper_baseinfo_tab">
+						<table class="table topsec_tabletop">
+							<tr>
+								<td style="width:130px; text-align:right; vertical-align:middle;">编号：</td>
+								<td style="width:370px; ">
+									<input id='displaypapno' name='displaypapno' type='text'  class="form-control topself_input" readonly/>
+              				</td>
+
+              				<td style="width:130px; text-align:right; vertical-align:middle;">名称：</td>
+              				<td style="width:370px; ">
+                				<input id='displaypapname' name='displaypapname' type='text' class="form-control topself_input"  readonly/>
+              				</td>
+							</tr>
+							<tr>
+								<td style="width:130px; text-align:right; vertical-align:middle;">创建时间：</td>
+              				<td style="width:370px; ">
+                				<input id='displaypapcreateDate' name='displaypapcreateDate' type='text' class="form-control topself_input" readonly/>
+             		 		</td>
+
+             		 		<td style="width:130px; text-align:right; vertical-align:middle;">修改时间：</td>
+              				<td style="width:370px; ">
+               		 			<input id='displaypapedittime' name='displaypapedittime' type='text' class="form-control topself_input" readonly/>
+              				</td>
+							</tr>
+							<tr>
+								<td style="width:130px; text-align:right; vertical-align:middle;">创建者：</td>
+              				<td style="width:370px; ">
+               		 			<input type='text' class="form-control topself_input"  id='displaypapcreate' name='displaypapcreate' readonly>
+              				</td>
+
+
+              				<td style="width:130px; text-align:right; vertical-align:middle;">总分：</td>
+              				<td style="width:370px; ">
+                  				<input type='text' class="form-control topself_input"  id='displaypapscore' name='displaypapscore' readonly>
+              				</td>
+              				
+              			</tr>
+
+              			<tr>	
+              				<td style="width:130px; text-align:right; vertical-align:middle;">使用次数：</td>
+              				<td style="width:370px; ">
+              					<input type='text' class="form-control topself_input"  id='displaypapfrequency' name='displaypapfrequency' readonly>
+              				</td>
+
+              				<td style="width:130px; text-align:right; vertical-align:middle;">ID号：</td>
+              				<td style="width:370px; ">
+               		 			<input type='text' class="form-control topself_input"  id='displaypapid' name='displaypapid' readonly>
+              				</td>
+							</tr>
+							
+							<tr>
+              				<td style="width:130px; text-align:right;  vertical-align:middle;">说明：</td>
+              				<td colspan=3>
+                				<input id='displaypapremark' name='displaypapremark' type='text'   class="form-control topself_input" readonly/>
+              				</td>
+            				</tr>
+						</table>
+						<div class="modal-footer"  >
+                  			<button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+              			</div>
+						<input id='postpapid' name='postpapid' type='hidden'/>
+					</div>
+					
+
+					<!--display paper questions info-->
+					<div class="tab-pane fade" id="display_paper_questions_tab">
+						<table id="display_paper_questions_list" class="table table-striped topsec_tabletop table-hover"data-selid="0"></table>
+                   <div id="display_peper_questions_page" class="flickr"></div>
+                   <div class="modal-footer"  >
+                  		<button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+              		</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- <form id="autoForm">
+  <input type="hidden" name="num" value="" id="autonum"/>
+  <input type="hidden" name="name" value="" id="name" />
+  <input type="hidden" name="choose" value="" id="auchoose" />
+  <input type="hidden" name="ask" value="" id="auask" />
+  <input type="hidden" name="skill" value="" id="auskill" />
+  <input type="hidden" name="infil" value="" id="auinfil" />
+
+</form> -->
+<script type="text/javascript">
+
+//页面加载时运行模块
+	//display paper
+	var g_displayQuePage = null;
+	var g_DisplayJson = null;
+	//add paper
+	var g_addJson = null;
+	var g_questionIds = null;
+	var g_status = false;//ture :add false:edit
+	var g_addQuePage = null;
+
+//页面加载时执行，初始化操作
+$(function(){
+	setfontcolor("papctrl");//设置试卷管理标签高亮
+	setTableEvent("lspap", true);
+
+	g_displayQuePage = null;
+	g_DisplayJson = null;
+
+	g_addJson = null;
+	g_questionIds = new Array();
+	g_status = false;//ture :add false:edit
+	g_addQuePage = null;
+})	
+
+
+function setTableEvent(tableid, singleSelect)
+{
+	var tr = "#" + tableid + ">tbody>tr";//#tableid 定位表 tbody定位表主体； tr定位表中某一行
+	var trSelected = tr + ".success";//表中class=success的行
+
+	$(tr).click(function(event) {//表中发生点击事件
+		if($(this).attr('id') == undefined)//如果点击的行的id为空
+			return;
+		if(singleSelect){
+			$(trSelected).removeClass('success');//删除class=success行的success属性
+		}
+		if($("#btnedit").hasClass('disabled')){//点击后将修改、删除、详情按钮置高亮（删除disabled属性）
+			$("#btnedit").removeClass('disabled');
+			$("#btndel").removeClass('disabled');
+			$("#btndisplay").removeClass('disabled');
+			$("#btnpreview").removeClass('disabled');
+		}
+		$(this).addClass('success');//点击的行添加success属性
+		$("#lspap").data("selid", $(this).attr('id'));//设置data-selid 的值为当前id
+		//$("#btndel").attr('formaction', '/paperdel/' + $(this).attr('id')+'/');//???????
+	});
+}
+
+// 点击预览按钮是设置当前选中试卷ID用于传参
+function gotoShowstate()
+{
+	var papid = $("#lspap").data("selid");
+	if(papid == "0")
+	{
+		return false;
+	}
+	window.location.href="/previewpapers/?preview="+papid;
+}
+
+
+/**************************************************页面公共模块，供其他函数调用****************************************/
+
+
+function SetTableControlTab(id)
+{
+  $(".dlgList").removeClass('active');
+  $("#"+id).addClass('active');
+}
+
+
+function SetTaleConrolContent(id)
+{
+  $(".tab-pane.fade").removeClass('in');
+  $(".tab-pane.fade").removeClass('active');
+  $("#"+id).addClass('in');
+  $("#"+id).addClass('active');
+}
+
+
+/*添加和编辑弹出框旋选题时使用此函数
+ *功能：实现题目success属性的添加和删除。并对应修改g_questionIds
+ */
+ function multibackcolor(tableName,sender)
+{
+	var str = ","+g_questionIds.join(",")+",";
+	
+	//将g_questionIds转换为string，并首位添加","
+	var papid = $(sender).data("tag");//获取单击的题目的id号
+	
+	/*查看选单击的题目的id号是否在g_questionIds
+	 *如果在：表示取消选中，则去除此id的success，并将其从g_questionIds中删除
+	 *如果不在：表示选中，则添加success，并加入g_questionIds中
+	 */ 
+	if(str.indexOf("," + $(sender).data("tag")+",")>=0)
+	{
+		$(sender).removeClass('success');
+		for(var i = 0; i < g_questionIds.length; i++)
+		{
+			if(papid == g_questionIds[i] )
+			{
+				g_questionIds.splice(i, 1);
+				break;
+			}
+		}
+	}
+	else
+	{
+		$(sender).addClass('success');
+		g_questionIds.push($(sender).data("tag"));
+	}
+}
+
+function NavigatButtononClick(nextId, myselfId)
+{
+	var validation = true;
+   var msg=new Array();
+
+   if(myselfId =="add_paper_baseinfo_tab")
+   {
+      if(g_questionIds.length == 0)
+   		{
+   			msg.push("请至少选择一道题!");
+   			validation = false;
+   		}
+   		else
+   		{
+   			json = GetPapBaseInfo();
+   			SetAddPapBaseInfo(json);
+   		}
+   }
+
+   if(validation == true)
+   {
+   		SetTableControlTab(nextId);
+   		SetTaleConrolContent(myselfId);
+   }
+   else
+   {
+  	 	Showbo.Msg.alert(msg.join("\r\n"))
+   }
+}
+
+/*题目的类型转换(取到的数据为1、2、3代号)*/
+function getQueType(qtype)
+{
+	switch(qtype)
+	{
+		case "1":
+			return "基础题";
+		case "4":
+			return "简答题";			
+		case "2":
+			return "技能题";
+		case "3":
+			return "渗透题";
+		default:
+			return "未知";
+	}
+}
+
+/*向弹出框页面写入题目信息
+ *page：对象，包含当前页面的信息
+ *json：json格式，包含题目信息
+ *uselist：表名，接收数据的表的名称
+ */
+function updateQueTable(page, json, uselist)
+{
+	if(json == null)
+	{
+		return false;
+	}
+	/*如果page对象未初始化，则初始化*/
+	if(page.totallCount == -1)
+	{
+		page.totallCount = json.questions.length;//数据总量
+		page.perPageCount =5;//每页的数据数量（行数）
+		page.currentPage = 0;//当前页
+	}
+
+	var colMark="<td>%colmark%</td>";
+	var rowMark="<tr data-tag=%id% onclick=\"multibackcolor('"+uselist+"', this)\">%rowmark%</tr>";
+	var innerHtml = '<tbody><tr><th>编号</th><th>类型</th><th>标题</th><th>分值</th><th>作者</th><th>最后修改时间</th></tr>';
+
+	if(json.questions.length != 0)
+	{
+		var totallcount = 0;
+		var pagecount = 0;
+		for(var i=0; i<json.questions.length; i++)
+		{
+			totallcount ++;//处理数据的总数
+			//过滤掉前面页的数据
+
+			if(totallcount<=page.currentPage * page.perPageCount)
+			{
+				continue;
+			}
+			pagecount++;//统计当前页添加的数据数量
+			//当前页面添加的数据==page.perPageCount跳出循环
+			if(pagecount>page.perPageCount)
+			{
+				break;
+			}
+			var quetype = getQueType(json.questions[i].qtype);
+			
+			var row="";
+			row += colMark.replace("%colmark%",json.questions[i].qid);
+			row += colMark.replace("%colmark%",quetype);
+			row += colMark.replace("%colmark%",json.questions[i].qtitle);
+			row += colMark.replace("%colmark%",json.questions[i].qscore);
+			row += colMark.replace("%colmark%",json.questions[i].teaname);
+			row += colMark.replace("%colmark%",json.questions[i].edittime);
+			row = rowMark.replace("%rowmark%", row);
+			row = row.replace("%id%", json.questions[i].id)
+
+			innerHtml += row;
+		}
+	}
+
+	innerHtml +="</tbody>";
+
+	$("#"+uselist).html(innerHtml);
+	// $("#"+uselist+">tbody>tr").each(
+	// 	function(){
+	// 		for()
+		// 	if(str.indexOf("," + $(this).data("tag")+",")>=0)//检测("," + $(this).data("tag")+",")在str中首次出现的位置
+		// 	{
+		// 		$(this).addClass('success');
+		// 	}
+		// });	
+}
+
+/*page对象，包含页面属性*/
+function page()
+{
+  this.currentPage=-1;//当前页
+  this.totallCount=-1;//数据总量
+  this.perPageCount=-1;//每页的数据数量（行数）
+  this.claid=-1;
+};
+
+
+function refreshQuePagination(totallCount,perPageCount,currentPage,usepage,_fcallback)
+{
+	$("#"+usepage).pagination(totallCount,{
+         callback: _fcallback,//PageCallback() 为翻页调用此函数。
+         prev_text: " 上一页",
+         next_text: "下一页 ",
+         items_per_page: perPageCount, //每页的数据个数
+         num_display_entries: 4, //两侧首尾分页条目数
+         current_page: currentPage,   //当前页码
+         num_edge_entries: 2, //连续分页主体部分分页条目数
+   });
+}
+
+/***********************************展示试卷信息模块**********************************************************/
+
+/* 回调函数，进一步使用请参阅说明文档
+ * page_id :当前页数
+**/
+function DisplayQuePageSelectCallback(page_id, jq)
+{
+	g_displayQuePage.currentPage = page_id;
+	updateQueTable(g_displayQuePage, g_DisplayJson, "display_paper_questions_list");
+	refreshQuePagination(g_displayQuePage.totallCount,g_displayQuePage.perPageCount,g_displayQuePage.currentPage,"display_peper_questions_page",DisplayQuePageSelectCallback);
+}
+
+function displayButtonClick()
+{
+	var papid = $("#lspap").data("selid");
+	if(papid == "0")
+	{
+		return false;
+	}
+	$("#postpapid").val(papid);
+	var displaypap = ajaxobj("/GetDisplayPaperInfo/", "", "post", "#InfoForm");
+	var jsondata =$.parseJSON(displaypap);
+	$("#displaypapid").val(jsondata.paperid);
+	$("#displaypapno").val(jsondata.paperno);
+	$("#displaypapname").val(jsondata.papername);
+	$("#displaypapcreate").val(jsondata.creatorid);
+	$("#displaypapremark").val(jsondata.remark);
+	$("#displaypapscore").val(jsondata.score);
+	$("#displaypapfrequency").val(jsondata.frequency);
+	$("#displaypapcreateDate").val(jsondata.createtime);
+	$("#displaypapedittime").val(jsondata.edittime);
+
+	g_DisplayJson = jsondata;
+	g_displayQuePage = new page();
+	updateQueTable(g_displayQuePage, g_DisplayJson, "display_paper_questions_list");
+	refreshQuePagination(g_displayQuePage.totallCount,g_displayQuePage.perPageCount,g_displayQuePage.currentPage,"display_peper_questions_page",DisplayQuePageSelectCallback);
+
+	NavigatButtononClick("display_paper_baseinfo", "display_paper_baseinfo_tab");
+	$("#viewModal").modal('show');
+
+}
+
+/****************************************add paper model*****************************************************************************/
+//获取试题的基本信息（基础题、技能题、渗透题的数量和分数以及统计信息）
+function SetAddPapBaseInfo(jsondata)
+{
+	$("#chooseinfo").val(jsondata.chooseCount + "题/" + jsondata.chooseScore + "分");
+	$("#askinfo").val(jsondata.askCount + "题/" + jsondata.askScore + "分");	
+	$("#skillinfo").val(jsondata.skillCount + "题/" + jsondata.skillScore + "分");
+	$("#infiltrationinfo").val(jsondata.infiltrationCount + "题/" + jsondata.infiltrationScore + "分");
+	$("#addpapscore").val(jsondata.totalScore.toString());
+}
+
+function GetPapBaseInfo()
+{
+	if(g_questionIds.length <= 0)
+	{
+		Showbo.Msg.alert("没有选题信息，请选题！");
+		return -1;
+	}
+	$("#postpapid").attr("value", g_questionIds);
+	var baseinfo = ajaxobj("/GetPapBaseInfo/","","post","#InfoForm");
+	var jsondata =$.parseJSON(baseinfo);
+	return jsondata;
+}
+
+//将在g_questionIds中的tr添加success属性
+function SelectedQuestions()
+{
+	var str = ","+g_questionIds.join(",")+",";
+	
+	$("#add_que_list>tbody>tr").each(
+		function(){
+			if(str.indexOf("," + $(this).data("tag")+",")>=0)//检测("," + $(this).data("tag")+",")在str中首次出现的位置
+			{
+				$(this).addClass('success');
+			}
+		});
+}
+function SelectedQuestions1()
+{
+	var str = ","+g_questionIds.join(",")+",";
+	
+	$("#add_que_list1>tbody>tr").each(
+		function(){
+			for(var i = 0; i<g_questionIds.length;i++)
+			{
+				if(g_questionIds[i] == $(this).data("tag"))
+				{
+					$(this).addClass('success');
+				}
+				// if(str.indexOf("," + $(this).data("tag")+",")>=0)//检测("," + $(this).data("tag")+",")在str中首次出现的位置
+				// {
+				// 	$(this).addClass('success');
+				// }
+			}
+		});
+}
+
+function SelectedQuestions2()
+{
+	var str = ","+g_questionIds.join(",")+",";
+	$("#add_que_list2>tbody>tr").each(
+		function(){
+			for(var i = 0; i<g_questionIds.length;i++)
+			{
+				if(g_questionIds[i] == $(this).data("tag"))
+				{
+					$(this).addClass('success');
+				}
+			}
+			// if(str.indexOf("," + $(this).data("tag")+",")>=0)//检测("," + $(this).data("tag")+",")在str中首次出现的位置
+			// {
+			// 	$(this).addClass('success');
+			// }
+		});
+}
+
+function SelectedQuestions3()
+{
+	var str = ","+g_questionIds.join(",")+",";
+	$("#add_que_list3>tbody>tr").each(
+		function(){
+			for(var i = 0; i<g_questionIds.length;i++)
+			{
+				if(g_questionIds[i] == $(this).data("tag"))
+				{
+					$(this).addClass('success');
+				}
+			}
+		});
+}
+
+//回调函数，换页时调用此函数
+function addQuePageSelectCallback(page_id, jq)
+{
+	g_addQuePage.currentPage = page_id;
+
+	updateQueTable(g_addQuePage, g_addJson.BasicData, "add_que_list");
+	SelectedQuestions();
+	refreshQuePagination(g_addQuePage.totallCount,g_addQuePage.perPageCount, g_addQuePage.currentPage, "add_que_page", addQuePageSelectCallback);
+}
+function addQuePageSelectCallback1(page_id, jq)
+{
+
+	g_addQuePage1.currentPage = page_id;
+	updateQueTable(g_addQuePage1, g_addJson.AskData,"add_que_list1");
+	SelectedQuestions1();
+
+	refreshQuePagination(g_addQuePage1.totallCount,g_addQuePage1.perPageCount, g_addQuePage1.currentPage, "add_que_page1", addQuePageSelectCallback1);
+	
+}
+
+function addQuePageSelectCallback2(page_id, jq)
+{
+	g_addQuePage2.currentPage = page_id;
+	updateQueTable(g_addQuePage2, g_addJson.SkillData,"add_que_list2");
+	SelectedQuestions2();
+	refreshQuePagination(g_addQuePage2.totallCount,g_addQuePage2.perPageCount, g_addQuePage2.currentPage, "add_que_page2", addQuePageSelectCallback2);
+}
+
+function addQuePageSelectCallback3(page_id, jq)
+{
+	g_addQuePage3.currentPage = page_id;
+	updateQueTable(g_addQuePage3, g_addJson.InfilData,"add_que_list3");
+	SelectedQuestions3();
+	refreshQuePagination(g_addQuePage3.totallCount,g_addQuePage3.perPageCount, g_addQuePage3.currentPage, "add_que_page3", addQuePageSelectCallback3);
+}
+
+function clearInput()
+{
+	//将所有的输入框的内容置为""
+	$(".topself_input").each(function(){
+		this.value = "";
+	});
+}
+
+function InitAddModelDlg(json)
+{
+	g_addQuePage = new page();
+
+	updateQueTable(g_addQuePage, json.BasicData, "add_que_list");
+	refreshQuePagination(g_addQuePage.totallCount,g_addQuePage.perPageCount, g_addQuePage.currentPage, "add_que_page", addQuePageSelectCallback);
+
+	g_addQuePage1 = new page();
+	updateQueTable(g_addQuePage1, json.AskData, "add_que_list1");
+	refreshQuePagination(g_addQuePage1.totallCount,g_addQuePage1.perPageCount, g_addQuePage1.currentPage, "add_que_page1", addQuePageSelectCallback1);
+
+	g_addQuePage2 = new page();
+	updateQueTable(g_addQuePage2, json.SkillData, "add_que_list2");
+	refreshQuePagination(g_addQuePage2.totallCount,g_addQuePage2.perPageCount, g_addQuePage2.currentPage, "add_que_page2", addQuePageSelectCallback2);
+
+	g_addQuePage3 = new page();
+	updateQueTable(g_addQuePage3, json.InfilData, "add_que_list3");
+	refreshQuePagination(g_addQuePage3.totallCount,g_addQuePage3.perPageCount, g_addQuePage3.currentPage, "add_que_page3", addQuePageSelectCallback3);
+
+	NavigatButtononClick('add_paper_ask','add_paper_ask_tab');	
+	NavigatButtononClick('add_paper_skill','add_paper_skill_tab');
+	NavigatButtononClick('add_paper_infiltration','add_paper_infiltration_tab');
+	NavigatButtononClick('add_paper_queinfo','add_paper_queinfo_tab');
+}
+
+function AutoButtonClick()
+{
+	title=document.getElementById("automyModalLabel");  
+	title.innerHTML="一键组卷";
+	clearInput();
+
+	$("#autoaddModal").modal('show');
+
+}
+
+function  AddButtonClick()
+{
+	title=document.getElementById("myModalLabel");  
+	title.innerHTML="添加试卷";    
+
+	var info = ajaxobj("/GetAddPaperInfo/","","get","");
+	g_addJson = $.parseJSON(info);
+
+	clearInput();
+
+	InitAddModelDlg(g_addJson);
+	g_questionIds = new Array();
+	g_sillQueId = -1;
+	g_InfilQueId = -1;
+	g_status = true;
+
+	$("#addpapno").removeAttr("readonly","readonly");
+	$("#addModal").modal('show');	
+}
+
+/********************************************************************/
+//编辑模块
+
+function EditButtonClick()
+{
+	/*由于使用的是添加的弹出框，所以需要改变标题为编辑试卷*/
+	title=document.getElementById("myModalLabel");  // 找到元素
+	title.innerHTML="编辑试卷";    // 改变内容
+	
+	var papid = $("#lspap").data("selid");
+	if(papid == "0")
+	{
+		return false;
+	}
+
+	$("#postpapid").val(papid);
+	result = ajaxobj("/Checkuse/","","post","#InfoForm");
+	result = $.parseJSON(result);
+	if(result.cando == 'false'){
+	    Showbo.Msg.alert("您没有权限编辑该试卷!");
+	    return
+	  } else if(result.results == "full")
+	{
+		Showbo.Msg.alert("试卷已被开启的竞赛或攻防使用,禁止编辑！")
+	}
+	else
+	{
+		var editpap = ajaxobj("/GetEditPaperInfo/", "", "post", "#InfoForm");
+		g_addJson = $.parseJSON(editpap);
+
+		if(g_addJson.result == 0)
+		{
+			clearInput();
+			InitAddModelDlg(g_addJson);
+			g_questionIds = new Array();
+			$("#addpapno").val(g_addJson.edit.paperno);
+			$("#addpapname").val(g_addJson.edit.papername);
+			$("#addpapremark").val(g_addJson.edit.remark);
+			$("#addpapscore").val(g_addJson.edit.score);
+			g_questionIds = g_addJson.edit.questions;
+
+			SelectedQuestions();
+			SelectedQuestions1();
+			SelectedQuestions2();
+			SelectedQuestions3();
+
+			$("#addpapno").attr("readonly","readonly");
+
+			g_status = false;
+			$("#addModal").modal('show');
+		}
+		else
+		{
+			g_addJson = null;
+		}
+	}
+
+}
+
+function PapInfo()
+{
+	this.papid = -1;
+	this.papno = -1;
+	this.papname = "";
+	this.remark = "";
+	this.score = 0;
+	this.queIds = new Array();
+}
+
+function checkSubmitInfo(info)
+{
+	//检测papid是否为空
+	var result = 0;
+	if(info.papno.length == 0)
+	{
+		result = 1;
+		// alert('编号不能为空，请填写编号！');
+		return result;
+	}
+	//检测papname是否为空
+	if(info.papname.length == 0)
+	{
+		result = 2;
+		// alert('名称不能为空，请填写名称！');
+		return result;
+	}
+	
+	if(g_questionIds.length == 0)
+  	{
+  		msg.push("请至少选择一道题!");
+  		result = 3;
+  		return result;
+  	}
+
+	return result;
+}
+function checkinput(info)
+{
+	var papernos=document.getElementById("autoaddpapno");
+	var choose = document.getElementById("autochooseinfo");
+	var ask = document.getElementById("autoaskinfo");
+	var skill = document.getElementById("skillinfo");
+	var infil = document.getElementById("autoinfiltrationinfo");
+	var result = 0;
+	$("#postpapid").attr("value", info.num);
+
+	var checkJson = ajaxobj("/checkPapInfo/", "", "post", "#InfoForm");
+	var checkResult = $.parseJSON(checkJson);
+	var reg=/^[A-Za-z0-9]+$/;
+	var rag=/^[0-9]+$/;
+	if(papernos.value)
+	{
+	    if(reg.test(papernos.value)==false)
+	    {
+	      papernos.setCustomValidity("只能输入数字或字母");
+      	  result = 12;
+	    }
+		else if (0 != checkResult.check)
+		{
+			papernos.setCustomValidity("已存在的编号!");
+			result = 4;
+		}
+		else
+		{
+			papernos.setCustomValidity("");
+		}
+	}
+	else
+	{
+		papernos.setCustomValidity("请填写此字段");
+		result =1;
+	}
+	
+	if(info.choose)
+	{
+		if(rag.test(info.choose)==false)
+		{
+			choose.setCustomValidity("只能输入数字");
+			result =2;
+		}
+		else
+		{
+			choose.setCustomValidity("");
+		}
+	}
+	else
+	{
+		choose.setCustomValidity("请填写此字段");
+		result =3;
+	}
+	if(info.ask)
+	{
+		if(rag.test(info.ask)==false)
+		{
+			ask.setCustomValidity("只能输入数字");
+			result =5;
+		}
+		else
+		{
+			ask.setCustomValidity("");
+		}
+	}
+	else
+	{
+		ask.setCustomValidity("请填写此字段");
+		result =6;
+	}
+	if(info.skill)
+	{
+		if(rag.test(info.skill)==false)
+		{
+			skill.setCustomValidity("只能输入数字");
+			result =7;
+		}
+		else
+		{
+			skill.setCustomValidity("");
+		}
+	}
+	else
+	{
+		skill.setCustomValidity("请填写此字段");
+		result =8;
+	}
+	if(info.infil)
+	{
+		if(rag.test(info.infil)==false)
+		{
+			infil.setCustomValidity("只能输入数字");
+			result =9;
+		}
+		else
+		{
+			infil.setCustomValidity("");
+		}
+	}
+	else
+	{
+		infil.setCustomValidity("请填写此字段");
+		result =10;
+	}
+
+	return result
+}
+
+function chechpapid(papid)
+{
+	//检测papid是否重复
+	var papernos=document.getElementById("addpapno");
+	var result = 0;
+	$("#postpapid").attr("value", papid);
+	// alert(papernos.value);
+
+	var checkJson = ajaxobj("/checkPapInfo/", "", "post", "#InfoForm");
+	var checkResult = $.parseJSON(checkJson);
+	var reg=/^[A-Za-z0-9]+$/;
+    if(reg.test(papernos.value)==false)
+    {
+      papernos.setCustomValidity("只能输入数字或字母");
+      result = 12;
+    }
+	else if (0 != checkResult.check)
+	{
+		papernos.setCustomValidity("已存在的编号!");
+		result = 4;
+	}
+	else
+	{
+		papernos.setCustomValidity("");
+	}
+	return result;
+}
+function que()
+{
+	this.num="";
+	this.name1="";
+	this.choose="";
+	this.ask="";
+	this.skill="";
+	this.infil="";
+}
+
+function autosubmitPapInfo()
+{
+	//获取页面输入题目个数后台得到题目的ID
+	info = new que();
+	info.num = $("#autoaddpapno").val();
+	$("#autonum").val(info.num);
+	info.name1 = $("#autoaddpapname").val();
+	$("#name").val(info.name1);
+	info.choose = $("#autochooseinfo").val();
+	$("#auchoose").val(info.choose);
+	info.ask = $("#autoaskinfo").val();
+	$("#auask").val(info.ask);
+	info.skill = $("#autoskillinfo").val();
+	$("#auskill").val(info.skill);
+	info.infil = $("#autoinfiltrationinfo").val();
+	$("#auinfil").val(info.infil);
+
+	var check = checkinput(info);
+
+	if(check!=0)
+	{
+		return -1;
+	}
+	if(info.ask=='0'&&info.choose=='0'&&info.skill=='0'&&info.infil=='0')
+	{
+		Showbo.Msg.alert("题目个数至少为一个！");
+		return false;
+	}
+	result = ajaxobj("/selectque/", "", "post", "#InfoForm");
+	jsonresult= $.parseJSON(result);
+	// for(var i=0;i<jsonresult.quesid.length;i++)
+	// {
+	// 	alert(jsonresult.quesid[i]);
+	// }
+	//对接添加试卷的部分
+	g_questionIds = jsonresult.quesid
+	var info1 = new PapInfo();
+	info1.papid = $("#lspap").data("selid");
+	info1.papno = $("#autoaddpapno")[0].value;
+	info1.papname = $("#autoaddpapname")[0].value;
+	info1.remark = $("#autoaddpapremark")[0].value;
+	info1.score = jsonresult.score;
+	info1.queids = g_questionIds;
+
+	$("#postpapid").attr("value", JSON.stringify(info1));
+	if(jsonresult.setnum == "true")
+	{
+		result = ajaxobj("/SaveAddPap/", "", "post", "#InfoForm");
+		$("#autoaddModal").modal('hide');
+		window.location.href='/papers/';
+	}
+	else
+	{
+		Showbo.Msg.alert("请输入题目的数量少于题库内的题目数");
+		return false;
+	}
+
+}
+
+function submitPapInfo()
+{
+	var info = new PapInfo();
+	info.papid = $("#lspap").data("selid");
+	info.papno = $("#addpapno")[0].value;
+	info.papname = $("#addpapname")[0].value;
+	info.remark = $("#addpapremark")[0].value;
+	info.score = $("#addpapscore")[0].value;
+	info.queids = g_questionIds;
+	var check = checkSubmitInfo(info);
+	if(0 != check)
+	{
+		return -1;
+	}
+	
+	if(g_status == true)
+	{
+		
+		check = chechpapid(info.papno);
+		if(0 != check)
+		{
+			return -1;
+		}
+		$("#postpapid").attr("value", JSON.stringify(info));
+
+		result = ajaxobj("/SaveAddPap/", "", "post", "#InfoForm");
+		// document.getElementById("InfoForm").action="/SaveAddPap/";
+      	// document.getElementById("InfoForm").submit();
+		//result = ajaxobj("/SaveAddPap/", "", "post", "#InfoForm");
+	}
+	else
+	{
+		$("#postpapid").attr("value", JSON.stringify(info));
+		result = ajaxobj("/UpdateEditPap/", "", "post", "#InfoForm");
+	}
+	// location.reload(false);
+	return false;
+	
+}
+
+
+
+/*删除试题*/
+function DeleteButtonClick()
+{
+	
+		var papid = $("#lspap").data("selid");//get paper id
+		if(papid == "0")
+		{
+			return false;
+		}
+		$("#postpapid").attr("value", papid);
+		result = ajaxobj("/Checkuse/","","post","#InfoForm");
+		result = $.parseJSON(result);
+
+		if(result.cando == 'false'){
+		    Showbo.Msg.alert("您没有权限删除该试卷!");
+		    return
+		  } else if(result.results == "full")
+		{
+			// document.getElementById("btndel").type="button";
+			Showbo.Msg.alert("该试卷已被竞赛或者攻防使用,删除无效！！")
+			return;
+			
+		}
+		else
+		{
+
+			Showbo.Msg.oncallback = submitdelformeditcallback;
+    		Showbo.Msg.confirm("确定删除吗？");
+		}
+}
+function submitdelformeditcallback()
+{
+	
+	var papid = $("#lspap").data("selid");//get paper id
+	if(papid == "0")
+	{
+		return false;
+	}
+	$("#postpapid").attr("value", papid);
+	ajaxobj("/RemovePap/","","post","#InfoForm");
+	document.getElementById("paperform").submit();
+}
+
+
+/*添加题目时随机选题*/
+function  SearchQueButtonClick()
+{
+	var qtext = $("#que_search_text")[0].value;
+	//alert(qtext);
+	$("#postpapid").attr("value", qtext);
+	//alert($("#postpapid").attr("value", qtext));
+	var info =ajaxobj("/SearchQue/", "", "post", "#InfoForm");
+	g_addJson = $.parseJSON(info);
+	InitAddModelDlg(g_addJson);
+	SelectedQuestions();
+}
+</script>
+{% endblock%}

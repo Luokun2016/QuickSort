@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>{% block title %}天融信网络安全仿真系统--实训{% endblock %}</title>
+  <!-- Bootstrap core CSS -->
+  <link href="/statics/css/bootstrap.css" rel="stylesheet"/>
+  <!-- Custom styles for this template -->
+  <!-- <link href="/statics/css/navbar.css" rel="stylesheet"/> -->
+  <link href="/statics/css/allStyle.css" rel="stylesheet"/>
+  <link href="/statics/css/docsss.css" rel="stylesheet"/>
+  <link href='/statics/css/ui.dynatree.css' rel='stylesheet'/>
+  <link href="/statics/css/showBo.css" rel="stylesheet"/>
+
+  <link href='/statics/css/ui.dynatree.custom.css' rel='stylesheet'/>
+  <link href="/statics/css/bootstrap-datetimepicker.min.css" rel="stylesheet"/>
+
+  <link type="text/css" href="/statics/myflow/lib/jquery-ui-1.8.4.custom.css" rel="stylesheet" />
+
+  <style type="text/css">
+    .table-hover > tbody > tr:hover > td { cursor: pointer; }
+  </style>
+  {% block css %}{% endblock %}
+  <script src="/statics/js/jquery.js"></script>
+  <script src="/statics/js/showBo.js"></script>
+  <script src="/statics/js/bootstrap.min.js"></script>
+  <script src="/statics/js/bootstrap-datetimepicker.js"></script>
+  <script src="/statics/js/bootstrap-datetimepicker.zh-CN.js"></script>
+  {% block script %}
+      <script type="text/javascript">
+        height = 570;
+        width = 800;
+     </script>
+    <script src='/statics/js/jquery.custom.js' type="text/javascript"></script>
+    <script src='/statics/js/jquery.cookie.js' type="text/javascript"></script>
+    <script src='/statics/js/uploadfile.js' type="text/javascript"></script>
+    <script src='/statics/js/jquery.dynatree.js' type="text/javascript"></script>
+    <script type="text/javascript" src="/statics/myflow/lib/raphael.js"></script>
+    <script type="text/javascript" src="/statics/myflow/myflowdetail.js"></script>
+    <script type="text/javascript" src="/statics/myflow/myflow.jpdl4detail.js"></script>
+    <script type="text/javascript" src="/statics/myflow/myflow.editorsdetail.js"></script>
+  {% endblock %}
+    <script type="text/javascript">
+      function ajaxobj(_url, _tag, _way, _form)
+      {
+        var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+        var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+        var info = "";
+        $.ajax({
+          type:m,
+          url:_url,
+          data:par,
+          async: false,
+          error: function(request) {
+            //alert("Connection error");
+          },
+          success: function(data) {
+            //$(_tag).html(data);
+            //alert(data);
+            info = data;
+          }
+        });
+        return info;
+      }
+      function LoadDate()
+      {
+        $('.form_date').datetimepicker({
+          language:  'zh-CN',
+          weekStart: 1,
+          todayBtn:  1,
+          autoclose: 1,
+          todayHighlight: 1,
+          startView: 2,
+          minView: 2,
+          forceParse: 0
+        });
+      }
+      function savepwd()
+      {
+          var dev = ajaxobj("/modifypwd/", "", "post", "#userinfoform");
+
+          if(dev == "1")
+              Showbo.Msg.alert("密码修改成功！");
+          else
+              Showbo.Msg.alert("密码修改失败！");
+
+          $('#myModal1').modal('hide');
+      }
+      function userpwd()
+      {
+        clearinput();
+        $('#myModal1').modal('show');
+      }
+      function clearinput()
+      {
+        document.getElementById("spwd").value="";
+        document.getElementById("npwd").value="";
+        document.getElementById("repwd").value="";
+      }
+    </script>
+</head>
+<body style="padding-top:30px;">
+
+
+<div class="container" style="height:100%;">
+    <div id="HomeContent" style="width:100%;height:100%;">
+       <div style="width:100%;height:75px;">
+            <a href="/clientindex/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+            <span style="font-size:28px;color:#fff;">实验大纲</span>
+      </div>
+              
+           
+        <div id="MainContent" class="personRightSx"  style=" heigth:100%; margin-top:-10px; " >
+              <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-15px;">
+                    <ul class="nav nav-tabs">
+                      <li class="active">
+                      <a data-toggle="tab" href="#syyl">实验介绍</a>
+                      </li>
+                      <li>
+                      <a data-toggle="tab" href="#sydg">实验步骤</a>
+                      </li>
+                      <li>
+                      <a data-toggle="tab" href="#sylx">实验录像</a>
+                      </li>
+                      <li>
+                      <a data-toggle="tab" href="#sygj">实验工具</a>
+                      </li>
+                      <li>
+                      <a data-toggle="tab" href="#syss">实验实施</a>
+                      </li>
+                      <li>
+                      <a data-toggle="tab" href="#sytopo">实验拓扑</a>
+                      </li>
+                      <li>
+                      <a data-toggle="tab" href="#sybg">实验报告</a>
+                      </li>
+                    </ul>
+                    <div class="tab-content" style="height:95%; width:100%; margin:0px; padding:0px;">
+                      <div id="syyl" class="tab-pane fade in active" style="height:100%; width:100%;">
+                         <iframe id="syylframe" name="syylframe" src='' frameborder="0" style="height:560px; width:100%;" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+                          <!--<div id="syylframe" name="syylframe"  style="height:560px; width:100%;"></div>-->
+                      </div>
+                      <div id="sydg" class="tab-pane fade" style="height:100%; width:100%;">
+                         <iframe id="sydgframe" name="sydgframe" src='' frameborder="0" style="height:560px; width:100%;" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+                      <!--<div id="sydgframe" name="sydgframe"  style="height:560px; width:100%;"></div>-->
+                      </div>
+                      <div id="sylx" class="tab-pane fade" style="height:100%; width:100%; padding:0px; vertical-align:top;">
+                        <iframe id="videoframe" name="videoframe" src='' frameborder="0" style="height:560px; width:100%;" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+                      </div>
+                      <div id="sygj" class="tab-pane fade" style="height:100%; width:100%;">
+                        <iframe id="sygjframe" name="sygjframe" src='' frameborder="0" style="height:560px; width:100%;"></iframe>
+                      </div>
+                      <div id="syss" class="tab-pane fade" style="height:100%; width:100%;" >
+                        <div id="control" style="margin-top:10px;margin-bottom:10px;">
+                          <button id="btnstartexp" type="button" class="btn btn-primary" style="margin:0px;" onclick="startBench()">启动实验台</button>
+                          <button id="btnstopexp" type="button" class="btn btn-primary disabled" style="margin:0px;" onclick="stopBench()">关闭实验台</button>
+                          <button id="btnmaxscreen" type="button" class="btn btn-primary disabled" style="margin:0px;" onclick="fullscreen()">全屏</button>
+                        </div>
+                          <iframe id="syssframe" name="syssframe" src='' frameborder="0" style="height:520px; width:100%;" ></iframe>
+                      </div>
+                      <div id="sytopo" class="tab-pane fade" style="height:100%; width:100%;">
+                      <!--   <iframe id="sytopoframe" name="sytopoframe" src='' frameborder="0" style="height:100%; width:100%;"></iframe> -->
+                        <div id="myflow_propsdetail"
+                      style="position: absolute;  right: 30px; background-color: #fff; width: 220px; padding: 3px; margin-top:80px;"  class="ui-widget-content">
+                          <div id="myflow_props_handledetail" class="ui-widget-header">属性</div>
+                            <table border="1" width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                </tr>
+                            </table>
+                          </div>
+                          <div id="myflowdetail" ></div>
+                        </div>
+
+                      <div id="sybg" class="tab-pane fade" style="height:100%; width:100%;">
+                        <form id="sybg_form">
+                          <div class="bs-docs-section">
+                            <button disabled id="btnFile" class="btn btn-primary"  type="button" style="position:absolute;top:70px;" title="上传" onclick="Uploadingstudent('/savefile/',  'progress_percent','currentProgress','sybg_form')"><span class="glyphicon glyphicon-upload">
+                            </button>
+                            <button disabled  style="display:none" id="btnUrl" type="button" title="保存" class="btn btn-primary" onclick="saveUrl('#sybg_form')"><span class="glyphicon glyphicon-floppy-save"></button>
+                          </div>
+                          <div style="position: absolute; top: 100px;left:100px; width:90%">
+                            <table class="table topsec_tabletop">
+                              <tr>
+                                <td style="width:120px; vertical-align:middle; text-align:left; ">&nbsp;&nbsp;模板获取：</td>
+                                <td style="vertical-align:middle; text-align:left; ">
+                                  <a href="/document/expmd.zip">模板下载</a>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="width:100px; vertical-align:middle; text-align:left; "><font color="#FF0000">*</font>选择文件：</td>
+                                <td>
+                                  <input  type='file' id='thisfile' name='thisfile' required="required" accept="application/x-zip-compressed" onchange="selectFileType();fileSelected(this);"/>
+                                </td>
+                              </tr>
+
+                              <tr>
+                                <td colspan=2 style="width:100px; vertical-align:middle; text-align:left;"><font color="#FF0000">*</font>上传压缩包为姓名+学号.zip 如：张三007.zip</td>
+                              </tr>
+                              <tr id="trVideoProgress">
+                                <td style="text-align:left; vertical-align:middle; height:30px; vertical-align:middle;">
+                                  &nbsp;&nbsp;完&nbsp;&nbsp;成：
+                                </td>
+                                <td style="height:30px; padding:0px; vertical-align:middle;">
+                                  <table style="width:100%; height:30px; margin:0px; padding:0px;">
+                                    <tr>
+                                    <td style="width:52%; border:0px; margin:0px; padding:0px; vertical-align:middle;">
+                                    <div class="progress progress-striped" style="margin:0px; padding:0px;">
+                                      <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="currentProgress">
+                                      </div>
+                                    </div>
+                                    </td>
+                                  <td style="width:48%; border:0px; vertical-align:middle;"><div id="progress_percent" style="text-align:left"></div>
+                                  </td>
+                                    </tr>
+                                  </table>
+                              </td>
+                              </tr>
+
+                          </table>
+                        </div>
+                        <input id='courseid' name='courseid' type='hidden' value='{{selcourse}}' />
+                        <input id='experid' name='experid' type='hidden' value='0'/>
+                        <input id='coursename' name='coursename' type='hidden' value='{{coursename}}'/>
+                        <input id='curexpid' name='curexpid' type='hidden' value='0'/>
+
+                      </form>
+                      </div>
+                  </div>
+              </div>
+         </div>
+
+        <div class="contentMain">
+              <div id="tree" class="clienttree" style="text-align:left; vertical-align:top;"></div>
+        </div>
+
+    </div>
+</div>
+
+<form id="information" action="/selcourse/" method='post'>
+  <input id='selcourse' name='selcourse' type='hidden' value='{{selcourse}}' />
+  <input id='expid' name='expid' type='hidden' value='0'/>
+  <input id='courname' name='courname' type='hidden' value='{{coursename}}'/>
+  <input id='curexp' name='curexp' type='hidden' value='0'/>
+  <input id='curvms' name='curvms' type='hidden'  value='0'/>
+</form>
+<script type="text/javascript">
+    function open_vnc(fscreen, vmid)
+    {
+        var preid = vmid;
+        $.post("/tools/getServerIp/", {'vmid': vmid}, function(re){
+            ip = JSON.parse(re);
+            var url = 'http://' + ip + '/console/' + preid + '/vm?token=' + preid;
+            if(fscreen)
+              window.open(url,'','width=850,height=485');
+            else
+              document.getElementById("syssframe").src = url;
+        });
+    }
+</script>
+<script type="text/javascript">
+
+var restore_html='';
+var hasTopo = false;
+$(function(){
+    restore_html=$("#control").html();
+  $('#thisfile').attr('disabled','disabled');
+  clearuploadfile();
+  $('#btnFile').attr('disabled','disabled');
+  showcourse();
+  timedCount();
+  
+
+
+  var clientid = {{ vmid }};
+  if (clientid != 0)
+  {
+   $("#curvms").val(clientid);
+    open_vnc(false, clientid);
+    $("#btnstopexp").removeClass('disabled');
+    $("#btnmaxscreen").removeClass('disabled');
+    $("#btnstartexp").addClass('disabled');
+  }
+
+  myflowdetail = $('#myflowdetail').myflowdetail(
+  {
+           basePath : "",
+            restore : "",
+            tools : 
+            {
+
+            }
+  });
+  
+  $("#syss").mouseenter(function(){
+  var stopcss = $("#btnstopexp").hasClass('disabled');
+  if(stopcss == false)
+  {  
+    $("#btnstartexp").addClass('disabled');
+  }
+  else
+  {
+    if(hasTopo){
+      $("#btnstartexp").removeClass('disabled');
+    }
+  }
+    document.getElementById('syssframe').focus();
+  });
+
+});
+
+function clearuploadfile()
+{
+    $("#thisfile").val("");
+}
+
+function selectFileType()
+{   
+    
+    if(!(/\w+.zip$/).test($('#thisfile').val()))
+    {
+      Showbo.Msg.alert('请选择正确格式的文件');
+      $('#btnFile').attr('disabled','disabled');
+      clearuploadfile();
+    }
+    else
+    {
+      $("#curfile").val($('#thisfile').val());
+      $('#btnFile').removeAttr('disabled');
+    }       
+}
+
+
+var oXHR; 
+function Uploadingstudent(strURL, progress_percent, currentProgress, upload_form) {
+    // alert($("#experid").val());   //1153
+    // alert($("#curexpid").val());    //114
+    // alert($("#courseid").val());  //181
+    // alert($("#coursename").val());  //苑彬专用勿动
+    pgpercent = progress_percent;
+    progress = currentProgress;
+    iPreviousBytesLoaded = 0;
+    document.getElementById(pgpercent).innerHTML = '';
+
+    var vFD = new FormData(document.getElementById(upload_form)); 
+    oXHR = new XMLHttpRequest();  
+
+    oXHR.upload.addEventListener('progress', uploadProgress, false);
+    oXHR.addEventListener('load', uploadFinish, false);
+    oXHR.open('POST', strURL);
+    oXHR.send(vFD);
+    oTimer = setInterval(doInnerUpdates, 300);
+}
+function uploadresult(jsondata)
+{
+  //************
+  /*$("#fileTool").val('');
+  $("#currentProgress").attr('style','width:0px');
+  $("#progress_percent").text('0%');*/
+  var jsondata = $.parseJSON(jsondata);
+  if(jsondata["finish"]==1)
+  {
+    Showbo.Msg.alert("上传成功");
+  }
+  else
+  {
+    Showbo.Msg.alert("上传失败：不包含所需有效文件类型");
+    $(":input[type=file]").val('');
+    $("#currentProgress").attr('style','width:0px');
+    $("#progress_percent").text('0%');
+
+  }
+  var tree = $("#tree").dynatree("getTree");
+  var node = tree.getNodeByKey($("#hidId").val());
+  expinfo(node,false); 
+}
+
+function saveUrl(frm)
+{
+  ajaxobj("/savefile/", "", "post", frm);
+  // var tree = $("#tree").dynatree("getTree");
+  // var node = tree.getNodeByKey($("#hidId").val());
+  expinfo(node,true); 
+  Showbo.Msg.alert('保存成功！');
+}
+
+function showcourse()
+{        
+
+    $("#tree").dynatree({
+               onClick: function(node) {
+                      var stopcss = $("#btnstopexp").hasClass('disabled');
+
+                      if(stopcss == false)
+                      {  
+                        $("#btnstartexp").addClass('disabled');
+                      }
+                      else
+                      {
+                        $("#btnstartexp").removeClass('disabled');
+                      }
+                    },
+               onActivate: function(node) {
+                    if(node.data.isFolder==false )
+                    {
+                      $('#thisfile').removeAttr("disabled");
+                      //设置上传按钮的属性
+                      $('#btnFile').attr('disabled','disabled');
+
+                      if (node.data.key != 0)
+                      {
+                        expinfo(node,true);
+                      }
+                      $("#expid").val(node.data.exp);
+                      $("#curexp").val(node.data.expid);
+                      $("#experid").val(node.data.exp);
+                      $("#curexpid").val(node.data.expid);
+                     //alert(node.data.ele +"试验原理");
+                      if(node.data.ele != null)
+                      {
+                        document.getElementById("syylframe").src= "/viewpdf?file=" + node.data.ele;
+                        // PDFObject.embed(node.data.ele, "#syylframe");
+                      }
+                      else
+                      {
+                        document.getElementById("syylframe").src="/document/eles404.html";
+                      }
+                      //alert(node.data.step +"试验step");
+                      if(node.data.step != null)
+                      {
+                        // PDFObject.embed(node.data.step, "#sydgframe");
+                        document.getElementById("sydgframe").src="/viewpdf?file=" + node.data.step;
+                      }
+                       else
+                      {
+                        document.getElementById("sydgframe").src="/document/steps404 .html";
+                      }
+                       //alert(node.data.video +"试验录像");
+                      if(node.data.video != null)
+                      {
+                        // alert(node.data.video);
+                        document.getElementById("videoframe").src=node.data.video;
+                      }
+                      else
+                      {
+                        document.getElementById("videoframe").src="/document/videos404.html";
+                      }
+                       //alert(node.data.tool +"试验工具");
+                      if(node.data.tool != null)
+                      {
+                        document.getElementById("sygjframe").src=node.data.tool;
+                      }
+                      else
+                      {
+                        document.getElementById("sygjframe").src="/document/null404.html";
+                      }
+                      $('#myflowdetail').empty();
+
+                      // 如果选中的实验被启动，就获取最新的拓扑图，必须使用同步方法获取
+                      $.ajax({
+                          type : "post",  
+                          url : "/expIsStart/",  
+                          data : {"expid": $('#curexp').val()},  
+                          async : false,  
+                          success : function(re){
+                            if($.parseJSON(re)){
+                              $.ajax({
+                                type: "post",
+                                url: "/getNewTopo/",
+                                async: false,
+                                success: function(re){
+                                  node.data.topo = $.parseJSON(re);
+                                }
+                              });
+                            } else {
+                              $.ajax({
+                                type : "post",  
+                                url : "/getOldTopo/",  
+                                data : {"expid": $('#curexp').val()},  
+                                async : false,  
+                                success : function(re){
+                                  node.data.topo = $.parseJSON(re);
+                                }
+                             });
+                            }
+                          }
+                       });
+
+                      hasTopo = false;
+                      if(node.data.topo != null)
+                      {
+                        topo = node.data.topo;
+                        topo = topo.replace(/[{]/g, '{\"');
+                        topo = topo.replace(/[}]/g, '\"}');
+                        topo = topo.replace(/[,]/g, '\",\"');
+                        topo = topo.replace(/[:]/g,'\":\"');
+                        topo = topo.replace(/[']/g, '');
+                        topo = topo.replace(/(:"{)/g, ':{');
+                        topo = topo.replace(/(}",)/g, '},');
+                        topo = topo.replace(/(}"})/g, '}}');
+                        topo = topo.replace(/(}"})/g, '}}');
+                        topo = topo.replace(/( )/g, '');
+                        topo = topo.replace(/({""})/g, '{}');
+                        topo = $.parseJSON(topo);
+
+                        // 检查是否有拓扑
+                        for(var k in topo["states"]){
+                          if(topo["states"].hasOwnProperty(k)){
+                            hasTopo = true;
+                            break;
+                          }
+                        }
+
+                        cons = topo['states'];
+
+                        txt = JSON.stringify(cons);
+                        if(txt != '{}'){
+                          // $("#control").html(restore_html);
+                          // $("#btnstartexp").removeClass('disabled');
+                          var addbutton = ajaxobj("/Getaddbutton/", "", "post", "#information");
+                          var jsondata = $.parseJSON(addbutton);
+                          if(jsondata.started=="true")
+                          {
+                            var addhtml="";
+                            for (var i in jsondata)
+                            {
+                              if(i=="started") continue;
+                              if(jsondata.hasOwnProperty(i))
+                              {
+                                addhtml+='<button id="'+jsondata[i]+'" type="button" class="btn btn-primary" style="margin:0px;" onclick="open_vnc(true,this.id)">'+i+'</button>'
+                              }
+                            }
+                            $("#control").html(restore_html+addhtml);     
+                            $("#btnstopexp").removeClass('disabled');
+                            $("#btnmaxscreen").removeClass('disabled');
+                            $("#btnstartexp").addClass('disabled'); 
+                          }    
+                          // else
+                          // {
+                          //   $("#control").html(restore_html);     
+                          //   // $("#btnstopexp").removeClass('disabled');
+                          //   // $("#btnmaxscreen").removeClass('disabled');
+                          //   // $("#btnstartexp").addClass('disabled'); 
+                          // }           
+                        }
+                        else if(txt == '{}'){
+                          $("#control").html(restore_html);
+                          $("#btnstartexp").addClass('disabled');
+                        }
+
+                        myflowdetail = $('#myflowdetail').myflowdetail(
+                        {
+                                basePath : "",
+                                restore : eval("(" + node.data.topo + ")")
+                                
+                        });
+
+                        // -----------------如果存在拓扑图，对其添加右键菜单----------------------------
+                        addMenu(myflowdetail[0]);
+                      }
+                      else
+                      {
+
+                        // document.getElementById("sytopoframe").src="#";
+                          $("#btnstartexp").addClass('disabled');                             
+                          myflowdetail = $('#myflowdetail').myflowdetail(
+                          {
+                                 basePath : "",
+                                  restore : "",  
+                          });
+                      }
+
+                    }
+                   else
+                  {
+                      $('#thisfile').attr('disabled','disabled');
+                      clearuploadfile();
+                      $('#btnFile').attr('disabled','disabled');
+                  }
+        },
+    });
+
+      
+
+    var tree = $("#tree").dynatree("getTree");
+    var rmnode = $("#tree").dynatree("getRoot");
+
+    rmnode.removeChildren();
+    var outdetail = ajaxobj("/outtreeDetails/", "", "post", "#information");
+    var jsontreedetail = $.parseJSON(outdetail);
+    var outrela = jsontreedetail.key;
+    var node =$("#tree").dynatree("getRoot");
+    var nodechild; 
+    var parent;
+    for (var i=0;i<=outrela.length-1;i++)
+    {
+    //alert(outrela[i][2]);
+      if (outrela[i][2]=='None')
+      {
+        if(outrela[i][3]==0)
+        {
+          //alert(outrela[i][0]);
+          node.addChild({title: outrela[i][1], key: outrela[i][0], isFolder: true});
+        }
+        else
+        {
+          node.addChild({title: outrela[i][1], expid: outrela[i][3] ,exp: outrela[i][4] ,ele: outrela[i][5] ,step: outrela[i][6] ,tool: outrela[i][7] ,video: outrela[i][8] ,topo: outrela[i][9],isFolder: false});
+        }
+      }
+      else
+      {
+        for (var j=0;j<=outrela.length-1;j++)
+        {
+          if(outrela[i][2]==outrela[j][0])
+          {
+              parent = outrela[j][0];
+              break;
+          }
+        }
+       // alert(parent);
+        nodechild = tree.getNodeByKey(parent);
+        //alert(nodechild);
+        if(outrela[i][3]==0)
+          nodechild.addChild({title: outrela[i][1],  key: outrela[i][0] ,isFolder: true});
+        else
+          nodechild.addChild({title: outrela[i][1], expid: outrela[i][3] , exp: outrela[i][4] ,ele: outrela[i][5] ,step: outrela[i][6] ,tool: outrela[i][7] ,video: outrela[i][8] ,topo: outrela[i][9],isFolder: false});
+      }
+    }
+}
+
+//引用实验体系模块功能
+function expinfo(node, fileclear)
+{
+      if (fileclear)
+      {
+          $(":input[type=file]").val('');
+          $("#currentProgress").attr('style','width:0px');
+          $("#progress_percent").text('0%');
+          
+          // $(":input[type=file]").attr('disabled','disabled');
+          $("input[type=text]").val('');
+      } 
+     if (node.data.isFolder == false)
+     {
+      $('#thisfile').removeAttr("disabled");
+     }
+     else
+     {
+
+      $('#thisfile').attr('disabled','disabled');
+     }
+
+      // var result =  ajaxobj("/experimentinfo/" + node.data.key, "", "get", "");
+      //     var jsondata = $.parseJSON(result);        
+}
+
+function startBench()
+{
+    var now = new Date();
+    var Course = ajaxobj("/GetSETime/", "", "post", "#information");
+    var json = $.parseJSON(Course);
+    var starttime = new Date(json.startTime.replace(/-/g,'/'));
+    var endtime = new Date(json.endTime.replace(/-/g,'/'));
+    
+    if( now < starttime ||now > endtime )
+    {
+      Showbo.Msg.alert("当前实验还未开始或已结束,不能启动实验台!");
+      return;
+    }
+    else
+    {
+    var client = ajaxobj("/tools/selectVM/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    var result = json.result;
+    var othermvs=json.othermvs;
+
+    if(result == 1 && clientid != 0)
+    {
+        open_vnc(false, clientid);
+
+        $("#curvms").val(clientid);
+
+        $("#btnstopexp").removeClass('disabled');
+        $("#btnmaxscreen").removeClass('disabled');
+        $("#btnstartexp").addClass('disabled');
+
+        var addhtml="";
+        for (var key in othermvs)
+        {
+            addhtml+='<button id="'+othermvs[key]+'" type="button" class="btn btn-primary" style="margin:0px;" onclick="open_vnc(true,this.id)">'+key+'</button>'
+        }
+
+        var addhtmls = $("#control").html();
+        $("#control").html(addhtmls+addhtml);
+
+        $('#myflowdetail').empty();
+
+        var topo = "";
+        $.ajax({
+          type: "post",
+          url: "/getNewTopo/",
+          async: false,
+          success: function(re){
+            topo = $.parseJSON(re);
+          }
+        });
+
+        myflowdetail = $('#myflowdetail').myflowdetail(
+                {
+                        basePath : "",
+                        restore : eval("(" + topo + ")")
+                        
+                });
+        addMenu(myflowdetail[0]);
+    }
+     if(result=='2'){
+        Showbo.Msg.alert("虚拟资源不足");  
+      }
+      else if(result=='3'){//=='3'
+          Showbo.Msg.alert("物理资源不足");
+      
+      }
+      else if(result=='4'){//=='4'
+        Showbo.Msg.alert("镜像不存在");
+      
+      }
+      else if(result=='5'){//=='4'
+        Showbo.Msg.alert("物理资源网卡不足");
+      
+      }
+      else if(result=='6'){
+        Showbo.Msg.alert("单台服务器资源不足");
+      }
+      else if(result=='0'){// == '0'后台报错
+        Showbo.Msg.alert("失败");   
+      }
+      else{
+        if(result !== 1){
+          Showbo.Msg.alert(result);
+        }
+         $("#btnstartexp").addClass('disabled');
+        
+      }
+
+    }    
+}
+function stopBench()
+{
+    var client = ajaxobj("/tools/stopVM/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    $("#curvms").val("0");
+    document.getElementById("syssframe").src = "";
+    $("#control").html(restore_html);
+    $("#btnstartexp").removeClass('disabled');
+    $("#btnstopexp").addClass('disabled');
+    $("#btnmaxscreen").addClass('disabled');
+
+    // 如果选中的实验被关闭，就获取以前的拓扑图，必须使用同步方法获取
+    $('#myflowdetail').empty();
+    var topo = "";
+    $.ajax({
+        type : "post",  
+        url : "/getOldTopo/",  
+        data : {"expid": $('#curexp').val()},  
+        async : false,  
+        success : function(re){
+          topo = $.parseJSON(re);
+        }
+     });
+
+      myflowdetail = $('#myflowdetail').myflowdetail(
+                      {
+                              basePath : "",
+                              restore : eval("(" + topo + ")")
+                              
+                      });
+      addMenu(myflowdetail[0]);
+}
+function fullscreen()
+{
+    var clientid = $("#curvms").val();
+
+    open_vnc(true, clientid);
+    //var client = ajaxobj("/fullscreen/", "", "post", "#information");
+}
+function timedCount()
+ {
+    var client = ajaxobj("/clientinfor/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    var t=setTimeout("timedCount()",6000);
+ }
+
+
+    // 右键菜单模块
+    function menuMethods() {
+        var methods = {},
+            menu = null,
+            parent = null,
+            liobj = null,
+            that = this;
+
+        // 生成右键菜单内容
+        function nodeMenu() {
+            function openConsole() {
+                // 获取对应的虚拟机实例
+                $.post(/getVMId/, {"name": getVMIns, "type": getType}, function(re){
+                    var info = JSON.parse(re).split(":");
+                    var id = info[0];
+                    var ip = info[1];
+                    var url;
+                  if(getType === "imgls"){
+                      url = 'http://' + ip + '/console/' + id + '/vm?token=' + id;
+                      window.open(url,'','width=850,height=485');
+                  } else if(getType === "imgvgtls"){
+                    url = 'http://' + ip + '/console/' + id + '/vgt?token=' + id;
+                    window.open(url,'','width=850,height=485');
+                  }
+                });
+                menu.style.display = 'none';
+            }
+
+            return [{
+                text: '控制台',
+                method: openConsole
+            }
+            ];
+        }
+
+        // 创建一个菜单，返回一个无序列表ul对象
+        function createMenu(menuContent) {
+            var menu = document.createElement('ul');
+            menu.setAttribute('id', 'menu' + that.id);
+            menu.setAttribute('oncontextmenu', 'return false');
+
+            for (var i = 0; i < menuContent.length; i++) {
+                var li = document.createElement('li');
+                li.innerHTML = menuContent[i].text;
+                li.onclick = menuContent[i].method;
+                li.onmouseover = liMouseover;
+                li.onmouseout = liMouseout;
+                li.setAttribute('oncontextmenu', 'return false');
+                menu.appendChild(li);
+                liobj = li;
+            }
+
+            function liMouseover(evt) {
+                evt.target.style.backgroundColor = 'rgba(212, 212, 111, 0.3)';
+                evt.target.style.boxShadow = '1px 1px 2px rgba(0, 0, 0, 0.55)';
+            }
+
+            function liMouseout(evt) {
+                evt.target.style.backgroundColor = '';
+                evt.target.style.boxShadow = '';
+            }
+
+            return menu;
+        }
+
+        // 显示菜单
+        function showMenu(evt) {
+            // menu不存在？创建
+            if (!menu) {
+                menu = createMenu(nodeMenu());
+                that.appendChild(menu);
+                
+                $(that).parents().each(function(){
+                  if($(this).css('position') === "absolute" || $(this).css('position') === "relative") {
+                    parent = this;
+                    return false;
+                  }
+                });
+
+                $("#menu" + that.id).css({
+                  "list-style-type": "none",
+                  "margin": "0",
+                  "position": "absolute",
+                  "background-color": "#3C3C3C",
+                  "padding": "2px",
+                  "font-size": "16px",
+                  "border-radius": "3px",
+                  "box-shadow": "2px 2px 4px rgba(0, 0, 0, 0.6)"
+                });
+
+                $("#menu" + that.id + " li").css({
+                  // "width": "110px",
+                  "text-align": "left",
+                  "cursor": "pointer",
+                  "padding": "2px 12px 2px 12px",
+                  "border-radius": "1px"
+                });
+            }
+            liobj.innerHTML = "控制台|" + getVMIns;
+            menu.style.display = 'block'; // 显示菜单
+            menu.style.left = (evt.clientX - $(parent).offset().left) + 'px';
+            menu.style.top = (evt.clientY - $(parent).offset().top) + 'px';
+        }
+
+        // 隐藏菜单
+        function hiddenMenu() {
+            // 如果菜单被显示，那么就隐藏
+            if (menu && menu.style.display !== 'none') {
+                menu.style.display = 'none';
+            }
+        }
+
+        methods.showMenu = showMenu;
+        methods.hiddenMenu = hiddenMenu;
+
+        return methods;
+    }
+
+    function addMenu(myflowdetail){
+      // -----------------如果存在拓扑图，对其添加右键菜单----------------------------
+      var menu_methods = menuMethods.call(myflowdetail);
+      myflowdetail.children[0].oncontextmenu = function(evt){
+        var expid = $('#curexp').val();
+        $.post(/expIsStart/, {"expid": expid}, function(re){
+          if($.parseJSON(re)){
+            $(evt.target).trigger("click");
+            if(evt.target.tagName === 'image' && (getType === "imgls" || getType === "imgvgtls")){
+              menu_methods.showMenu(evt);
+            }
+          }
+        });
+        return false;
+      };
+      document.onmousedown = function(evt){
+        if(!(evt.target.id === ("menu" + myflowdetail.id) || evt.target.parentNode.id === ("menu" + myflowdetail.id))){
+          menu_methods.hiddenMenu();
+        }
+      };
+    }
+</script>
+</body>
+</html>

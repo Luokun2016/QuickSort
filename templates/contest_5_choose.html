@@ -1,0 +1,581 @@
+{% extends "templates/examclientindex.html" %}
+{% load i18n %} 
+{% load staticfiles%}
+
+
+
+{% block script %}
+<script type="text/javascript">
+
+</script>
+{% endblock %}
+
+{% block content1 %}
+<!-- hiddendata保存竞赛id -->
+<input id="hiddendata" type="hidden" value="{{hhdata}}"/>
+<div id="HomeContent" style="width:100%;height:100%;">
+      <form id="showflag"  method="post">
+
+          <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+             <div class="panel-heading" ><h3 id="baseque">理论题</h3>
+              <div id="flagsection" style="padding-top:2px;"></div>
+             </div>
+              <div class="panel-body" style="height:100%;">
+              <div id="choice-questions" style="text-align:left; vertical-align:top;">
+                    <input type="hidden" id="flaghidden" name="flaghidden" value=""/>
+                    <div id="flags">
+                            <table  class="table topsec_tabletop" data-choid="0">
+                              <tr  style="background:#2D63EF;">
+                                <td >1</td>
+                                <td colspan="2" style="text-align:left;">手动脱压缩壳一般是用下列方法：</td>
+                            </tr>
+                            <tr>
+                                <td style="width:20px; vertical-align:middle; text-align:right;">
+                                  <input type="checkbox" />
+                              </td>
+                              <td style="width:20px; vertical-align:middle; text-align:right;">A:</td>
+                              <td style="text-align:left;">
+                                  使用upx 脱壳
+                              </td>
+                          </tr>
+                          <tr>
+                            <td style="width:20px; vertical-align:middle; text-align:right;">
+                              <input type="checkbox" />
+                          </td>
+                          <td style="width:20px; vertical-align:middle; text-align:right;">B:</td>
+                          <td style="text-align:left;">
+                              使用fi扫描后，用unaspack脱壳
+                          </td>
+                      </tr>
+                      <tr>
+                        <td style="width:20px; vertical-align:middle; text-align:right;">
+                          <input type="checkbox" />
+                      </td>
+                      <td style="width:20px; vertical-align:middle; text-align:right;">C:</td>
+                      <td style="text-align:left;">
+                          使用winhex 工具脱壳
+                      </td>
+                      </tr>
+                      <tr>
+                        <td style="width:20px; vertical-align:middle; text-align:right;">
+                          <input type="checkbox" />
+                      </td>
+                      <td style="width:20px; vertical-align:middle; text-align:right;">D:</td>
+                      <td style="text-align:left;">
+                          确定加壳类型后，ollyice 调试脱壳
+                      </td>
+                    </tr>
+                </table>
+                </div>
+                <button id="submitflag" class="btn btn-danger" type="button" onclick="submitflags()" style="float:right;">提交基础题</button>
+                </div>     
+              </div>
+            </div>
+      </form>
+      <form id="qtioninfo">
+          <input type="hidden" name="qtionid" id="qtionid" value=""/>
+          <!-- <div class="container" style="width:100%;height:100%;"> -->
+
+            <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                  <div class="panel-heading">技能题目</div>
+                    <div id="skill-questions" class="panel-body" style="height:100%;">     
+                      </div>
+            </div>
+            <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                      <div class="panel-heading">渗透题目</div>
+                      <div id="infiltration-questions" class="panel-body" style="height:100%; padding: 15px"></div>
+            </div>
+      </form>
+</div>
+
+  <!-- Bootstrap core JavaScript
+  ================================================== -->
+  <!-- Placed at the end of the document so the pages load faster -->
+
+<form id="showskill" action="/modifypwd/" method='post'>
+  <input type="hidden" id="skillhidden" name="skillhidden" value=""/>
+  {% csrf_token %}
+  <div class="modal fade" id="skillsubmit" tabindex="-1" 
+  role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+  <div class="modal-dialog">
+      <div class="modal-content" style="width:600px; ">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="skilllab">技能题02</h3>
+      </div>
+      <div>
+          <table id = "skilltb" class="table topsec_tabletop">
+            <tr>
+              <td colspan="2" style="text-align:left;">国家安全局张博士截获了一封恐怖分子发送的邮件，你能帮助张博士破解邮件的信息吗？</td>
+          </tr>
+          <tr>
+              <td colspan="2" style="text-align:left;"><a href="#">邮件下载</a></td>
+          </tr>
+          <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right;">KEY：</td>
+              <td>
+                <input id='spwd1' name='spwd1' type='text' required="required" class="form-control topself_input"/>
+            </td>
+        </tr>
+    </table>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal" type="button">关闭</button>
+      <button class="btn btn-primary" type="button" onclick="submitskill()">提交</button>
+  </div>
+</div>
+</div>
+</div>
+</div>
+</form>
+<form id="showtotal" action="/modifypwd/" method='post'>
+  <input type="hidden" id="totalhidden" name="totalhidden" value=""/>
+  {% csrf_token %}
+  <div class="modal fade" id="totalsubmit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px;">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="infilib">渗透题01</h3>
+      </div>
+      <div>
+          <table id = "infitb" class="table topsec_tabletop">
+            <tr>
+              <!-- <td colspan="2" style="text-align:left;"><a href="#">172.20.10.100</a></td> -->
+          </tr>
+          <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right;">KEY：</td>
+              <td>
+                <input id='spwd2' name='spwd2' type='text' required="required" 
+                class="form-control topself_input"/>
+            </td>
+        </tr>
+    </table>
+    <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal" type="button">关闭</button>
+        <button class="btn btn-primary" type="button" onclick="submittotal()">提交</button>
+    </div>
+</div>
+</div>
+</div>
+</div>
+</form>
+
+<form id="information" action="/selcourse/" method='post'>
+  <input id='expid' name='expid' type='hidden' value='0'/>
+  <input id='exam-id' name='exam_id' type='hidden' value='0'/>
+  <input id='curexp' name='curexp' type='hidden' value='0'/>
+  <input id='curvms' name='curvms' type='hidden'  value='0'/>
+</form>
+
+<script type="text/javascript">
+setbackgroundcolor("examcolor");
+function open_vnc(fscreen, vmid){
+    var preid = vmid;
+    var url = '/console/' + preid + '/vm?token=' + preid;
+    if(fscreen)
+      window.open(url,'','width=850,height=485');
+  else
+      document.getElementById("syssframe").src = url;
+}
+
+function skin()
+{
+    this.qid="";
+    this.examid="";
+}
+function ajaxobj(_url, _tag, _way, _form)
+{
+    var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+    var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+    var info = "";
+    $.ajax({
+        type: m,
+        url: _url,
+        data: par,
+        async: false,
+        error: function(request) {
+                //alert("Connection error");
+            },
+            success: function(data) {
+                //$(_tag).html(data);
+                //alert(data);
+                info = data;
+            }
+        });
+    return info;
+}
+function LoadDate()
+{
+    $('.form_date').datetimepicker({
+        language:  'zh-CN',
+        weekStart: 1,
+        todayBtn:  1,
+        autoclose: 1,
+        todayHighlight: 1,
+        startView: 2,
+        minView: 2,
+        forceParse: 0
+    });
+}
+function showtotal()
+ {
+    $('#totalsubmit').modal('show');
+}
+function submittotal()
+{
+    var stuanswer = new answer();
+    stuanswer.ans =  $("input[name='spwd2']").val();
+        stuanswer.qid = Math.floor(parseInt($("#qtionid").val()));   // 修改
+        stuanswer.examid = $("#hiddendata").val();
+
+        $("#totalhidden").val(JSON.stringify(stuanswer));
+        var datas = ajaxobj("/submitexamque/", "", "post", "#showtotal");
+        data = $.parseJSON(datas);
+        if(data.istart == "totaltrue")
+        {
+            $('#totalsubmit').modal('hide');
+
+            $("#qt"+$("#qtionid").val()).removeClass('btn-default');
+            $("#qt"+$("#qtionid").val()).addClass('btn-warning');
+            $("#qt"+$("#qtionid").val()).addClass('disabled');
+
+            return true
+
+        }
+        else if(data.istart == "false")
+        {
+            Showbo.Msg.alert("该竞赛已关闭或已暂停，禁止答题！");
+            $('#totalsubmit').modal('hide');
+            return true;
+        }
+        else if(data.istart == "havetotalans")
+        {
+            Showbo.Msg.alert("不能重复提交！");
+            $('#skillsubmit').modal('hide');
+            return true;
+        }
+        else
+        {
+            Showbo.Msg.alert("答案错误");
+            $('#totalsubmit').modal('hide'); 
+        }
+    }
+
+// function showskill()
+// {
+//         $.ajax({
+//             url: '/load-student-questions',//请求后台数据
+//             type: 'GET',
+//             data: {exam_id: examId},
+//             dataType: 'json',
+//             success: function(data){
+//                 if(data.meta.error === true){
+//                     Showbo.Msg.alert(data.meta.msg);
+//                 }
+//                 else{
+//                 }
+//             }
+//         });
+//         $('#skillsubmit').modal('show');
+// }
+
+function submitskill()
+{
+        var stuanswer = new answer();
+        stuanswer.ans =  $("input[name='spwd1']").val();
+        stuanswer.qid = Math.floor(parseInt($("#qtionid").val()));   // 修改
+        stuanswer.examid = $("#hiddendata").val();
+
+        $("#skillhidden").val(JSON.stringify(stuanswer));
+        var datas = ajaxobj("/submitexamque/", "", "post", "#showskill");
+        data = $.parseJSON(datas);
+        if(data.istart == "skilltrue")
+        {
+            $('#skillsubmit').modal('hide');
+            $("#qt"+$("#qtionid").val()).removeClass('btn-default');
+            $("#qt"+$("#qtionid").val()).addClass('btn-warning');
+            $("#qt"+$("#qtionid").val()).addClass('disabled');
+
+            return true
+        }
+        else if(data.istart == "false")
+        {
+            Showbo.Msg.alert("该竞赛已关闭或已暂停，禁止答题！");
+            $('#skillsubmit').modal('hide');
+            return true;
+        }
+        else if(data.istart == "haveskillans")
+        {
+            Showbo.Msg.alert("不能重复提交！");
+            $('#skillsubmit').modal('hide');
+            return true;
+        }
+        else
+        {
+            Showbo.Msg.alert("答案错误");
+            $('#skillsubmit').modal('hide');
+        }
+}
+
+function answer(){
+    this.ans="";
+    this.qid="";
+    this.examid="";
+    this.istart="";
+}
+
+ 
+function submitflags()
+{
+    Showbo.Msg.oncallback = submitflagscallback;
+    Showbo.Msg.confirm("不能重复提交,请确定是否完成所有基础题");
+}
+function submitflagscallback(){
+    var stuanswer = {};
+        var stuans="";
+
+        // 提交题目的选项判断题
+        $("#flags>table").each(function(){
+          stuans=""
+          $(this.querySelectorAll("input")).each(function(){
+              if($(this).is(':checked')){
+                  stuans+= $(this).val();
+              }
+          });
+          if(stuans!=""){
+             stuanswer[$(this).data("choid")]=stuans;
+          }
+        });
+        // 将stuanswer解析成字符串，传递给后台处理
+        $("#flaghidden").val(JSON.stringify(stuanswer));
+        console.log(stuanswer);
+
+        var datas = ajaxobj("/submitflags/", "", "post", "#showflag");
+        data = $.parseJSON(datas);
+        if (data.issubmit== "true")
+        {
+            Showbo.Msg.alert("不能重复提交!"); 
+            $("#submitflag").addClass('disabled');
+            return;
+          }
+        else if(data.istart == "true")
+        {
+            Showbo.Msg.alert("基础题提交成功!");
+            $("#submitflag").addClass('disabled');
+
+            return true
+        }
+        else
+        {
+            Showbo.Msg.alert("该竞赛已关闭或已暂停，禁止答题！");
+            return true;
+        }
+}
+</script>
+
+<script type="text/javascript">
+
+function getQtion(id,i)
+    {
+        
+        $("#qtionid").val(id);
+
+        var qtion = ajaxobj("/getqtioninfo/", "", "post", "#qtioninfo");
+        var jsondata = $.parseJSON(qtion);
+
+       
+      if(jsondata.qtype == 2)
+        {
+            var h3text="技能题";
+            if(i<10){h3text+='0'+i}else{h3text+=i}
+                $('#skilllab').text(h3text);
+            tr = '<tr><td colspan="2" style="text-align:left;">'+jsondata.qtitle+'</td></tr>';
+            tr += '<tr><td colspan="2" style="text-align:left;"><a target="_blank" href="'+jsondata.link + '">'+jsondata.link +'</a></td></tr><tr><td style="width:100px; vertical-align:middle; text-align:right;">KEY：</td><td><input id="spwd1" name="spwd1" type="text" required="required" class="form-control topself_input"/></td></tr>';
+            $('#skilltb').html(tr);
+            $('#skillsubmit').modal('show');
+        }
+        else if(jsondata.qtype == 3)
+        {
+            var h3text="渗透题";
+            // if(i<10){h3text+='0'+i}else{h3text+=i}
+            $('#infilib').text(h3text);
+
+            tr = '<tr><td colspan="2" style="text-align:left;">'+jsondata.qtitle+'</td></tr>';
+            tr += '<tr><td colspan="2" style="text-align:left;"><a  target="_blank" href="'+jsondata.link + '">'+jsondata.link +'</a></td></tr><tr><td style="width:100px; vertical-align:middle; text-align:right;">KEY：</td><td><input id="spwd2" name="spwd2" type="text" required="required" class="form-control topself_input"/></td></tr>';
+
+            $('#infitb').html(tr);
+            $('#totalsubmit').modal('show');
+        }
+    }
+
+  $(function(){
+        var cour=document.getElementById("exam_id");
+        // 设置ajax方法为同步
+        $.ajaxSetup({
+            async:false
+        });
+        loadQuestions();
+    });
+
+function renderQtion(qtionDiv, questionIds,answer)
+    {
+        var content = "";
+          // flag=0;
+        for(var i = 1; i <= questionIds.length; i++)
+        {
+           if(answer.indexOf(questionIds[i-1]) != -1){
+                content += '<button class="btn btn-warning disabled" type="button" id="' + 'qt' + questionIds[i-1] + '"' + ' onclick="getQtion(' + questionIds[i-1].toString() +','+ i.toString() +')">' + i.toString() + '</button>&nbsp;&nbsp;';
+           // }else if(flag==0){
+           //      flag=1;
+           //       content += '<button class="btn btn-default" type="button" id="' +'qt' + questionIds[i-1] + '"' + ' onclick="getQtion(' +  questionIds[i-1].toString() +','+ i.toString() +')">' + i.toString() + '</button>&nbsp;&nbsp;';
+           }else{
+            content += '<button class="btn btn-default " type="button" id="' +'qt' + questionIds[i-1] + '"' + ' onclick="getQtion(' +  questionIds[i-1].toString() +','+ i.toString() +')">' + i.toString() + '</button>&nbsp;&nbsp;';
+           }
+        }
+        $("#" + qtionDiv).html(content);
+    }
+//添加基础题
+function section(i){
+  $("#flags>table").css('display', 'none');
+  sec=$("#flags>table").slice(eval((i-1)*5+1)-1,eval(i*5));
+  sec.css('display', '');
+}
+function add_choose(quechos,answer){
+     var char_array=["A","B","C","D","E","F","G","H","I","J"];
+     html=''
+     sections= Math.ceil((quechos.length)/5)
+     sec=quechos.length%5
+     $("#flagsection").append('题号：');
+     for(var i = 1; i <sections; i++)
+     {
+          $("#flagsection").append('<a onclick=section('+i+'); style="cursor:pointer;">'+eval((i-1)*5+1)+'~'+eval(i*5)+'</a>&nbsp;&nbsp;&nbsp;&nbsp;');
+     }
+     if(sec==0){
+        $("#flagsection").append('<a onclick=section('+sections+'); style="cursor:pointer;">'+eval((sections-1)*5+1)+'~'+eval(sections*5)+'</a>&nbsp;&nbsp;&nbsp;&nbsp;');
+      }else{
+          $("#flagsection").append('<a onclick=section('+sections+'); style="cursor:pointer;">'+eval((sections-1)*5+1)+'~'+eval((sections-1)*5+sec)+'</a>&nbsp;&nbsp;&nbsp;&nbsp;');
+      }
+     for(var i = 1; i <= quechos.length; i++)
+        {
+            tr='<table  class="table topsec_tabletop" data-choid="'+quechos[i-1].qid+'"style="display:none;"><tr  style="background:#2D63EF;"><td >'+i+'</td><td colspan="2" style="text-align:left;">'+ quechos[i-1].content + '</td></tr>'
+            for(var j = 1; j <= quechos[i-1].options.length; j++)
+            {
+                op = char_array[j-1];
+                if( quechos[i-1].ans.indexOf(quechos[i-1].options[j-1][1])>=0){
+                  tr+='<tr><td style="width:20px; vertical-align:middle; text-align:right;"><input name="'+quechos[i-1].qid+'" type="checkbox" value="'+quechos[i-1].options[j-1][1]+'" checked/></td><td style="width:20px; vertical-align:middle; text-align:right;">'+ op +': </td><td style="text-align:left;">'+ quechos[i-1].options[j-1][0]+'</td></tr>';
+
+                   $("#submitflag").addClass('disabled');
+
+                }else{
+                   tr+='<tr><td style="width:20px; vertical-align:middle; text-align:right;"><input name="'+quechos[i-1].qid+'" type="checkbox" value="'+quechos[i-1].options[j-1][1]+'"/></td><td style="width:20px; vertical-align:middle; text-align:right;">'+ op +': </td><td style="text-align:left;">'+ quechos[i-1].options[j-1][0]+'</td></tr>';
+                }
+            }
+            html+=tr;   
+        }
+      $('#flags').html(html);
+
+
+      section(1);
+}
+    // 添加渗透题
+function add_infiltration(qtionDiv, questionIds,answer)
+    {
+        // 根据渗透题的个数创建
+        for(var i=0; i<questionIds.length; i++)
+        {
+            var title = "";
+            $.post("/getquestiontitle/", {"qid": questionIds[i]}, function(data){
+                title = $.parseJSON(data);
+            });
+
+
+            var item =  '<div class="panel panel-default self_top" style="height:100%; margin-top:0px;">' +
+            '<div class="panel-heading">题目：' + title + '</div>' +
+            '<div class="panel-body" style="height:100%;">' +
+            '<div id="infq'+ i.toString()+'" style="text-align:left; vertical-align:top;"></div>' +
+            '</div>' +
+            '</div>';
+
+            $(item).appendTo($("#" + qtionDiv));
+
+            // 获取渗透题有几个小题
+            $.post("/infiltrationquestioninfo/", {"qid": questionIds[i]}, function(data){
+                result = $.parseJSON(data);
+                var newids = [];
+                for(var j=0; j<result; j++)
+                    newids[j] = questionIds[i] * 10 + (j + 1);
+                renderQtion("infq"+ i.toString(), newids, answer);
+            });
+        }
+    }
+
+    // 为了和渗透题按键的id统一，给每个按键都加上一个1，便于在getQtion中进行统一的处理
+function get_new_id(questionIds)
+    {
+        for(var i=0; i<questionIds.length; i++)
+            questionIds[i] = questionIds[i] * 10 + 1;
+        return questionIds
+    }
+
+function loadQuestions(){
+        var examId = $("#hiddendata").val();
+
+        $.ajax({
+            url: '/load-student-questions',
+            type: 'GET',
+            data: {exam_id: examId},
+            dataType: 'json',
+            success: function(data){
+                if(data.meta.error === true){
+                    Showbo.Msg.alert(data.meta.msg);
+                }
+                else{
+                    add_choose(data.questions.choiceQuestionIds,data.answer.question);
+                    // renderQtion("choice-questions", get_new_id(data.questions.choiceQuestionIds),data.answer.question);
+                    renderQtion("skill-questions", get_new_id(data.questions.skillQuestionIds),data.answer.question);
+                    add_infiltration("infiltration-questions", data.questions.infiltrationQuestionIds,data.answer.question);
+                }
+            }
+        });
+    }
+
+function startBench(){
+        var client = ajaxobj("/startBench/", "", "post", "#information");
+        var json = $.parseJSON(client);
+        var clientid = json.clientid;
+        var result = json.result;
+
+        if(result == 0 && clientid != 0)
+        {
+            open_vnc(false, clientid);
+            $("#curvms").val(clientid);
+            $("#btnstopexp").removeClass('disabled');
+            $("#btnmaxscreen").removeClass('disabled');
+            $("#btnstartexp").addClass('disabled');
+        }
+        else if (result == 2)
+            Showbo.Msg.alert("系统资源无法满足当前请求，请联系管理员！");
+        else if(result == 1)
+            Showbo.Msg.alert("请求失败，请联系管理员！");
+    }
+
+function stopBench()
+    {
+        var client = ajaxobj("/stopBench/", "", "post", "#information");
+        var json = $.parseJSON(client);
+        var clientid = json.clientid;
+        $("#curvms").val("0");
+        document.getElementById("syssframe").src = "";
+        $("#btnstartexp").removeClass('disabled');
+        $("#btnstopexp").addClass('disabled');
+        $("#btnmaxscreen").addClass('disabled');
+    }
+
+    function fullscreen(){
+        var clientid = $("#curvms").val();
+        open_vnc(true, clientid);
+        //var client = ajaxobj("/fullscreen/", "", "post", "#information");
+    }
+
+</script>
+{% endblock  %}

@@ -1,0 +1,237 @@
+{% extends "templates/index.html" %}
+<!-- 继承自templates/index.html的模板 -->
+{% load i18n %}
+<!-- 国际化 -->
+{% load staticfiles %}
+{% block title %}上传工具{% endblock %}
+
+{% block css %}   
+{% endblock %}
+
+{% block script %}
+{% endblock %}
+{% block maincontent %}{% endblock %}
+{% block content %}
+<html>
+  <title>上传工具</title>
+
+  <!-- 显示页面 -->
+  <form id='toolform' action="/tools/" method='get' >
+    <!--    {% csrf_token %} 
+       针对POST类型出现403错误信息使用此方法，get类型不需要
+     -->  
+    <div class="bs-docs-section">
+      <table width="100%">
+        <tr>
+          <td align="right">
+            <!-- <div style="text-align:right;">
+              <input  id='querytext' name='querytext' type="text" class="form-control topself_input" placeholder="请输入名称、说明关键字"  style="width:185px; display:inline;" value="{{toolselect}}" />
+              <button id="btnquery" type="submit" title="查找工具" formaction="/tools/" class="btn btn-danger">
+                <span class="glyphicon glyphicon-search"></span>
+              </button>
+            </div> -->
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="panel-body" style="padding-left:0px; padding-right:0px;">
+      <table id="showtooltable" class="table table-striped topsec_tabletop table-hover" data-selid="0" >
+        <!-- 自定义data的delis属性值为‘0’ -->
+          <tr>
+            <th width='25%'>名称</th>
+            <th width='25%'>说明</th>
+            <th width='25%'>备注</th>
+            <th width='15%'>上传时间</th>
+            <th width='10%'>下载</th>
+          </tr>
+          {% for show_tool in tool_list %}
+          <tr  id="{{show_tool.id}}" >
+            <td title={{show_tool.toolname}}>{{show_tool.toolname|truncatechars:20}}</td>
+            <td title={{show_tool.toolmessage}}>{{show_tool.toolmessage|truncatechars:20}}</td>      
+            <td title={{show_tool.toolinformation}}>{{show_tool.toolinformation|truncatechars:20}}</td>
+            <td>{{show_tool.toolcreatetime|date:"Y-m-d H:i:s"}}</td>
+            {%if show_tool.toolfile %}
+            <td>
+              <a id="download" href = "/document/uploadtools/{{show_tool.toolfile}}" >下载</a>
+            </td>
+            {%else%}
+            <td>--</td>
+            {% endif %}
+          </tr>
+          {% endfor %}  
+      </table>
+      <div class="flickr">
+        {% if tool_list.has_previous %}
+          <a href="?page={{ tool_list.previous_page_number }}{% ifnotequal toolselect '' %}&toolselect={{toolselect}}{% endifnotequal %}">上一页</a>
+        {% else %}
+          <span>上一页</span>
+        {% endif %}
+        <span>
+          {% for p in page_range %}
+
+            {% ifequal p tool_list.number %}
+              <span class="current">{{p}}</span>
+            {% else %}
+              <a href="?page={{p}}{% ifnotequal toolselect '' %}&toolselect={{toolselect}}{% endifnotequal %}" title="第{{p}}页">{{p}}</a>
+            {% endifequal %}
+
+          {% endfor %}
+        </span>
+        {% if tool_list.has_next %}
+        <a href="?page={{ tool_list.next_page_number }}{% ifnotequal toolselect '' %}&toolselect={{toolselect}}{% endifnotequal %}">下一页</a>
+        {% else %}
+        <span>下一页</span>
+        {% endif %}
+      </div>        
+    </div>
+  </form>
+
+  <!-- 新增工具-->
+  <form  id='addtool' action="/tooladd/" method='post' enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+      <div class="modal-dialog">
+        <div class="modal-content" style="width:600px;">
+          <div class="modal-header" >
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="addModalLabel">添加工具</h3>
+          </div>
+          <div>
+            <table class="table topsec_tabletop">
+              <tr>
+                <td style="width:100px; vertical-align:middle; text-align:right;"><font color="#FF0000">*</font>名称：</td>
+                <td style="width:470px;" >
+                  <input title="最多允许输入40个文字" id='toolname' name='toolname' maxLength="40" type='text' required="required" onchange="nameaddchecktool()" class="form-control topself_input" placeholder="只允许数字、字母、汉字及（）<>《》—@_="/> 
+                </td>
+              </tr>             
+              <tr>
+                <td style="width:100px; text-align:right;   vertical-align:middle;"><font color="#FF0000">*</font>说明：</td>
+                <td >
+                  <input title="最多允许输入50个文字" id='toolmessage' name='toolmessage' maxLength="50" type='text' required="required"  class="form-control topself_input"/>
+                </td>                 
+              </tr>
+
+              <tr>
+                <td style="width:100px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>选择文件：</td>
+                <td>
+                  <input  type='file' id='toolfile' name='toolfile' required="required" onchange="getFileSize(this)" maxLength="50" />
+                </td>
+  <!--                <td>
+                  <button type="button" onclick='uploadByParts()'>测试上传</button>
+                  </td> -->
+              </tr>
+
+              <tr>
+                <td style="width:100px; text-align:right;   vertical-align:middle;">备注：</td>
+                <td>
+                  <input title="最多允许输入50个文字" id='toolinformation' name='toolinformation' maxLength="50" type='text'   class="form-control topself_input"/>
+                </td>                 
+              </tr>
+
+            </table>
+
+            <div class="modal-footer">
+              <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+              <button class="btn btn-primary" id="btnaddtea" type="submit"  title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+              <button class="btn btn-default"  type="button" onclick='mclear()' title='重置'><span class="glyphicon glyphicon-retweet"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+ 
+  <script type="text/javascript">
+
+    // 页面加载完成以后执行，相当于$(document).ready(function(){})
+    $(function(){
+         setfontcolor("toolform"); 
+    })
+    
+    //清空显示内容
+    function mclear()
+    {           
+      document.getElementById('toolname').value = '';//更改id为toolname元素的value属性值为空
+      document.getElementById('toolmessage').value = '';
+      document.getElementById('toolfile').value = '';  
+      document.getElementById('toolinformation').value = '';           
+    }
+
+    // 选中事件
+    setTableEvent("showtooltable", true);//执行setTableEvent方法
+    function setTableEvent(tableid, singleSelect)
+    {
+      var tr = "#" + tableid + ">tbody>tr";//将特定id的table下的tbody子元素下的tr子元素对象赋值给tr变量
+      var trSelected = tr + ".success";//tr的success属性赋值给trSelected变量
+
+      $(tr).click(function(event) {//选取tr对象(tr是变量，不用加#)，click固定写法
+        if($(this).attr('id') == undefined)//$(this):上次选取的对象的id属性的值
+          return;
+        if (singleSelect) {
+          $(trSelected).removeClass('success');//移除success属性
+        }
+        if($("#tooledit_button").hasClass('disabled'))//判断id为tooledit_button元素是否存在disabled属性值
+        {
+          $("#tooledit_button").removeClass('disabled');//移除id为tooledit_button元素的disabled属性
+          $("#tooldel_button").removeClass('disabled');
+        }
+        $(this).addClass('success');//选定元素(指tr)增加success属性
+        $("#showtooltable").data("selid", $(this).attr('id'));
+        //$("#btndel").attr('formaction', '/teacherdel/' + $(this).attr('id')+'/');  
+        });
+    }
+
+    function uploadByParts(){
+      var file = $("#toolfile")[0].files[0],  //文件对象
+          name = file.name,        //文件名
+          size = file.size,        //总大小
+          succeed = 0;
+
+      var shardSize = 10 * 1024 *1024,     //以10MB为一个分片
+          shardCount = Math.ceil(size / shardSize);   //总片数
+            
+      for(var i = 0;i < shardCount;++i){
+          //计算每一片的起始与结束位置
+          var start = i * shardSize,
+              end = Math.min(size, start + shardSize);
+
+          //构造一个表单，FormData是HTML5新增的
+          var form = new FormData();
+          form.append("data", file.slice(start,end));  //slice方法用于切出文件的一部分
+          form.append("name", name);
+          form.append("total", shardCount);   //总片数
+          form.append("index", i + 1);        //当前是第几片
+          // alert(name+"  "+shardCount+"  "+i);
+         
+          //Ajax提交
+          $.ajax({
+              url: "/tooladd/",
+              type: "POST",
+              data: form,
+              async: true,         //异步
+              processData: false,  //很重要，告诉jquery不要对form进行处理
+              contentType: false,  //很重要，指定为false才能形成正确的Content-Type
+              success: function(){
+                  ++succeed;
+                  $("#output").text(succeed + " / " + shardCount);
+              }
+          });
+      }
+    }
+
+    function requestFullScreen() {
+      var de = document.documentElement;
+      if (de.requestFullscreen) {
+       de.requestFullscreen();
+      } 
+      else if (de.mozRequestFullScreen) {
+       de.mozRequestFullScreen();
+      } 
+      else if (de.webkitRequestFullScreen) {
+       de.webkitRequestFullScreen();
+      }
+    }
+  </script>
+{% endblock %}
+</html>

@@ -1,0 +1,296 @@
+{% extends "templates/index.html" %}
+<!-- 继承自templates/index.html的模板 -->
+{% load i18n %}
+<!-- 国际化 -->
+{% load staticfiles %}
+{% block title %}多人监控{% endblock %}
+
+{% block css %}   
+<style type="text/css">
+.console {
+    position: absolute;
+    right: 30px;
+    top: 45px;
+    border: 4px solid rgba(0, 161, 255, 0.95);
+    border-top-width: 25px;
+    border-radius: 3px;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Chrome/Safari/Opera */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge */
+    user-select: none;
+}
+
+.message {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background-color: #CCC;
+    text-align: center;
+}
+
+.console .title {
+    position: absolute;
+    top: -21px;
+    left: 5px;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+    font-family: Arial, "微软雅黑", "Yahei Mono", serif;
+    color: rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+}
+
+.console .fullScreen {
+    position: absolute;
+    margin: 0;
+    top: -22px;
+    right: 30px;
+    width: 20px;
+    height: 20px;
+}
+
+.console .refreshIframe {
+    position: absolute;
+    margin: 0;
+    top: -22px;
+    right: 5px;
+    width: 18px;
+    height: 20px;
+}
+
+.console .fullScreen:hover, .console .refreshIframe:hover {
+    box-shadow: 2px 2px 5px gray;
+}
+
+.console .iframe {
+    border: 0;
+    position: absolute;
+}
+
+</style>
+{% endblock %}
+
+{% block script %}
+{% endblock %}
+{% block maincontent %}{% endblock %}
+{% block link %}
+
+{% endblock %}
+{% block content %}
+<html>
+	<title>多人监控</title>
+  <div id="eyes" ></div>
+
+<script>
+function Console() {
+    this.console_div = null;
+    this.iframe = null;
+    this.full_screen = null;
+    this.refresh = null;
+    this.title = null;
+    this.iframe_basic_width = 0; // iframe标准的宽度
+    this.iframe_basic_height = 0; // iframe标准高度
+    this.scale_x = 1;
+    this.scale_y = 1;
+    this.outtime = null; // setInterval的id
+    this.isFullScreen = false;
+    this.consoleID = null;
+}
+
+
+Console.prototype = {
+    constructor: Console,
+    createConsole: function (container) {
+        this.console_div = document.createElement('div');
+        this.console_div.setAttribute('class', 'console');
+        this.iframe = document.createElement('iframe');
+        this.iframe.setAttribute('class', 'iframe');
+
+        this.title = document.createElement('p');
+        this.title.setAttribute('class', 'title');
+        this.full_screen = document.createElement('img');
+        this.full_screen.setAttribute('class', 'fullScreen');
+        this.full_screen.setAttribute('title', 'full screen');
+        this.full_screen.setAttribute('src', '/statics/images/full_screen.png');
+        this.refresh = document.createElement('img');
+        this.refresh.setAttribute('class', 'refreshIframe');
+        this.refresh.setAttribute('title', 'refresh');
+        this.refresh.setAttribute('src', '/statics/images/refresh.png');
+
+        this.console_div.appendChild(this.full_screen);
+        this.console_div.appendChild(this.refresh);
+        this.console_div.appendChild(this.iframe);
+        this.console_div.appendChild(this.title);
+
+        container.appendChild(this.console_div);
+    },
+    showConsole: function (container, text, url, left, top, width, height, id, num) {
+        if (!this.console_div) {
+            this.createConsole(container);
+            this.events();
+        }
+        this.title.textContent = text;
+        if(num !== '0'){
+            this.iframe.setAttribute('src', url);
+        }
+        this.console_div.style.left = left + "px";
+        this.console_div.style.top = top + "px";
+        this.console_div.style.width = width + "px";
+        this.console_div.style.height = height + "px";
+        this.console_div.style.visibility = "visible";
+        this.consoleID = id;
+    },
+    scaleIframe: function () {
+        // 获取console_div的内部宽高（去除边框）
+        var w = this.console_div.clientWidth,
+                h = this.console_div.clientHeight;
+        // 计算缩放比例
+        this.scale_x = w / this.iframe_basic_width;
+        this.scale_y = h / this.iframe_basic_height;
+        // 计算缩放后的偏移
+        var left = Math.ceil((this.iframe_basic_width - w) / 2),
+            top = Math.ceil((this.iframe_basic_height - h) / 2);
+
+        // 设置iframe
+        this.iframe.style.transform = "scale(" + this.scale_x + ", " + this.scale_y + ")";
+        this.iframe.style.left = (-left) + "px";
+        this.iframe.style.top = (-top) + "px";
+    },
+    getIframeBasicSize: function () {
+        var iframeWindow = this.iframe.contentWindow;
+        iframeWindow.postMessage(this.consoleID, "*");
+    },
+    set_size: function (size) { 
+        if((this.iframe_basic_width !== size[0] || this.iframe_basic_height !== size[1]) && !this.isFullScreen){
+            this.iframe_basic_width = size[0];
+            this.iframe_basic_height = size[1];
+            this.iframe.style.width = this.iframe_basic_width + "px";
+            this.iframe.style.height = this.iframe_basic_height + "px";
+            this.scaleIframe();
+        }
+    },
+    events: function () {
+        this.iframe.onload = iframe_onload.bind(this);
+        this.refresh.onclick = refresh_onclick.bind(this);
+        this.full_screen.onclick = full_onclick.bind(this);
+        this.console_div.onmouseover = console_mouseover.bind(this);
+
+        document.addEventListener("webkitfullscreenchange", webkitfullscreenchange.bind(this), false);
+        document.addEventListener("mozfullscreenchange", mozfullscreenchange.bind(this), false);
+
+        function iframe_onload() {
+            this.getIframeBasicSize();
+            this.outtime = setInterval(this.getIframeBasicSize.bind(this), 1000);
+        }
+
+        function refresh_onclick() {
+            this.console_div.parentNode.appendChild(this.console_div);
+        }
+
+        function full_onclick() {
+            clearInterval(this.outtime);
+            // 进入全屏时，1:1显示
+            this.iframe.style.transform = "scale(1)";
+            this.isFullScreen = true;
+
+            if (this.iframe.requestFullscreen) {
+                this.iframe.requestFullscreen();
+            } else if (this.iframe.mozRequestFullScreen) {
+                this.iframe.mozRequestFullScreen();
+            } else if (this.iframe.webkitRequestFullScreen) {
+                this.iframe.webkitRequestFullScreen();
+            }
+        }
+
+        function webkitfullscreenchange() {
+            if (!document.webkitIsFullScreen) {
+                this.outtime = setInterval(this.getIframeBasicSize.bind(this), 1000);
+                this.iframe.style.transform = "scale(" + this.scale_x + ", " + this.scale_y + ")";
+                this.isFullScreen = false;
+            }
+        }
+
+        function mozfullscreenchange() {
+            if (!document.mozFullScreen) {
+                this.outtime = setInterval(this.getIframeBasicSize.bind(this), 1000);
+                this.iframe.style.transform = "scale(" + this.scale_x + ", " + this.scale_y + ")";
+                this.isFullScreen = false;
+            }
+        }
+
+        function console_mouseover(evt) {
+            // 只有焦点在iframe上时，iframe才能接收键盘输入
+            this.iframe.focus();
+        }
+    }
+};
+var x=0;
+var y=0;
+var width=0;
+var height=0;
+
+var consoles = {},
+    names = localStorage.getItem("names").split(","),
+    nums = localStorage.getItem("nums").split(","),
+    container = document.getElementById("eyes");
+// names = ["ss","sssd","888","444","sss","sssde","dfef","sdfdf","dde"];
+// nums = ["12","55","61","89","56","142","545","641","849","546","777"];
+var flag=0;
+var arry = document.body.clientWidth/4;
+// alert(names.length);
+var setsum = 0;
+var setnu=0;
+(function createConsole(){
+	setsum ++;
+    var cons = new Console(),
+        cons_id = "console" + names.length,
+        name = names.pop(),
+        num = nums.pop(),
+        url = ''; // 根据num计算出控制台的url
+
+    $.post('/tools/getServerIp/', {'vmid': num}, function(re){
+        ip = JSON.parse(re);
+        url = 'http://' + ip + '/console/' + num + '/vm?token=' + num;
+        if(setsum%4 == 1 && setsum!=1)
+        {
+            setnu++;
+            flag =0;
+        }
+        // 计算console的坐标和宽高
+        if(flag == 0)
+        {
+            x = 5;
+            flag++;
+        }
+        else
+        {
+            x =x+arry;
+        }
+        width = arry-25;
+        height = arry-50;
+        y = 10+height*setnu;
+
+        cons.showConsole(container, name, url, x, y, width, height, cons_id, num);
+        consoles[cons_id] = cons;
+    });
+
+    if(names.length){
+        setTimeout(createConsole, 100);
+    }
+})();
+
+
+window.onmessage = function (event){
+    var datas = event.data.split(":"),
+        cons = datas[0],
+        size = datas[1].split(",");
+
+    consoles[cons].set_size(size);
+};
+
+
+</script>
+
+{% endblock %}
+</html>

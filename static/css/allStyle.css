@@ -1,0 +1,281 @@
+
+@charset "utf-8";
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, form, fieldset, p {
+    margin: 0;
+    padding: 0;
+}
+html, body{
+    font-family: "Microsoft YaHei" !important;
+    background-image: url('bg.png');
+}
+
+.glyphicon:before {
+    display: inline-block;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    position: relative;
+    top: 1px;
+}
+
+.topself_font {
+    font-family: "Glyphicons Halflings" !important;
+}
+.topself_input[readonly], fieldset[disabled] .topself_input {
+    /*background-color: #FCFCFC;*/
+    cursor: not-allowed;
+}
+.topself_input {
+    height: 27px;/*28px-->30px*/
+    width: 100%;
+}
+.topself_date {
+    width: 100%;
+}
+.topself_inputSerach {
+    margin-bottom: -15px;
+}
+.topsec_tabletop {
+    margin-bottom: 5px;
+    /*margin-top: 5px;*/
+}
+
+.topsec_tabletop > tbody > tr > td {
+    vertical-align: middle;
+}
+.topsec_tabletop > thead > tr > th, .topsec_tabletop > tbody > tr > td, .topsec_tabletop > tbody > tr > th {
+    text-align: center;
+    vertical-align: middle;
+    color: #fff;
+}
+
+.topsec_table_noborder > tbody > tr > td {
+    text-align: center;
+    vertical-align: middle;
+}
+.topsec_table_noborder > tbody > tr:nth-child(2n+1) > th {
+    background-color: #F9F9F9;
+    font-weight: bold;
+    text-align: center;
+}
+.topselft_btngroup {
+    margin-top: 10px;
+}
+.contentMain {
+    height: 100%;
+    width: 20%;
+}
+.topsecAbout {
+    float: right;
+    margin-right: 10px;
+    margin-top: 30px;
+}
+.topsecTop {
+    margin-top: -100px;
+}
+.topsecNav {
+    width: 10%;
+}
+.topself_checkbox {
+    margin-left: 20px;
+}
+.topself_checkboxcontent {
+    margin-left: 10px;
+}
+.personLeft {
+    float: left;
+    height: auto;
+    margin: -10px 2px 4px 0;
+    width: 100%;
+}
+.personRight {
+    float: right;
+    height: auto;
+    margin: -10px -8px 4px 0;
+    width: 79%;
+}
+
+.personLeftSx {
+    float: left;
+    height: auto;
+    margin: -10px 2px 4px 0;
+    width: 100%;
+}
+
+/*yfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfxyfx*/
+.personLeftSx .bs-docs-section {
+    background-color: #2d8bef;
+    height:90px;
+}
+.personLeftSx .bs-docs-section .btn-myprimary{
+    width:40px;
+    height:90px;
+    background-color: transparent;
+    color:#fff;
+    margin-left: 10px;
+}
+
+.personRightSx {
+    float: right;
+    height: auto;
+    margin: -10px 2px 4px 0;
+    width: 78%;
+}
+
+.personLeftEx {
+    float: left;
+    height: auto;
+    margin: -10px 2px 4px 0;
+    width: 27%;
+}
+.personRightEx {
+    float: right;
+    height: auto;
+    margin: -10px 2px 4px 0;
+    width: 78%;
+}
+
+.leftbar {
+    float: left;
+    height: auto;
+    margin: 8px 2px 4px 4px;
+    width: 62%;
+}
+.rightbar {
+    float: right;
+    height: auto;
+    margin: 8px 2px 4px 4px;
+    width: 35%;
+}
+.commonLocation {
+    margin-bottom: -10px;
+    margin-top: 25px;
+}
+.table01 {
+    background: none repeat scroll 0 0 #B4B4B4;
+    border: 1px solid #D5D5D5;
+    border-collapse: collapse;
+    width: 100%;
+}
+.table01 th {
+    background: none repeat scroll 0 0 #F1F7FF;
+    border: 1px solid #D5D5D5;
+    line-height: 26px;
+    padding: 5px 15px 5px 5px;
+    text-align: left;
+    vertical-align: baseline;
+}
+.table01 td {
+    background-color: #EFEFEF;
+    border: 1px solid #D5D5D5;
+    line-height: 24px;
+    padding: 5px 15px 5px 5px;
+    vertical-align: text-top;
+}
+.table01 td {
+    padding-left: 6px;
+}
+.self_tabs {
+    height: 70%;
+    margin-left: 7px;
+    width: 100%;
+}
+.self_top {
+    height: 35%;
+    margin-top: 20px;
+    width: 100%;
+}
+.self_down {
+    height: 200px;
+    margin-top: -5px;
+    width: 100%;
+}
+.liuleft {
+    float: left;
+    margin-left: 10px;
+    margin-top: 5px;
+    width: 90px;
+}
+.liuright {
+    float: left;
+    margin-left: 50px;
+    margin-top: 5px;
+    width: 85px;
+}
+.liuxiangmu {
+    float: right;
+    margin-right: 10px;
+    margin-top: 5px;
+    width: 80px;
+}
+.xiaoxi {
+    float: right;
+}
+.navbar-inverse {
+    background-color: #563D7C;
+    border-color: #463265;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.15);
+}
+div.flickr {
+    padding:0px;margin:0px; text-align:right; font-family:Verdana; font-size:12px;padding-right: 12px;
+}
+div.flickr a {
+    /*border-right: #dedfde 1px solid; */
+    padding-right: 6px; 
+    background-position: 50% bottom; 
+    /*border-top: #dedfde 1px solid; */
+    padding-left: 6px; 
+    padding-bottom: 2px; 
+    /*border-left: #dedfde 1px solid; */
+    color: #fff; 
+    margin-right: 3px; 
+    padding-top: 2px; 
+    /*border-bottom: #dedfde 1px solid;*/
+    text-decoration: none
+}
+div.flickr a:hover {
+    /*border-right: #000 1px solid; */
+    /*border-top: #000 1px solid; */
+    background-image: none; 
+    /*border-left: #000 1px solid; */
+    color: #777474; 
+    /*border-bottom: #000 1px solid; background-color: #0061de;height: 30px;width: 30px;*/
+}
+div.meneame a:active {
+    /*border-right: #000 1px solid; border-top: #000 1px solid; */
+    /*background-image: none; border-left: #000 1px solid; */
+    color: #fff; 
+    /*border-bottom: #000 1px solid; background-color: #0061de*/
+}
+div.flickr span.current {
+    padding-right: 6px; padding-left: 6px; 
+    font-weight: bold; padding-bottom: 2px; 
+    color: #0066ff; 
+    margin-right: 3px; padding-top: 2px;
+}
+div.flickr span.disabled {
+        padding-right: 6px; padding-left: 6px; padding-bottom: 2px; color: #adaaad; margin-right: 3px; padding-top: 2px;
+    }
+.clienttree ul.dynatree-container
+{
+    font-family: tahoma, arial, helvetica;
+    font-size: 10pt; /* font size should not be too big */
+    white-space: nowrap;
+    padding: 20px;
+    margin: 0; /* issue 201 */
+    background-color: #103882;
+    /*border: 0px dotted gray;*/
+    overflow: auto;
+    height: 602px; /* issue 263 */
+}
+
+
+
+

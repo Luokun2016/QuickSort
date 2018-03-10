@@ -1,0 +1,780 @@
+{% extends "templates/questiondesign.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}题目管理{% endblock %}
+{% block css %}
+    
+{% endblock %}
+{% block script1 %}
+
+{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">技能题</span>
+</div>
+{% endblock %}
+{% block content1 %}
+
+<form id='questionform' action="/questions/skill/" method='get' style="position: relative; ">
+   {% csrf_token %}
+  <div class="bs-docs-section">
+      <table width="100%">
+         <tr>
+              <td >
+                  <div style="text-align:left;">
+                      
+                        <button type="button" class="btn btn-primary" data-target="#myModal" data-toggle="modal" title="添加题目" onclick='mclear()'><span class="glyphicon glyphicon-plus"></span></button>
+                        <button type="button" class="btn btn-primary disabled"  onclick='edit()' title="编辑题目" data-toggle="modal" id='editsuccess'><span class="glyphicon glyphicon-pencil"></span></button>
+                          <button type="button"  onclick='details()'   title="题目详情"   data-toggle="modal" class="btn btn-primary disabled" id='detailsuccess'><span class="glyphicon glyphicon-info-sign"></span></button>
+                        <button id="btndel" type="button" class="btn btn-danger disabled" title="删除题目" onclick='submitdelformedit()'><span class="glyphicon glyphicon-remove"></span></button>
+                   </div>
+              </td>
+              <td align="right">
+                  <div style="text-align:right;">    
+                        <input id='querytext' name='querytext' value="{{queselect}}" placeholder="请输入编号、标题关键字" type='text' class="form-control topself_input"  style="width:185px; display:inline; "/>
+                        <button id="btnquery" type="submit" class="btn btn-danger" formaction="/questions/skill/" title="查找题目" ><span class="glyphicon glyphicon-search"></span></button>
+               </div>
+              </td>
+          </tr>
+       </table>
+  </div>
+  <div class="panel-body" style="padding-left:0px; padding-right:0px;">
+    <!-- Glyphicons
+  ================================================== -->
+    <table  id="lsque" class="table table-striped topsec_tabletop table-hover" data-selid="0" >
+      <tr>
+        
+        <th>编号</th>
+        <th>标题</th>
+        <th>分值</th>
+        <th>出题人</th>
+        <th>创建时间</th>
+        <th>最后修改时间</th>
+      </tr>
+      {% for question in questionls.object_list %}
+      <tr  id="{{question.id}}" >
+        <td>{{question.qid}}</td>
+        <td>{{question.qtitle}}</td>
+        <td>{{question.qscore}}</td>
+        <td>{{question.teacherid.teaname}}</td>
+        <td>{{question.createtime|date:"Y-m-d H:i:s"}}</td>
+        <td>{{question.edittime|date:"Y-m-d H:i:s"}}</td>
+      </tr>
+      {% endfor %}   
+    </table>
+      <div id='flickr1' class="flickr">
+        <input type="hidden" name="flickr1_current" id="flickr1_current" value="{{page}}" />
+        <input type="hidden" name="flickr1_total" id="flickr1_total" value="{{page_long}}" />
+        <input type="hidden" name="flickr1_querytext" id="flickr1_querytext" value="{{querytext}}" />
+      </div>
+
+  </div>
+</form>
+
+<form  id='skilladdform' action="/questions/skilladd/" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px;">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">添加题目</h3>
+        </div>
+
+<div>
+   <div>
+    <table class="table topsec_tabletop">
+     <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目编号：</td>
+              <td style="width:370px; ">
+                <input id='qid' name='qid' type='text' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" required="required" maxLength="20" onchange="checkqid()"  class="form-control topself_input"/>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目标题：</td>
+              <td style="width:370px; ">
+                <input id='qtitle' name='qtitle' type='text' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" required="required" maxLength="20"  class="form-control topself_input"/>
+              </td>
+            </tr>             
+             <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目分值：</td>
+              <td style="width:370px; ">
+                <input id='qscore' name='qscore' type='text' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" required="required" maxLength="30" onchange="checkscore()" class="form-control topself_input"/>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目答案：</td>
+              <td style="width:370px; ">
+                <input id='result' name='result' type='text' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" required="required" maxLength="30" class="form-control topself_input"/>
+              </td>
+            </tr>             
+    <tr>
+              <td style="width:130px; text-align:right;  vertical-align:middle;"><font color='#FF0000'>*</font>题目地址：</td>
+              <td colspan=3>
+                <input id='link' name='link' maxLength="80" onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" type='text'  required="required" class="form-control topself_input"/>
+              </td>
+            </tr>
+            <!-- <tr>
+              <td style="width:130px; text-align:right;  vertical-align:middle;" ><font color='#FF0000'>*</font>题目拓扑：</td>
+              <td colspan=3></td>
+            </tr> -->
+            </table>
+          </div>
+            <div  style="height: 410px;">
+             <div id="myflow_tools" style="position: absolute; margin-top: 200px; left: 10; background-color: #fff; width: 120px; cursor: default; padding: 3px;margin-left:10px;" class="ui-widget-content">
+                            
+                      </div>
+
+                      <div id="myflow_props"
+                        style="position: absolute; top: 30; right: 50; background-color: #fff; width: 220px; padding: 3px;margin-top:200px;"
+                        class="ui-widget-content">
+                      <div id="myflow_props_handle" class="ui-widget-header">属性</div>
+                      <table border="1" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td></td>
+                        </tr>
+                      </table>
+                      </div>
+
+                      <div id="myflow" ></div>
+                      <input id='hidTopo' name='hidTopo' type='hidden'/>
+          </div>
+
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" id="btnaddski" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          <button class="btn btn-default"  type="button" onclick='mclear()' title='重置'><span class="glyphicon glyphicon-retweet"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+
+<form  id='skilleditform' action="/questions/skilledit/" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px;">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">编辑题目</h3>
+        </div>
+
+<div>
+   <div>
+            <table class="table topsec_tabletop">
+             <tr>
+                      <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目编号：</td>
+                      <td style="width:370px; ">
+                        <input id='qidedit' name='qid' type='text'  required="required" maxLength="20"  class="form-control topself_input" readonly/>
+                      </td>
+                      <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目标题：</td>
+                      <td style="width:370px; ">
+                        <input id='qtitleedit' name='qtitleedit' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" type='text' required="required" maxLength="30"  class="form-control topself_input"/>
+                      </td>
+                    </tr>             
+                     <tr>
+                      <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目分值：</td>
+                      <td style="width:370px; ">
+                        <input id='qscoreedit' name='qscoreedit' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" type='text'  required="required" maxLength="30" onchange="checkscoreedit()" class="form-control topself_input"/>
+                      </td>
+                      <td style="width:130px; text-align:right; vertical-align:middle;"><font color='#FF0000'>*</font>题目答案：</td>
+                      <td style="width:370px; ">
+                        <input id='resultedit' name='resultedit' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" type='text' required="required" maxLength="30" class="form-control topself_input"/>
+                      </td>
+                    </tr>             
+            <tr>
+                      <td style="width:130px; text-align:right;  vertical-align:middle;"><font color='#FF0000'>*</font>题目地址：</td>
+                      <td colspan=3>
+                        <input id='linkedit' name='linkedit' onkeyup="this.value=this.value.replace(/^ +| +$/g,'')" maxLength="80" type='text'  required="required" class="form-control topself_input"/>
+                      </td>
+                    </tr>
+                    <!--   <tr>
+                        <td style="width:130px; text-align:right;  vertical-align:middle;" ><font color='#FF0000'>*</font>题目拓扑：</td>
+                        <td colspan=3></td>
+                      </tr> -->
+                    </table>
+                  </div>
+                    <div  style="height: 410px;">
+                     <div id="myflow_toolsedit" style="position: absolute; margin-top: 200px; left: 10; background-color: #fff; width: 120px; cursor: default; padding: 3px;margin-left:10px;" class="ui-widget-content">
+                                    
+                              </div>
+
+                              <div id="myflow_propsedit"
+                                style="position: absolute; top: 30; right: 50; background-color: #fff; width: 220px; padding: 3px;margin-top:200px;"
+                        class="ui-widget-content">
+                                  <div id="myflow_props_handleedit" class="ui-widget-header">属性</div>
+                                      <table border="1" width="100%" cellpadding="0" cellspacing="0">
+                                          <tr>
+                                            <td></td>
+                                          </tr>
+                                          <tr>
+                                            <td></td>
+                                          </tr>
+                                      </table>
+                              </div>
+
+                              <div id="myflowedit" ></div>
+                              <input id='hidTopoedit' name='hidTopoedit' type='hidden'/>
+                              <input id='skiid' name='queid' type='hidden'/>
+                  </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+                    <button class="btn btn-primary" id="btneditski" type="submit" title='保存' onclick='submitformedit()'><span class="glyphicon glyphicon-floppy-save"></span></button>
+                </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+
+ <form  id='skilldetailform'  method='post'>
+          {% csrf_token %}
+            <div class="modal fade" id="viewDoc" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog" style="width:1000px">
+                          <div class="modal-content" style="width:950px;">
+                              <div class="modal-header" >
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                        <h3 id="myModalLabel">题目详情</h3>
+                              </div>
+
+                              <div>
+                              <div>
+                                  <table class="table topsec_tabletop">
+                                          <tr>
+                                            <td style="width:130px; text-align:right; vertical-align:middle;">题目编号：</td>
+                                            <td style="width:370px; ">
+                                              <input id='qiddetail' name='qid' type='text'  required="required" maxLength="20" class="form-control topself_input" readOnly/>
+                                            </td>
+                                            <td style="width:130px; text-align:right; vertical-align:middle;">题目标题：</td>
+                                            <td style="width:370px; ">
+                                              <input id='qtitledetail' name='qtitledatail' type='text' required="required" maxLength="20" class="form-control topself_input" readOnly/>
+                                            </td>
+                                          </tr>             
+                                           <tr>
+                                            <td style="width:130px; text-align:right; vertical-align:middle;">题目分值：</td>
+                                            <td style="width:370px; ">
+                                              <input id='qscoredetail' name='qscoredetail' type='text'  required="required" maxLength="30" onchange="checkscoreedit()" class="form-control topself_input" readOnly/>
+                                            </td>
+                                            <td style="width:130px; text-align:right; vertical-align:middle;">题目答案：</td>
+                                            <td style="width:370px; ">
+                                              <input id='resultdetail' name='resultdetail' type='text' required="required" maxLength="30" class="form-control topself_input" readOnly/>
+                                            </td>
+                                          </tr>             
+                                          <tr>
+                                            <td style="width:130px; text-align:right;  vertical-align:middle;">题目地址：</td>
+                                            <td colspan=3>
+                                              <input id='linkdetail' name='linkdatail' maxLength="50" type='text'  required="required" class="form-control topself_input" readOnly/>
+                                            </td>
+                                          </tr>
+                                          <tr>
+                                            <td style="width:130px; text-align:right;  vertical-align:middle;" >题目拓扑：</td>
+                                            <td colspan=3></td>
+                                          </tr>
+                                    </table>
+                                </div>
+                                <div>
+                                <div id="myflow_propsdetail"
+                    style="position: absolute; top: 30; right: 50; background-color: #fff; width: 220px; padding: 3px;margin-top:210px;"  class="ui-widget-content">
+                                <div id="myflow_props_handledetail" class="ui-widget-header">属性</div>
+                                    <table border="1" width="100%" cellpadding="0" cellspacing="0">
+                                          <tr>
+                                            <td></td>
+                                          </tr>
+                                          <tr>
+                                            <td></td>
+                                          </tr>
+                                    </table>
+                                </div>
+                                <div id="myflowdetail" ></div>
+                               <input id='hidTopodetail' name='hidTopodetail' type='hidden'/> 
+                                <input id='skiiddetail' name='skiiddetail' type='hidden'/>
+                        </div>
+
+                              <div class="modal-footer">
+                                <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+                              </div>
+                </div>
+              </div>
+            </div>
+          </div>
+</form>
+
+<script type="text/javascript">
+  setfontcolor("choctrl");
+  setbackgroundcolor("skill");
+  setTableEvent("lsque", true);
+  $(function() 
+      {
+            //var myflow = $.myflow;
+            var myflowtools =  ajaxobj("/initmyflowtools/1","", "get", "");
+            var toolsdata = $.parseJSON(myflowtools);
+
+
+            $("#myflow_tools").append("<div id='myflow_tools_handle' style='text-align: center;' class='ui-widget-header'>操作</div>");
+
+
+            $("#myflow_tools").append("<div class='node' id='myflow_save'><img src='/statics/myflow/img/save.gif' />&nbsp;&nbsp;保存</div>");
+
+
+            $("#myflow_tools").append("<div class='node' style='display:none' id='myflow_clear'><img src='/statics/myflow/img/16/delete.gif' />&nbsp;&nbsp;清空</div>");
+            // $("#myflow_tools").append("<div class='node' id='myflow_save'><img style='height:16px;width:16px;' src='/statics/myflow/img/FullScreen.png' />&nbsp;&nbsp;放大</div>");
+            $("#myflow_tools").append("<div class='node selectable' id='pointer'><img src='/statics/myflow/img/select16.gif' />&nbsp;&nbsp;选择</div>");
+
+            $("#myflow_tools").append("<div class='node selectable' id='path'><img src='/statics/myflow/img/16/flow_sequence.png' />&nbsp;&nbsp;连线</div>");
+
+
+            $("#myflow_tools").append("<div style='text-align: center;' class='ui-widget-header'>物理设备</div>");
+            if(toolsdata.physics.length>=3){
+                  $("#myflow_tools").append("<div id='physicsdiv' style='text-align: float;height:70px;overflow:auto;' ></div>"); 
+             }else{
+                  $("#myflow_tools").append("<div id='physicsdiv' style='text-align: float;' ></div>"); 
+             }      
+            for (var i = 0;i < toolsdata.physics.length;i++)
+            {
+                if ( toolsdata.physics[i][2] == "pgate")
+                  $("#physicsdiv").append("<div class='node state' name='" + toolsdata.physics[i][1]+ "' id='" + toolsdata.physics[i][0] + "' desc='" + toolsdata.physics[i][2] + "' instance='" + toolsdata.physics[i][1] + "' type='pgate'><img style='height:16px;width:16px;'  src='/statics/myflow/img/128/fw.png' />&nbsp;&nbsp;" + toolsdata.physics[i][1] + "</div>");
+                else if ( toolsdata.physics[i][2] == "pc")
+                  $("#physicsdiv").append("<div class='node state' name='" + toolsdata.physics[i][1]+ "' id='" + toolsdata.physics[i][0] + "' desc='" + toolsdata.physics[i][2] + "' instance='" + toolsdata.physics[i][1] + "' type='pc'><img style='height:16px;width:16px;'  src='/statics/myflow/img/128/pc.png' />&nbsp;&nbsp;" + toolsdata.physics[i][1] + "</div>");
+                else if ( toolsdata.physics[i][2] == "pswitch")
+                  $("#physicsdiv").append("<div class='node state' name='" + toolsdata.physics[i][1]+ "' id='" + toolsdata.physics[i][0] + "' desc='" + toolsdata.physics[i][2] + "' instance='" + toolsdata.physics[i][1] + "' type='pswitch'><img style='height:16px;width:16px;'  src='/statics/myflow/img/128/switch.png' />&nbsp;&nbsp;" + toolsdata.physics[i][1] + "</div>");
+            }
+
+            $("#myflow_tools").append("<div style='text-align: center;' class='ui-widget-header'>虚拟服务器</div>");
+            if(toolsdata.imgls.length>=3){
+                   $("#myflow_tools").append("<div id='imglsdiv' style='text-align: float;height:70px;overflow:auto;' ></div>");
+            }else{
+                  $("#myflow_tools").append("<div id='imglsdiv' style='text-align: float;' ></div>");
+            } 
+             for (var i = 0;i < toolsdata.imgls.length;i++)
+            {
+                  $("#imglsdiv").append("<div class='node state' name='" + toolsdata.imgls[i][1]+ "' id='" + toolsdata.imgls[i][0] + "' desc='" + toolsdata.imgls[i][2] + "' instance='" + toolsdata.imgls[i][1] + "' type='imgls' dictype='"+toolsdata.imgls[i][3]+"'><img style='height:16px;width:16px;'  src='/statics/myflow/img/128/"+toolsdata.imgls[i][3]+".png' />&nbsp;&nbsp;" + toolsdata.imgls[i][1] + "</div>");
+            }
+
+            $("#myflow_tools").append("<div style='text-align: center;' class='ui-widget-header'>虚拟网关</div>");
+            if(toolsdata.imgvgtls.length>=3){
+                   $("#myflow_tools").append("<div id='imgvgtlsdiv' style='text-align: float;height:70px;overflow:auto;' ></div>"); 
+            }else{
+                   $("#myflow_tools").append("<div id='imgvgtlsdiv' style='text-align: float;' ></div>"); 
+            }
+            for (var i = 0;i < toolsdata.imgvgtls.length;i++)
+            {
+                  $("#imgvgtlsdiv").append("<div class='node state' name='" + toolsdata.imgvgtls[i][1]+ "' id='" + toolsdata.imgvgtls[i][0] +  "' desc='" + toolsdata.imgvgtls[i][2] + "'  instance='" + toolsdata.imgvgtls[i][1] + "' type='imgvgtls' dictype='"+toolsdata.imgvgtls[i][3]+"'><img style='height:16px;width:16px;' src='/statics/myflow/img/128/" + toolsdata.imgvgtls[i][3] + ".png' />&nbsp;&nbsp;" + toolsdata.imgvgtls[i][1] + "</div>");
+            }
+
+            $("#myflow_tools").append("<div style='text-align: center;' class='ui-widget-header'>虚拟交换</div>");
+            if(toolsdata.imgvshls.length>=3){
+                   $("#myflow_tools").append("<div id='imgvshlsdiv' style='text-align: float;height:70px;overflow:auto;' ></div>"); 
+            }else{
+                   $("#myflow_tools").append("<div id='imgvshlsdiv' style='text-align: float;' ></div>"); 
+            }
+            for (var i = 0;i < toolsdata.imgvshls.length;i++)
+            {
+                  $("#imgvshlsdiv").append("<div class='node state' name='" + toolsdata.imgvshls[i][1]+ "' id='" + toolsdata.imgvshls[i][0] +  "' desc='" + toolsdata.imgvshls[i][2] + "'  instance='" + toolsdata.imgvshls[i][1] + "' type='imgvshls' dictype='"+toolsdata.imgvshls[i][3]+"'><img style='height:16px;width:16px;' src='/statics/myflow/img/128/" + toolsdata.imgvshls[i][3] + ".png' />&nbsp;&nbsp;" + toolsdata.imgvshls[i][1] + "</div>");
+            }
+
+
+            $("#myflow_toolsedit").append("<div id='myflow_tools_handleedit' style='text-align: center;' class='ui-widget-header'>操作</div>");
+            $("#myflow_toolsedit").append("<div class='node' id='myflow_saveedit'><img src='/statics/myflow/img/save.gif' />&nbsp;&nbsp;保存</div>");
+            $("#myflow_toolsedit").append("<div class='node' style='display:none' id='myflow_clearedit'><img src='/statics/myflow/img/16/delete.gif' />&nbsp;&nbsp;清空</div>");
+            /*$("#myflow_tools").append("<div class='node' id='myflow_save'><img style='height:16px;width:16px;' src='/statics/myflow/img/FullScreen.png' />&nbsp;&nbsp;放大</div>");*/
+            $("#myflow_toolsedit").append("<div class='node selectable' id='pointer'><img src='/statics/myflow/img/select16.gif' />&nbsp;&nbsp;选择</div>");
+            $("#myflow_toolsedit").append("<div class='node selectable' id='path'><img src='/statics/myflow/img/16/flow_sequence.png' />&nbsp;&nbsp;连线</div>");
+
+
+            $("#myflow_toolsedit").append("<div style='text-align: center;' class='ui-widget-header'>物理设备</div>");
+             if(toolsdata.physics.length>=3){
+                  $("#myflow_toolsedit").append("<div id='physicsdivedit' style='text-align: float;height:70px;overflow:auto;' ></div>"); 
+             }else{
+                  $("#myflow_toolsedit").append("<div id='physicsdivedit' style='text-align: float;' ></div>"); 
+             }     
+            for (var i = 0;i < toolsdata.physics.length;i++)
+            {
+                if ( toolsdata.physics[i][2] == "pgate")
+                  $("#physicsdivedit").append("<div class='node state' name='" + toolsdata.physics[i][1]+ "' id='" + toolsdata.physics[i][0] + "' desc='" + toolsdata.physics[i][2] + "' instance='" + toolsdata.physics[i][1] + "' type='pgate'><img style='height:16px;width:16px;'  src='/statics/myflow/img/128/fw.png' />&nbsp;&nbsp;" + toolsdata.physics[i][1] + "</div>");
+                else if ( toolsdata.physics[i][2] == "pc")
+                  $("#physicsdivedit").append("<div class='node state' name='" + toolsdata.physics[i][1]+ "' id='" + toolsdata.physics[i][0] + "' desc='" + toolsdata.physics[i][2] + "' instance='" + toolsdata.physics[i][1] + "' type='pc'><img style='height:16px;width:16px;'  src='/statics/myflow/img/128/pc.png' />&nbsp;&nbsp;" + toolsdata.physics[i][1] + "</div>");
+                else if ( toolsdata.physics[i][2] == "pswitch")
+                  $("#physicsdivedit").append("<div class='node state' name='" + toolsdata.physics[i][1]+ "' id='" + toolsdata.physics[i][0] + "' desc='" + toolsdata.physics[i][2] + "' instance='" + toolsdata.physics[i][1] + "' type='pswitch'><img style='height:16px;width:16px;'  src='/statics/myflow/img/128/switch.png' />&nbsp;&nbsp;" + toolsdata.physics[i][1] + "</div>");
+            }
+
+            $("#myflow_toolsedit").append("<div style='text-align: center;' class='ui-widget-header'>虚拟服务器</div>");
+
+           if(toolsdata.imgls.length>=3){
+                   $("#myflow_toolsedit").append("<div id='imglsdivedit' style='text-align: float;height:70px;overflow:auto;' ></div>");
+            }else{
+                  $("#myflow_toolsedit").append("<div id='imglsdivedit' style='text-align: float;' ></div>");
+            } 
+
+            for (var i = 0;i < toolsdata.imgls.length;i++)
+            {
+                  $("#imglsdivedit").append("<div class='node state' name='" + toolsdata.imgls[i][1]+ "' id='" + toolsdata.imgls[i][0] + "edit' desc='" + toolsdata.imgls[i][2] + "' instance='" + toolsdata.imgls[i][1] + "' type='imgls' dictype='"+toolsdata.imgls[i][3]+"'><img style='height:16px;width:16px;'  src='/statics/myflow/img/128/"+toolsdata.imgls[i][3]+".png' />&nbsp;&nbsp;" + toolsdata.imgls[i][1] + "</div>");
+            }
+
+            $("#myflow_toolsedit").append("<div style='text-align: center;' class='ui-widget-header'>虚拟网关</div>");
+            if(toolsdata.imgvgtls.length>=3){
+                   $("#myflow_toolsedit").append("<div id='imgvgtlsdivedit' style='text-align: float;height:70px;overflow:auto;' ></div>"); 
+            }else{
+                   $("#myflow_toolsedit").append("<div id='imgvgtlsdivedit' style='text-align: float;' ></div>"); 
+            }
+            for (var i = 0;i < toolsdata.imgvgtls.length;i++)
+            {
+                  $("#imgvgtlsdivedit").append("<div class='node state' name='" + toolsdata.imgvgtls[i][1]+ "' id='" + toolsdata.imgvgtls[i][0] +  "edit' desc='" + toolsdata.imgvgtls[i][2] + "'  instance='" + toolsdata.imgvgtls[i][1] + "' type='imgvgtls' dictype='"+toolsdata.imgvgtls[i][3]+"'><img style='height:16px;width:16px;' src='/statics/myflow/img/128/" + toolsdata.imgvgtls[i][3] + ".png' />&nbsp;&nbsp;" + toolsdata.imgvgtls[i][1] + "</div>");
+            }
+
+            $("#myflow_toolsedit").append("<div style='text-align: center;' class='ui-widget-header'>虚拟交换</div>");
+            if(toolsdata.imgvshls.length>=3){
+                   $("#myflow_toolsedit").append("<div id='imgvshlsdivedit' style='text-align: float;height:70px;overflow:auto;' ></div>"); 
+            }else{
+                   $("#myflow_toolsedit").append("<div id='imgvshlsdivedit' style='text-align: float;' ></div>"); 
+            }
+            for (var i = 0;i < toolsdata.imgvshls.length;i++)
+            {
+                  $("#imgvshlsdivedit").append("<div class='node state' name='" + toolsdata.imgvshls[i][1]+ "' id='" + toolsdata.imgvshls[i][0] +  "edit' desc='" + toolsdata.imgvshls[i][2] + "'  instance='" + toolsdata.imgvshls[i][1] + "' type='imgvshls' dictype='"+toolsdata.imgvshls[i][3]+"'><img style='height:16px;width:16px;' src='/statics/myflow/img/128/" + toolsdata.imgvshls[i][3] + ".png' />&nbsp;&nbsp;" + toolsdata.imgvshls[i][1] + "</div>");
+            }
+
+
+            myflow = $('#myflow').myflow(
+            {
+                   basePath : "",
+                  restore : "",
+                          tools : 
+                          {
+                                save : 
+                                {
+                                      onclick : function(data) 
+                                      {
+                                           
+                                            debugger;
+                                            $('#hidTopo').val(data);
+                                            alert('保存成功');
+                                      }
+                                }
+                          }
+            });
+            myflowedit = $('#myflowedit').myflowedit(
+            {
+                   basePath : "",
+                    restore : "",
+                          tools : 
+                          {
+                                save : 
+                                {
+                                      onclick : function(data) 
+                                      {
+                                            debugger;
+                                            $('#hidTopoedit').val(data);
+                                            alert('保存成功');
+                                      }
+                                }
+                          }
+            });
+            myflowdetail = $('#myflowdetail').myflowdetail(
+            {
+                   basePath : "",
+                    restore : "",
+                    tools : 
+                    {
+
+                    }
+            });
+        var total_page=parseInt($('#flickr1_total').val());
+        var current_page=parseInt($('#flickr1_current').val());
+        var flickr1_querytext=$('#flickr1_querytext').val();
+        var dic = new Array(); 
+        if(flickr1_querytext!=''){
+          dic["querytext"] = flickr1_querytext;
+        }
+        document.getElementById('flickr1').innerHTML=setflickr(total_page,current_page,dic);
+      });
+
+
+function setTableEvent(tableid, singleSelect) {
+         var tr = "#" + tableid + ">tbody>tr";
+         var trSelected = tr + ".success";
+
+         $(tr).click(function(event) {
+                    if($(this).attr('id') == undefined)
+                      return;
+                  //var id = $("td:first-child", $(this)).text();
+                  // single-select
+                  if (singleSelect) {
+                      $(trSelected).removeClass('success');
+                  }
+                    if($("#editsuccess").hasClass('disabled'))
+                  {
+
+                    $("#editsuccess").removeClass('disabled');
+                    $("#btndel").removeClass('disabled');
+                    $("#detailsuccess").removeClass('disabled');
+                  }
+                  $(this).addClass('success');
+                  $("#lsque").data("selid", $(this).attr('id'));
+                  $("#btndel").attr('formaction', '/questiondel/' + $(this).attr('id')+'/');  
+         });
+}
+
+function details(){
+
+              var preid = $("#lsque").data("selid");
+              if(preid == "0")
+              {
+                 return false;
+               }
+             $("#skiiddetail").val(preid);
+             var skilllink;
+             
+             var que = ajaxobj("/questions/skilllinkcheck/", "", "post", "#skilldetailform");     
+             var jsondata = $.parseJSON(que);
+
+        
+            $("#qiddetail").val(jsondata.qid);
+            $("#qtitledetail").val(jsondata.qtitle);
+            $("#qscoredetail").val(jsondata.qscore);
+            $("#resultdetail").val(jsondata.result);
+            $("#linkdetail").val(jsondata.link);
+
+            $('#viewDoc').modal('show');
+
+            $('#myflowdetail').empty();
+
+             if(jsondata.topo!='')
+              {
+            
+                 myflowdetail = $('#myflowdetail').myflowdetail(
+                    {
+                           basePath : "",
+
+                            restore : eval("(" + jsondata.topo + ")")
+                            
+                    });
+               }
+               else
+              {
+                myflowdetail = $('#myflowdetail').myflowdetail(
+                  {
+                         basePath : "",
+                          restore : "",  
+                  });
+              }
+               
+    }
+
+function checkqid(){
+                   var qid=document.getElementById("qid");
+                   var judgeqid;
+                   var que = ajaxobj("/questions/qidcheck/", "", "post", "#skilladdform");
+                   var jsondata = $.parseJSON(que);
+                   judgeqid=jsondata.judgeqid;
+                   var reg=/^[A-Za-z0-9]+$/;
+                  if(reg.test(qid.value)==false)
+                        {qid.setCustomValidity("只能输入数字或字母");}
+                  else if(judgeqid==1)
+                    qid.setCustomValidity("已存在的编号!");
+                  else
+                    qid.setCustomValidity("");
+    }
+
+function checkqidedit(){
+                   var qid=document.getElementById("qidedit");
+                   var judgeqid;
+                   var que = ajaxobj("/questions/qidcheck/", "", "post", "#skilleditform");
+                   var jsondata = $.parseJSON(que);
+                   judgeqid=jsondata.judgeqid;
+
+                  if(judgeqid==1)
+                    qid.setCustomValidity("已存在的编号!");
+                  else
+                    qid.setCustomValidity("");
+    }
+
+function submitdelformedit()
+{
+      var preid = $("#lsque").data("selid");
+      var jresult = ajaxobj("/questions/checkquedel/"+preid+"/", "", "post", "");
+      var jsonresult = $.parseJSON(jresult);
+      if(jsonresult.cando=="false"){
+            Showbo.Msg.alert("您没有权限删除该题!");
+            return;
+      }else  if(jsonresult.result != '0')//被试卷使用
+      {
+            Showbo.Msg.alert("该题目已被添加到试卷中，删除无效！");
+            return;
+      }
+
+      Showbo.Msg.oncallback = submitdelformeditcallback;
+      Showbo.Msg.confirm("确定删除吗？");
+}
+function submitdelformeditcallback()
+{
+      var preid = $("#lsque").data("selid");
+
+        if(preid!=0)
+        {
+        var delurl="/questions/skilldel/"+preid+'/';
+        document.getElementById("questionform").action=delurl;
+        document.getElementById("questionform").submit();
+       }
+}  
+
+ function mclear()
+ {
+  $("#qid").val('');
+  $("#qtitle").val('');
+  $("#qscore").val('');
+  $("#result").val('');
+  $("#link").val('');
+  $('#hidTopo').val('');
+  $("#myflow_save").unbind("click");
+  $('#myflow_clear').click();
+  $("#myflow_clear").unbind("click");
+  $('#myflow').empty();
+   myflow = $('#myflow').myflow(
+            {
+                   basePath : "",
+                  restore : "",
+                          tools : 
+                          {
+                                save : 
+                                {
+                                      onclick : function(data) 
+                                      {
+                                           
+                                            debugger;
+                                            $('#hidTopo').val(data);
+                                            Showbo.Msg.alert('保存成功');
+                                      }
+                                }
+                          }
+            });
+
+
+ }
+
+
+function edit()
+{
+    var preid = $("#lsque").data("selid");
+    if(preid == "0")
+    {
+        return false;
+    }
+
+    $("#skiid").val(preid);
+
+    var que = ajaxobj("/questions/instartexam/", "", "post", "#skilleditform");
+    var jsondata = $.parseJSON(que);
+     if(jsondata.cando=="false"){
+            Showbo.Msg.alert("您没有权限编辑该题!");
+            return;
+    }else if(jsondata.result==1){
+            Showbo.Msg.alert("该题目已经在开启的竞赛中,不能编辑");
+            return;
+    }
+
+    var que = ajaxobj("/questions/skillinfo/", "", "post", "#skilleditform");
+    var jsondata = $.parseJSON(que);
+      
+    $("#qidedit").val(jsondata.qid);
+    $("#qtitleedit").val(jsondata.qtitle);
+    $("#qscoreedit").val(jsondata.qscore);
+    $("#resultedit").val(jsondata.result);
+    $("#linkedit").val(jsondata.link);
+    $('#hidTopoedit').val(jsondata.topo);
+
+
+    $("#myflow_saveedit").unbind("click");
+    $('#myflow_clearedit').click();
+    $("#myflow_clearedit").unbind("click");
+    $('#myflowedit').empty();
+
+
+      if(jsondata.topo!='')
+      {
+    
+         myflowedit = $('#myflowedit').myflowedit(
+            {
+                   basePath : "",
+
+                    restore : eval("(" + jsondata.topo + ")")//jsondata.topo从后台传过来的是一个字符串，用eval()转换成一个对象
+                    ,
+                    tools : 
+                          {
+                                save : 
+                                {
+                                      onclick : function(data) 
+                                      {
+                                            debugger;
+                                            $('#hidTopoedit').val(data);
+                                            Showbo.Msg.alert('保存成功');
+                                      }
+                                }
+                          }     
+                           
+            });
+       }
+       else
+       {
+          myflowedit = $('#myflowedit').myflowedit(
+            {
+                   basePath : "",
+                    restore : "",
+                          tools : 
+                          {
+                                save : 
+                                {
+                                      onclick : function(data) 
+                                      {
+                                            debugger;
+                                            $('#hidTopoedit').val(data);
+                                            Showbo.Msg.alert('保存成功');
+                                      }
+                                }
+                          }
+            });
+        }
+
+    $('#myModal1').modal('show');
+    
+}
+
+function submitformedit()
+  {
+
+    var preid = $("#lsque").data("selid");
+   
+    var editurl="/questions/skilledit/"+preid+'/';
+    //alert(editurl);
+     document.getElementById("skilleditform").action=editurl;
+   
+   // document.getElementById("teachereditform").submit();
+   }
+
+   function checkscore(){
+                 var sc = document.getElementById("qscore");
+                 var reg=/^[1-9][0-9]*$/;
+                 if(reg.test(sc.value)==false)
+                    sc.setCustomValidity("非0开头的正整数!");
+                  else if (parseInt(sc.value)<=0 || parseInt(sc.value)>100)
+                  sc.setCustomValidity("分值大于0小于或等于100!");
+                  else
+                    sc.setCustomValidity("");
+    }
+    function checkscoreedit(){
+                 var sc = document.getElementById("qscoreedit");
+                 var reg=/^[1-9][0-9]*$/;
+                 if(reg.test(sc.value)==false)
+                    sc.setCustomValidity("非0开头的正整数");
+                  else if (parseInt(sc.value)<=0 || parseInt(sc.value)>100)
+                  sc.setCustomValidity("分值大于0小于或等于100!");
+                  else
+                    sc.setCustomValidity("");
+    }
+</script>
+
+
+{% endblock %}

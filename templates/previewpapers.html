@@ -1,0 +1,375 @@
+{% extends "templates/index.html" %}<!--继承index.html-->
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}试卷预览{% endblock %}
+{% block css %}{% endblock %}
+{% block script %}
+
+{% endblock %}
+{% block maincontent %}{% endblock %}
+
+{% block link %}
+<div style="width:100%;height:80px;">
+
+  <a href="/papers/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">试卷预览</span>
+</div>
+{% endblock %}
+{% block content %}
+<form id='qtioninfo' >
+ <input type="hidden" name="exam_id" id="exam_id" value="{{exam_id}}"/>
+ <input type="hidden" name="qtionid" id="qtionid" value=""/>
+     <div  style="width:100%;height:100%;">
+        <div id="HomeContent" style="width:100%;height:100%;">
+            <div class="panel panel-default self_top" style="height:100%; margin-top:0px;background: rgba(0,0,0,0); color: #FFFFFF;">
+                <div class="panel-heading" style="background: rgba(0,0,0,0); color: #FFFFFF;">基础题目</div>
+                <div id = "choiceid" class="panel-body" style="height:100%;">
+                    <div id="choice-questions" style="text-align:left; vertical-align:top;">
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default self_top" style="height:100%; margin-top:0px; background: rgba(0,0,0,0); color: #FFFFFF;">
+                <div class="panel-heading" style="background: rgba(0,0,0,0); color: #FFFFFF;">简答题</div>
+                <div id = "askid" class="panel-body" style="height:100%;">
+                    <div id="ask-questions" style="text-align:left; vertical-align:top;">
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default self_top" style="height:100%; margin-top:0px; background: rgba(0,0,0,0); color: #FFFFFF;">
+                <div class="panel-heading" style="background: rgba(0,0,0,0); color: #FFFFFF;">技能题目</div>
+                <div class="panel-body" style="height:100%;">
+                    <div id="skill-questions" style="text-align:left; vertical-align:top;">
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default self_top" style="height:100%; margin-top:0px; background: rgba(0,0,0,0); color: #FFFFFF;">
+                <div class="panel-heading" style="background: rgba(0,0,0,0); color: #FFFFFF;">渗透题目</div>
+                <div id="infiltration-questions" class="panel-body" style="height:100%; padding: 15px"></div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<form id="showflag"  method="post">
+  <input type="hidden" id="flaghidden" name="shidden" value=""/>
+  {% csrf_token %}
+  <div class="modal fade" id="flagsubmit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px; ">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="baseque">理论题09</h3>
+        </div>
+        <div>
+          <table id="flags" class="table topsec_tabletop">
+            <tr>
+              <td colspan="3" style="text-align:left;">手动脱压缩壳一般是用下列方法：</td>
+            </tr>
+            <tr>
+              <td style="width:20px; vertical-align:middle; text-align:right;">
+                <input type="checkbox" />
+              </td>
+              <td style="width:20px; vertical-align:middle; text-align:right;">A:</td>
+              <td style="text-align:left;">
+                使用upx 脱壳
+              </td>
+            </tr>
+            <tr>
+              <td style="width:20px; vertical-align:middle; text-align:right;">
+                <input type="checkbox" />
+              </td>
+              <td style="width:20px; vertical-align:middle; text-align:right;">B:</td>
+              <td style="text-align:left;">
+                使用fi扫描后，用unaspack脱壳
+              </td>
+            </tr>
+            <tr>
+              <td style="width:20px; vertical-align:middle; text-align:right;">
+                <input type="checkbox" />
+              </td>
+              <td style="width:20px; vertical-align:middle; text-align:right;">C:</td>
+              <td style="text-align:left;">
+                使用winhex 工具脱壳
+              </td>
+            </tr>
+            <tr>
+              <td style="width:20px; vertical-align:middle; text-align:right;">
+                <input type="checkbox" />
+              </td>
+              <td style="width:20px; vertical-align:middle; text-align:right;">D:</td>
+              <td style="text-align:left;">
+                确定加壳类型后，ollyice 调试脱壳
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<form id="showask" action="" method='post'>
+  <input type="hidden" id="askhidden" name="shidden" value=""/>
+  {% csrf_token %}
+  <div class="modal fade" id="askmodal" tabindex="-1" 
+      role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px; ">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="asklab">简答题</h3>
+        </div>
+        <div>
+          <table id = "asktb" class="table topsec_tabletop">
+            
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<form id="showskill" action="/modifypwd/" method='post'>
+  <input type="hidden" id="skillhidden" name="shidden" value=""/>
+  {% csrf_token %}
+  <div class="modal fade" id="skillsubmit" tabindex="-1" 
+      role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px; ">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="skilllab">技能题02</h3>
+        </div>
+        <div>
+          <table id = "skilltb" class="table topsec_tabletop">
+           
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<form id="showtotal" action="/modifypwd/" method='post'>
+  <input type="hidden" id="totalhidden" name="shidden" value=""/>
+  {% csrf_token %}
+  <div class="modal fade" id="totalsubmit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px;">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="infilib">渗透题01</h3>
+        </div>
+        <div>
+          <table id = "infitb" class="table topsec_tabletop">
+            
+
+          </table>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<form id="information" action="/selcourse/" method='post'>
+  <input id='expid' name='expid' type='hidden' value='0'/>
+  <input id='exam-id' name='exam_id' type='hidden' value='0'/>
+  <input id='curexp' name='curexp' type='hidden' value='0'/>
+  <input id='curvms' name='curvms' type='hidden'  value='0'/>
+</form>
+
+<script type="text/javascript">
+
+    $(function(){
+        var cour=document.getElementById("exam_id");
+        // 设置ajax方法为同步
+        $.ajaxSetup({
+            async:false
+        });
+        loadQuestions();
+    });
+
+    function loadQuestions(){
+        
+        var examId = $("#exam_id").val();
+        $.ajax({
+            url: '/previewpapers1',
+            type: 'GET',
+            data: {exam_id: examId},
+            dataType: 'json',
+            success: function(data){
+                if(data.meta.error === true){
+                    Showbo.Msg.alert(data.meta.msg);
+                }
+                else{
+                    renderQtion("choice-questions", get_new_id(data.questions.choiceQuestionIds),data.answer.question);
+
+                    renderQtion("ask-questions", get_new_id(data.questions.askQuestionIds),data.answer.question);
+
+                    renderQtion("skill-questions", get_new_id(data.questions.skillQuestionIds),data.answer.question);
+                    add_infiltration("infiltration-questions", data.questions.infiltrationQuestionIds,data.answer.question);
+                }
+            }
+        });
+    }
+
+
+    // 添加渗透题
+    function add_infiltration(qtionDiv, questionIds,answer)
+    {
+        // 根据渗透题的个数创建
+        for(var i=0; i<questionIds.length; i++)
+        {
+            var title = "";
+            $.post("/getquestiontitle/", {"qid": questionIds[i]}, function(data){
+                title = $.parseJSON(data);
+            });
+
+            var item =  '<div class="panel panel-default self_top" style="height:100%; margin-top:0px; background: rgba(0,0,0,0); color: #FFFFFF;">' +
+                            '<div class="panel-heading" style="background: rgba(0,0,0,0); color: #FFFFFF;">题目：' + title + '</div>' +
+                            '<div class="panel-body" style="height:100%;">' +
+                                '<div id="infq'+ i.toString()+'" style="text-align:left; vertical-align:top;"></div>' +
+                            '</div>' +
+                        '</div>';
+
+            $(item).appendTo($("#" + qtionDiv));
+
+            // 获取渗透题有几个小题
+            $.post("/infiltrationquestioninfo/", {"qid": questionIds[i]}, function(data){
+                result = $.parseJSON(data);
+                var newids = [];
+                for(var j=0; j<result; j++)
+                    newids[j] = questionIds[i] * 10 + (j + 1);
+                renderQtion("infq"+ i.toString(), newids, answer);
+            });
+        }
+    }
+
+
+    function getQtion(id,i)
+    { 
+        var char_array=["A","B","C","D","E","F","G","H","I","J"];
+        $("#qtionid").val(id);
+        var qtion = ajaxobj("/questions/getqtioninfo/", "", "post", "#qtioninfo");
+        var jsondata = $.parseJSON(qtion);
+        if(jsondata.qtype == 1)
+        {
+            var op="";
+            var h3text="理论题";
+
+            if(i<10)
+            {
+                h3text += '0' + i;
+            }
+            else
+            {
+                h3text += i;
+            }
+
+            $('#baseque').text(h3text);
+
+            tr= '<tr><td colspan="3" style="text-align:left;">'+ jsondata.content + '</td></tr>'
+
+            cp = jsondata.picdir;
+            if(cp){
+                tr+='<tr><td colspan=3><img style="max-width: 573px;" src="/'+cp+'"></td></tr>'
+             }
+
+            for(var i = 1; i <= jsondata.options.length; i++)
+            {
+                op = char_array[i-1];
+                tr+='<tr><td style="width:20px; vertical-align:middle; text-align:right;"></td><td style="width:20px; vertical-align:middle;">'+ op +': </td><td style="text-align:left;">'+ jsondata.options[i-1]+'</td></tr>';
+            }
+            $('#flags').html(tr);
+            $('#flagsubmit').modal('show');
+        }
+        else if(jsondata.qtype == 4){
+             var h3text="简答题";
+            if(i<10)
+            {h3text += '0' + i;}else{h3text += i;}
+            $('#asklab').text(h3text);
+            tr= '<tr><td colspan=2 style="text-align:left;">'+ jsondata.content + '</td></tr>'
+
+            cp = jsondata.conpic;
+            if(cp){
+                tr+='<tr><td colspan=2><img style="max-width: 560px;" src="/'+cp+'"></td></tr>'
+             }
+
+            $('#asktb').html(tr);
+            $('#askmodal').modal('show');
+        }
+        else if(jsondata.qtype == 2)
+        {
+            var h3text="技能题";
+            if(i<10){h3text+='0'+i}else{h3text+=i}
+            $('#skilllab').text(h3text);
+            tr = '<tr><td colspan="2" style="text-align:left;">'+jsondata.qtitle+'</td></tr>';
+            tr += '<tr><td colspan="2" style="text-align:left;">'+jsondata.link +'</td></tr>';
+            $('#skilltb').html(tr);
+            $('#skillsubmit').modal('show');
+        }
+        else if(jsondata.qtype == 3)
+        {
+            var h3text="渗透题";
+            // if(i<10){h3text+='0'+i}else{h3text+=i}
+            $('#infilib').text(h3text);
+
+            tr = '<tr><td colspan="2" style="text-align:left;">'+jsondata.qtitle+'</td></tr>';
+            tr += '<tr><td colspan="2" style="text-align:left;">'+jsondata.link +'</td></tr>';
+
+            $('#infitb').html(tr);
+            $('#totalsubmit').modal('show');
+        }
+    }
+
+
+    function renderQtion(qtionDiv, questionIds,answer)
+    {
+        var content = "";
+        for(var i = 1; i <= questionIds.length; i++)
+        {
+            var setnum = 0;
+            for(var j = 1; j<=answer.length; j++)
+            {
+                if(answer[j-1] == questionIds[i-1])
+                {
+                    setnum = 1;
+                    content += '<button class="btn btn-warning disabled" style="width:44px; margin:0px 0px 5px 0px;padding-left:unset; padding-right:unset;" type="button" id="' + 'qt' + questionIds[i-1] + '"' + ' onclick="getQtion(' + questionIds[i-1].toString() +','+ i.toString() +')">' + i.toString() + '</button>&nbsp;&nbsp;';
+                }
+            }
+            if(setnum == 0)
+            {
+                content += '<button class="btn btn-default" style="width:44px; margin:0px 0px 5px 0px;padding-left:unset; padding-right:unset;" type="button" id="' +'qt' + questionIds[i-1] + '"' + ' onclick="getQtion(' +  questionIds[i-1].toString() +','+ i.toString() +')">' + i.toString() + '</button>&nbsp;&nbsp;';
+            }
+        }
+        $("#" + qtionDiv).html(content);
+    }
+
+
+    // 为了和渗透题按键的id统一，给每个按键都加上一个1，便于在getQtion中进行统一的处理
+    function get_new_id(questionIds)
+    {
+        for(var i=0; i<questionIds.length; i++)
+            questionIds[i] = questionIds[i] * 10 + 1;
+        return questionIds
+    }
+
+    function ajaxobj(_url, _tag, _way, _form)
+    {
+        var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+        var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+        var info = "";
+        $.ajax({
+            type: m,
+            url: _url,
+            data: par,
+            async: false,
+            error: function(request) {
+            },
+            success: function(data) {
+                info = data;
+            }
+        });
+        return info;
+    }
+
+</script>
+{% endblock  %}

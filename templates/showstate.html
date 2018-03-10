@@ -1,0 +1,1361 @@
+{% extends "templates/index.html" %}
+<!-- 继承自templates/index.html的模板 -->
+{% load i18n %}
+<!-- 国际化 -->
+{% load staticfiles %}
+{% block title %}攻防态势展现{% endblock %}
+
+{% block css %}   
+{% endblock %}
+
+{% block script %}
+{% endblock %}
+{% block maincontent %}{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/atkdfs/">
+    <img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/>
+  </a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">
+    攻防态势展现
+  </span>
+</div>
+{% endblock %}
+{% block content %}
+<html>
+<title>
+  攻防态势展现
+</title>
+
+<head>
+  <script type="text/javascript" src="/statics/js/jquery-1.6.4.min.js"></script>
+  <script type="text/javascript">
+  $(document).ready(function() {
+    // var monthNames = [ "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月" ]; 
+    var monthNames = [ "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12" ]; 
+    var dayNames= ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"]
+    var newDate = new Date();
+    newDate.setDate(newDate.getDate());
+    $('#Date').html(newDate.getFullYear()+ "/" +monthNames[newDate.getMonth()] + '/' +  newDate.getDate() + ' ' +dayNames[newDate.getDay()]  );
+    setInterval( function() {
+      var seconds = new Date().getSeconds();
+      $("#sec").html(( seconds < 10 ? "0" : "" ) + seconds);
+    },1000);
+
+    setInterval( function() {
+      var minutes = new Date().getMinutes();
+      $("#min").html(( minutes < 10 ? "0" : "" ) + minutes);
+    },1000);
+
+    setInterval( function() {
+      var hours = new Date().getHours();
+      $("#hours").html(( hours < 10 ? "0" : "" ) + hours);
+    }, 1000);
+
+  }); 
+  </script>
+  <style type="text/css">
+
+      /*雷达css*/
+   /* .circle {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      margin:auto;
+      width: 400px;
+      height: 400px;
+      border-radius:50%;
+      background:-moz-repeating-radial-gradient(#00A638 3%,#000 5%,#000 25%);
+      background:-webkit-repeating-radial-gradient(#00A638 3%,#000 5%,#000 25%);
+      background:repeating-radial-gradient(#00A638 3%,#000 5%,#000 25%);
+      opacity: 0.2;
+      pointer-events:none;
+    }
+    .h,.v {
+      position: absolute;
+    }
+    .h {
+      top: 200px;
+      height:2px;
+      width: 100%;
+      background: #00a638;
+    }
+    .v {
+      left: 200px;
+      width: 2px;
+      height: 100%;
+      background:#00a638
+    }
+    .scan {
+      width: 200px;
+      height: 200px;
+      background:linear-gradient(0deg,rgba(115, 255, 162, 0.0),rgba(0, 166, 56, 0.75));
+      border-radius:100% 0 0 0;
+      animation: scan 4s linear infinite;
+      -webkit-animation: scan 4s linear infinite;
+      border-right:3px solid rgba(0, 255, 86, 0.5);
+      z-index:19;
+    }
+    .dot {
+      position: absolute;
+      top:40px;
+      left: 20px;
+      width: 7px;
+      height: 7px;
+      border-radius:50%;
+      box-shadow:0 0 5px 3px #00FF56;
+      opacity: 0;
+      background: #C3FFD3;
+    }
+    .dot1 {
+      top: 75px;
+      left: 75px;
+      animation: flash 4s linear infinite 3.5s;
+      -webkit-animation: flash 4s linear infinite 3.5s;
+    }
+    .dot2 {
+      top: 150px;
+      left: 250px;
+      animation: flash 4s linear infinite 1s;
+      -webkit-animation: flash 4s linear infinite 1s;
+    }
+    .dot3 {
+      top: 250px;
+      left: 250px;
+      animation: flash 4s linear infinite 1.5s;
+      -webkit-animation: flash 4s linear infinite 1.5s;
+    }
+    .dot4 {
+      top: 60px;
+      left: 230px;
+      animation: flash 4s linear infinite 0.5s;
+      -webkit-animation: flash 4s linear infinite 0.5s;
+    }
+
+    @keyframes scan {
+      0% {
+        transform:rotateZ(0deg);
+        transform-origin:200px 200px;
+      }
+      100% {
+        transform:rotateZ(360deg); 
+        transform-origin:200px 200px;
+      }
+    }
+    @-webkit-keyframes scan {
+      0% {
+        transform:rotateZ(0deg);
+        transform-origin:200px 200px;
+      }
+      100% {
+        transform:rotateZ(360deg); 
+        transform-origin:200px 200px;
+      }
+    }
+    @keyframes flash {
+      0% {
+        opacity:0;
+      }
+      10% {
+        opacity:1;
+      }
+      30% {
+        opacity:0;
+      }
+    }
+    @-webkit-keyframes flash {
+      0% {
+        opacity:0;
+      }
+      10% {
+        opacity:1;
+      }
+      30% {
+        opacity:0;
+      }
+    }*/
+    /*表格css*/
+  html, body{ font-family: "Microsoft YaHei" !important; 
+  background-image: url('../statics/img/bgshow.png');position:fixed;}
+
+  *{margin:0;padding:0;}
+
+
+  .loading-bar {
+    margin-bottom: 10px;
+    width: 150px;
+    margin: 0px auto;
+    height: 22px;
+    border-radius: 5px;
+    float: left;
+  }
+
+  .amount {
+    height: 20px;
+    border-radius: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .loaded {
+    text-align: center;
+    font-family: Helvetica, sans-serif;
+    font-weight: bold;
+    position: relative;
+    top: 2px;
+    font-size: 12px;
+    color: #fff;
+    z-index: 2;
+  }
+
+  .tags0{background-color: #b17740;} 
+  .tags1{background-color: #488bb1;} 
+  .tags2{background-color: #85903d;}
+  .tags3{background-color: #891c34;} 
+  .tags4{background-color: #1f586e;} 
+  .tags5{background-color: #b29621;} 
+  .tags6{background-color: #983d49;} 
+  .tags7{background-color: #6e965d;} 
+  .tags8{background-color: #b3655c;} 
+  .tags9{background-color: #b09d58;} 
+
+/*  .promptStyle
+  {
+    border: dashed 1px blue;
+    width: 100px;
+    height:auto;
+    visibility: hidden;
+    position: absolute;
+  } 
+*/
+  #menu {
+    list-style-type: none;
+    display: none;
+    margin: 0;
+    position: fixed;
+    background-color: #3C3C3C;
+    padding: 2px;
+    font-size: 16px;
+    border-radius: 3px;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+    z-index: 100;
+  }
+
+  #menu li {
+    width: 110px;
+    text-align: left;
+    cursor: pointer;
+    padding: 2px 0 2px 12px;
+    border-radius: 1px;
+  }
+  .imgs {
+    width: 65px;
+    height: 246px;
+    position: absolute;
+    opacity: 1;
+  }
+
+  #rankingTable1 tbody tr{
+    background-color: rgba(4, 28, 78, 0.3);
+  }
+
+  #rankingTable1 tbody tr td {
+    pointer-events: none;
+  }
+
+  #Date { font-family:'BebasNeueRegular', Arial, Helvetica, sans-serif; font-size:10px; text-align:center; text-shadow:0 0 5px #00c6ff; }
+  #time_ul { width:200px; margin:0 auto; padding:0px; list-style:none; text-align:center; }
+  #time_ul li { display:inline; font-size:2em; text-align:center; font-family:'BebasNeueRegular', Arial, Helvetica, sans-serif; text-shadow:0 0 10px #00c6ff; }
+  #point { position:relative; -moz-animation:mymove 1s ease infinite; -webkit-animation:mymove 1s ease infinite; padding-left:10px; padding-right:10px; }
+
+#sanjiao {
+  position: fixed;
+  left: 330px;
+  top:197px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-right: 10px solid rgba(61, 72, 129, 0.9);
+  border-bottom: 5px solid transparent;
+  visibility:hidden;
+}
+
+#groupinfo {
+  position: fixed;
+  left: 340px;
+  top: 152px;
+  background-color: rgba(61, 72, 129, 0.9);
+  border-radius: 6px;
+  visibility:hidden;
+  text-align: center;
+}
+
+#groupinfo table {
+  width: 100%;
+  font-size: 14px;
+}
+
+#groupinfo td:nth-child(1) {
+  text-align: right;
+}
+
+#groupinfo td:nth-child(2) {
+  text-align: left;
+}
+
+
+#rankingTable1 tbody tr:nth-child(1) td{
+  color:rgba(255, 0, 0, 0.9);
+}
+#rankingTable1 tbody tr:nth-child(2) td{
+ color:rgba(255, 255, 0, 0.9);
+}
+#rankingTable1 tbody tr:nth-child(3) td{
+ color:rgba(0, 255, 255, 0.9);
+}
+  </style>
+</head>
+
+<body onresize="resize()">
+  <form id="InfoForm" method='post'>
+    {% csrf_token %}
+    <input type='hidden' name="examIDInfo" value="{{examID}}" id="postExamInfo" />
+    <input type='hidden' name="groupid" value="{{data}}" id="groupid" />
+  </form>
+  
+  <form id='showstateform' action="/atkdfsshow/" method='post' >
+    <canvas id='cas' style="position: absolute; top: 302px; left: 244px;"></canvas>
+    <img src="../statics/img/award.png" style="position: absolute; top: 470px; left: 375px;"/>
+    <div  style=" position:relative; width:100%; height:100%; ">
+
+      <!-- 动画 -->
+      <div id="abc" style="position: absolute; width: 870px; height: 763px; top: -130px; left: 420px;">
+        <div id="divs" style="position:absolute;width:100%">
+          <input type='hidden' name="exId" value="{{examID}}" id="exId" />
+          <div id="imgs" style="z-index:4; position:absolute; width:870px; height:763px;">
+            {% for exa in gros %}
+            <img class="imgs" id="{{exa.groupID.id}}" src="../statics/img/6.png" data-name="{{exa.name}}"/>
+            {% endfor %}
+
+            <div style="width:200px;height:200px;border-radius:200px;border:solid rgb(100,100,100) 1px;z-index:10; position: absolute;  top: 285px; left: 350px;box-shadow: 0 0 25px #fff;">
+              <div id="Date" style="position: absolute;  top: 60px;left: 50px;"></div>
+              <div  style="position: absolute;  top: 80px;left: 0px;">
+              <ul id='time_ul'>
+                <li id="hours"> </li>
+                <li id="point">:</li>
+                <li id="min"> </li>
+                <li id="point">:</li>
+                <li id="sec"> </li>
+              </ul>
+            </div>
+          </div>
+          </div>
+
+          <div id="svgContainer" style="z-index:5; position:relative; width:900px; height:763px; pointer-events: none"></div>
+        </div>
+      </div>
+      <!-- 雷达 -->
+    <!--   <div id="earth" style="z-index:5;position: absolute; top: 150px; left: 75px;">
+        <div class="radar">
+          <div class="circle">
+            <div class="h"></div>
+            <div class="v"></div>
+            <div class="scan"></div>
+            <div class="dot dot1"></div>
+            <div class="dot dot2"></div>
+            <div class="dot dot3"></div>
+            <div class="dot dot4"></div>
+          </div>
+        </div> 
+      </div>-->
+      <!-- 警报提示 -->
+      <div style="position:absolute; top:10px;left:200px; width:250px;height:150px; overflow: hidden;border-radius:15px;">
+        <table style="border-radius:15px;TABLE-LAYOUT: fixed;background-color:#33095d;margin:0px;"  class="table table-striped topsec_tabletop table-hover">
+          <tr>
+            <th style="background-color:rgba(51, 25, 93, 0.6); color:red ;border-bottom:3px ;solid red;" class="wrapper" colspan="2" >
+              <img src='../statics/img/jingshi.png' style="width: 30px"/>
+              警报提示
+            </th>
+          </tr>
+        </table>
+        <!-- 隐藏滚动条 -->
+        <div id="inner0" style="width: 320px;height:133px; overflow-y: scroll;">
+          <table id="rankingTable0" class="table table-striped topsec_tabletop table-hover">
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+
+      <!-- 实时排名 Top10 -->
+      <div style="position:absolute; top:10px;left:-120px; width:300px ;height:600px; overflow: hidden;border-radius:15px;">
+        <table id="top10" class="table table-striped  topsec_tabletop table-hover" style="border-radius:15px;margin:0px">
+          <tr style="opacity:0.5;">
+            <th class="wrapper" colspan="3" >
+              实时排名
+            </th>
+          </tr>
+
+
+        </table>
+        <!-- 隐藏滚动条 -->
+        <div id="inner1" style="width: 320px;height:533px; overflow-y: scroll;">
+          <table id="rankingTable1" class="table table-striped topsec_tabletop table-hover">
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </form>
+  <div id="sanjiao"></div>
+  <div id="groupinfo"></div>
+
+  <script type="text/javascript">
+      var dotLeft; //中心点横坐标
+      var dotTop; //中心点纵坐标
+      $(document).ready(function() {
+
+        var SVG_NS = "http://www.w3.org/2000/svg",
+        XLINK_NS = "http://www.w3.org/1999/xlink",
+        imgs = document.getElementById('imgs'),
+        svgContainer = document.getElementById('svgContainer'),
+        svg = document.createElementNS(SVG_NS, 'svg'),
+        defs = document.createElementNS(SVG_NS, 'defs'),
+        text_group = document.createElementNS(SVG_NS, 'g'),
+        devices_group = document.createElementNS(SVG_NS, 'g'),
+        atk_group = document.createElementNS(SVG_NS, 'g'),
+        g_group = document.createElementNS(SVG_NS, 'g'),
+        dialog_group = document.createElementNS(SVG_NS, 'g'),
+        w = svgContainer.clientWidth,
+        h = svgContainer.clientHeight,
+            groups_coords = {}; // 所有团队对应的坐标
+            svg.setAttribute('width', w + 'px');
+            svg.setAttribute('height', h + 'px');
+            svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+            svg.setAttribute('pointer-events', 'none');
+            svg.appendChild(defs);
+            svg.appendChild(text_group);
+            svg.appendChild(devices_group);
+            svg.appendChild(atk_group);
+            svg.appendChild(g_group);
+            svg.appendChild(dialog_group);
+            svgContainer.appendChild(svg);
+
+        // 创建所有团队的图标
+        var imgs = document.getElementsByClassName('imgs'),
+        img_counts = imgs.length,
+        img_width = imgs[0].clientWidth,
+        img_height = imgs[0].clientHeight,
+        left_count = parseInt(img_counts/2),
+        right_count = img_counts - left_count,
+        margin = 0,
+        x_pos = 0,
+        y_pos = 0,
+        i;
+
+        //中心点横坐标
+        dotLeft = w / 2 ;
+        //中心点纵坐标
+        dotTop = h / 2;
+        //起始角度
+        var stard = 0;
+        //半径
+        var radius = 240;
+        //每一个BOX对应的角度;
+        var avd = 360 / img_counts;
+        //每一个BOX对应的弧度;
+        var ahd = avd * Math.PI / 180;
+        var conuts =  Math.round(30/img_counts);
+        for(i = 0; i < img_counts; i++) {
+            // 计算图片中心点坐标
+            var m_lift3= dotLeft + Math.sin((ahd * i)) * radius;
+            var m_top3= dotTop - Math.cos((ahd * i)) * radius;
+            // 计算图片左上角坐标
+            var m_lift= m_lift3 - img_width / 2;
+            var m_top = m_top3 - img_height / 2;
+            // 计算人头坐标，sin和cos应该接收弧度作为参数，不能是角度
+            var m_lift1= m_lift3 - Math.sin(ahd * i) * 38;
+            var m_top1= m_top3 + Math.cos(ahd * i) * 38;
+            // 计算pc图标的坐标
+            var m_lift2= m_lift3 + Math.sin(ahd * i) * 92;
+            var m_top2= m_top3 - Math.cos(ahd * i) * 92;
+
+            imgs[i].style.left = m_lift + 'px';
+            imgs[i].style.top = m_top + 'px';
+            imgs[i].style.transform = 'rotate('+(i*avd)+'deg)';
+            
+
+            groups_coords[imgs[i].id] = {};
+            groups_coords[imgs[i].id]["coords"] = [m_lift1, m_top1];
+            groups_coords[imgs[i].id]["pc_coords"] = [m_lift2, m_top2];
+
+            if(imgs[i].id !== '') {
+              var dir = 1,
+              s = avd * i;
+              if(s <= 90){
+                dir = 1;
+              } else if (s > 90 && s <= 180){
+                dir = 2;
+              } else if (s > 180 && s <=270){
+                dir = 3;
+              } else if (s >270 && s < 360 ) {
+                dir = 4;
+              }
+              var dialog = smartDialog(m_lift1.toString(), m_top1.toString(), dir, [imgs[i].dataset.name, ["排名：", ''],["总成绩：", '']]);
+              dialog_group.appendChild(dialog.dialog);
+              groups_coords[imgs[i].id]["dialog"] = dialog;
+
+              imgs[i].onmouseover = function(){
+                groups_coords[this.id]["dialog"].show();
+              };
+              imgs[i].onmouseout = function(){
+                groups_coords[this.id]["dialog"].hidden();
+              };
+
+              var t = Math.random() * 4 + 2,
+                fixed_start_circle = newCircle(m_lift1.toString(), m_top1.toString(), '4', "hsla(60, 100%, 50%, 0.8)"),
+                fixed_start_circle_1 = newCircle(m_lift1.toString(), m_top1.toString(), '4', "hsla(0, 100%, 66%, 0.7)"),
+                scaleUpAni = newAnimate('r', '4', '8', '0s;a' + imgs[i].id + 'ani2.end', t.toString(), 'freeze', "0 0 1 1"),
+                scaleDownAni = newAnimate('r', '8', '4', 'a' + imgs[i].id + 'ani1.end', t.toString(), 'freeze', "0 0 1 1");
+
+              scaleUpAni.setAttribute('id', 'a' + imgs[i].id + 'ani1');
+              scaleDownAni.setAttribute('id', 'a' + imgs[i].id + 'ani2');
+              fixed_start_circle_1.appendChild(scaleUpAni);
+              fixed_start_circle_1.appendChild(scaleDownAni);
+              g_group.appendChild(fixed_start_circle_1);
+              g_group.appendChild(fixed_start_circle);
+
+              // 文字起始坐标
+              var ts_lift= m_lift3 - Math.sin(ahd * i) * 55;
+              var ts_top= m_top3 + Math.cos(ahd * i) * 55;
+              var d;
+              var t;
+              var group_name = imgs[i].dataset.name;
+              if(group_name.length >= 5) {
+                 group_name = group_name.slice(0,2) + '*' + group_name.slice(-2);
+              }
+              if(avd*i > 0 && avd*i < 180) {
+                d = "M "+dotLeft+' '+dotTop+' L '+ts_lift+' '+ts_top;
+                t = newText('path_'+imgs[i].id, group_name, '4', 'end', "100%");
+              } else {
+                d = "M "+ts_lift+' '+ts_top+' L '+dotLeft+' '+dotTop;
+                t = newText('path_'+imgs[i].id, group_name, '3.5', 'start', '0%');
+              }
+              var tp = newTextPath('path_'+imgs[i].id, d);
+              defs.appendChild(tp);
+              text_group.appendChild(t);
+
+              var cg = circleGroup(m_lift2, m_top2, 8, avd * i);
+              devices_group.appendChild(cg);
+            }
+          }
+
+        // 获取所有攻防比赛信息
+        (function getInfos(){
+
+          // 根据获取的到信息，创建新的动画
+          var data = ajaxobj("/showstate/getitem/", "", "post", "#InfoForm");
+          if(!data) {
+            return;
+          }
+          var result = $.parseJSON(data)["groups"];
+          atk_data = result;
+          // 为每个攻击创建一个动画
+          for(var i = 0, j = result.length; i < j; i++) {
+            // 获取攻击团队
+            var atkgroup = result[i]["atkgroup_id"];
+            var atkgroup_x = groups_coords[atkgroup]["coords"][0];
+            var atkgroup_y = groups_coords[atkgroup]["coords"][1];
+            for (var k = 0; k < result[i]["atknum"]; k++){
+              // 获取被攻击团队
+              var group = result[i]["group_id"][k];
+              if(!groups_coords[atkgroup][group]) {
+                  // 从group_coords中找到被攻击团队的坐标
+                  var group_x = groups_coords[group]["pc_coords"][0];
+                  var group_y = groups_coords[group]["pc_coords"][1];
+                  // 创建一个动画，并将返回的动画添加到对应的属性中保存
+                  var ani = createAtk(atkgroup, group, atkgroup_x, atkgroup_y, group_x, group_y);
+                  groups_coords[atkgroup][group] = ani;
+                }
+              }
+            }
+            WarnMsg();
+          // 每30秒获取一次数据
+          setTimeout(getInfos, 30 * 1000);
+        })();
+
+        // 创建一个动画, t表示开始动画执行时间
+        function createAtk(srcid, desid, start_x, start_y, end_x, end_y){
+          var t1 = parseInt(Math.random() * 8) + 2,
+          t2 = parseInt(Math.random() * 2) + 1,
+          dur = Math.random() * 0.5 + 0.4,
+          prev = "id_" + srcid.toString() + '_' + desid.toString() + '_',
+          g = document.createElementNS(SVG_NS, 'g'),
+          color = 'hsl(' + (Math.random() * 329 + 30) + ', 100%, 62%)',
+          circle_start = newCircle(start_x.toString(), start_y.toString(), '0.2', color),
+          start_scaleAni = newAnimate('r', '0','35', '0s;'+prev+"ani2.end", t1.toString(), 'remove', "0 0 1 1"),
+          start_opacityAni = newAnimate('opacity', '1','0', '0.5s;'+prev + "ani1.end" + "+0.5s", (t1-1).toString(), 'remove', "0.5 0 1 1"),
+
+          path = newPath('M -2.5 -2.5  A 2.5 2.5 0 0 1 -2.5 2.5 L -49 0 z', color),
+          aniMotion = newAnimateMotion("M "+start_x+" "+start_y+" L "+end_x+" "+end_y, t1.toString()+"s;"+ prev+"ani4.end", dur),
+
+          circle_end = newCircle(end_x.toString(), end_y.toString(), '0.2', color),
+          end_scaleAni = newAnimate('r', '8', '16', prev+"ani3.end", t2.toString(), 'remove', "0 0 1 1"),
+          end_opacityAni = newAnimate('opacity', '1','0', prev+"ani3.end", t2.toString(), 'remove', "0.75 0 1 1");
+
+          start_scaleAni.setAttribute('id', prev + 'ani1');
+          start_opacityAni.setAttribute('id', prev + 'ani2');
+          aniMotion.setAttribute('id', prev + 'ani3');
+          end_scaleAni.setAttribute('id', prev + 'ani4');
+          end_opacityAni.setAttribute('id', prev + 'ani5');
+
+          circle_start.appendChild(start_scaleAni);
+          circle_start.appendChild(start_opacityAni);
+          path.appendChild(aniMotion);
+          circle_end.appendChild(end_scaleAni);
+          circle_end.appendChild(end_opacityAni);
+
+          g.appendChild(circle_start);
+          g.appendChild(path);
+          g.appendChild(circle_end);
+          // g.appendChild(fixed_start_circle_1);
+          // g.appendChild(fixed_start_circle);
+          atk_group.appendChild(g);
+
+          return g;
+        }
+
+
+
+        function newCircle(cx, cy, r, fill){
+          var circle = document.createElementNS(SVG_NS, 'circle');
+          circle.setAttribute('cx', cx);
+          circle.setAttribute('cy', cy);
+          circle.setAttribute('r', r);
+          circle.setAttribute('fill', fill);
+          circle.setAttribute('stroke-width', '0');
+          return circle;
+        }
+
+        function newPath(d, fill){
+          var path = document.createElementNS(SVG_NS, 'path');
+          path.setAttribute('d', d);
+          path.setAttribute('fill', fill);
+          return path;
+        }
+
+        // 路径动画
+        function newAnimateMotion(animatePath, begin, dur) {
+          var animate = document.createElementNS(SVG_NS, 'animateMotion');
+          animate.setAttribute('path', animatePath);
+          animate.setAttribute('begin', begin);
+          animate.setAttribute('dur', dur);
+          animate.setAttribute('rotate', 'auto');
+          // animate.setAttribute('repeatDur', '0.5s')
+          return animate;
+        }
+
+        function newAnimate(attr, from, to, begin, dur, fill, keySplines){
+          var animate = document.createElementNS(SVG_NS, 'animate');
+          animate.setAttribute('attributeName', attr);
+          animate.setAttribute('from', from);
+          animate.setAttribute('to', to);
+          animate.setAttribute('begin', begin);
+          animate.setAttribute('dur', dur);
+          animate.setAttribute('fill', fill);
+          animate.setAttribute('calcMode', "spline");
+          animate.setAttribute("keyTimes", "0;1");
+          animate.setAttribute("keySplines", keySplines);
+
+          return animate;
+        }
+
+        function newTextPath(id, d) {
+          var p = document.createElementNS(SVG_NS, 'path');
+          p.setAttribute('id', id);
+          p.setAttribute('d', d);
+          return p;
+        }
+
+        function newText(pathId, text, dy, anchor, offset){
+          var t = document.createElementNS(SVG_NS, 'text'),
+          tp = document.createElementNS(SVG_NS, 'textPath');
+
+          t.setAttribute('x', '0');
+          t.setAttribute('y', '0');
+          t.setAttribute('fill', 'white');
+          t.setAttribute('dy', dy);
+          t.setAttribute('text-anchor', anchor);
+          t.style.fontSize = "12px";
+          t.style.fontWeight = "600";
+          tp.setAttributeNS(XLINK_NS, 'xlink:href', '#'+pathId);
+          tp.setAttribute('startOffset', offset);
+          tp.textContent = text;
+          t.appendChild(tp);
+          return t;
+        }
+
+
+        // "警报提示"增加
+        function AddTip(atktime,out,more){
+          var rankingTable0 = document.getElementById('rankingTable0');
+          var rowNum1=rankingTable0.rows.length;
+          for (i=0;i<rowNum1;i++){
+            rankingTable0.deleteRow(i);
+            rowNum1=rowNum1-1;
+            i=i-1;
+          }      
+
+          var table = $('#rankingTable0').children("tbody");
+          var tablerow = "<tr style='background-color:rgba(51, 9, 93, 0.6);'><td style='text-align:right;width:130px'>正在攻击团队数</td><td>"+atktime+"</td></tr><tr style='background-color:rgba(51, 9, 93, 0.6);'><td style='text-align:right'>濒临出局团队数</td><td>"+out+"</td></tr><tr style='background-color:rgba(51, 9, 93, 0.6);'><td style='text-align:right;word-break:keep-all;'>被攻击最多的团队</td><td>"+more+"</td></tr>";
+          table.append(tablerow);
+        }
+
+        //"实时排名"增加的一行方法
+        function AddRowToTop(id, number,team,score,parcent)  
+        { 
+
+          var table = $('#rankingTable1').children("tbody");
+          var tablerow = "<tr id="+id+"><td width='15%'>"+number+"</td><td width='25%'>"+team+"</td><td width='60%'><div class='loading-bar'><div class='amount'  style='width:"+parcent+"%'><div class='loaded'>"+score+"</div></div></div></td></tr>";
+          
+          table.append(tablerow);
+        }
+
+        function WarnMsg(){
+          $("#postExamInfo").val($("#exId").val());        
+          var editExamInfo1 = ajaxobj("/showstate/warnMsg/", "", "post", "#InfoForm");
+          var json1 = $.parseJSON(editExamInfo1);
+
+          // 添加实时攻击信息
+          AddTip(json1.counts,json1.out,json1.gname);
+
+          // 添加排名信息
+          AddToTop();
+        }
+
+        // 添加排名信息
+        function AddToTop(){
+          var color=0;
+          var scoreinfo = ajaxobj("/showstate/teamrank/","","post", "#InfoForm");
+          var json = $.parseJSON(scoreinfo);
+          json = json["arry"];
+
+         var rankingTable1 = document.getElementById('rankingTable1');
+          var rowNum1=rankingTable1.rows.length;
+          for (i=0;i<rowNum1;i++){
+            rankingTable1.deleteRow(i);
+            rowNum1=rowNum1-1;
+            i=i-1;
+          }     
+          
+          for(i = 0;i<json.length; i++)
+          {
+            
+            if(i<31)
+            {
+              $.each(json[i], function(index, value)
+              {
+                groups_coords[value.group_id]["dialog"].updateText([(i + 1).toString(), (value.total).toString()]);
+                // 下面这个if语句用于设置小人上面的文字
+                if(i === 0)
+                {
+                  first = index;
+                } 
+                else if(i === 1)
+                {
+                  second = index;
+                } 
+                else if(i === 2) 
+                {
+                  third = index;
+                }
+                if(i == 0)
+                {
+                  var parcent=100;
+                  if(value.total==0)
+                  {
+                    parcent=5;
+                  }
+                  totalScore=value.total;
+                  AddRowToTop(value.group_id, i+1,index,value.total,parcent);
+                }
+                else 
+                {  
+                  var m_parcent;
+                  if(totalScore==0)
+                  {
+                    m_parcent=5;
+                  }
+                  else 
+                  {
+                    if(value.total==0)
+                    {
+                      // m_parcent= Math.ceil(totalScore/20);
+                      // m_parcent= Math.ceil((m_parcent)/totalScore*100);
+                      m_parcent=5
+                    }
+                    else
+                    {
+                      m_parcent= Math.ceil((value.total)/totalScore*100);
+                    }
+                  }
+                  // alert(m_parcent);
+                  AddRowToTop(value.group_id, i+1,index,value.total,m_parcent);
+                }
+              });
+            }
+          }
+          // 改变分数条颜色
+          var tags_a = $(".amount"); 
+          tags_a.each(function(){ 
+            $(this).addClass("tags"+color);
+            color=color+1;
+            if(color==10){
+              color=0;
+            }
+          });
+        }
+
+        // 右键菜单模块
+        var menu = (function () {
+          var methods = {},
+          menu = null,
+                node_target = null, // menu作用的node节点
+                that = this;
+
+            // 生成右键菜单内容
+            function nodeMenu() {
+              function deleteDevice() {
+                alert("团队信息：团队id=" + node_target.id);
+                menu.style.display = 'none';
+              }
+
+              function openConsole() {
+                alert("控制台：团队id=" + node_target.id);
+                menu.style.display = 'none';
+              }
+
+                // function showInfo() {
+                //     alert("功能3：团队id=" + node_target.id);
+                //     menu.style.display = 'none';
+                // }
+
+                return [{
+                  text: '团队信息',
+                  method: deleteDevice
+                }, {
+                  text: '控制台',
+                  method: openConsole
+                }
+                // , {
+                //     text: '功能3',
+                //     method: showInfo
+                // }
+                ];
+              }
+
+            // 创建一个菜单，返回一个无序列表ul对象
+            function createMenu(menuContent) {
+              var menu = document.createElement('ul');
+              menu.setAttribute('id', 'menu');
+              menu.setAttribute('oncontextmenu', 'return false');
+
+              for (var i = 0; i < menuContent.length; i++) {
+                var li = document.createElement('li');
+                li.innerHTML = menuContent[i].text;
+                li.onclick = menuContent[i].method;
+                li.onmouseover = liMouseover;
+                li.onmouseout = liMouseout;
+                li.setAttribute('oncontextmenu', 'return false');
+                menu.appendChild(li);
+              }
+
+              function liMouseover(evt) {
+                evt.target.style.backgroundColor = 'rgba(212, 212, 111, 0.3)';
+                evt.target.style.boxShadow = '1px 1px 2px rgba(0, 0, 0, 0.55)';
+              }
+
+              function liMouseout(evt) {
+                evt.target.style.backgroundColor = '';
+                evt.target.style.boxShadow = '';
+              }
+
+              return menu;
+            }
+
+            // 显示菜单
+            function showMenu(evt) {
+                // menu不存在？创建
+                if (!menu) {
+                  menu = createMenu(nodeMenu());
+                  document.body.appendChild(menu);
+                }
+
+                menu.style.display = 'block'; // 显示菜单
+                // 计算菜单左上角的位置
+                var menuX = evt.clientX,
+                menuY = evt.clientY,
+                maxX = document.body.clientWidth - menu.clientWidth,
+                maxY = document.body.clientHeight - menu.clientHeight;
+
+                if (menuX > maxX) {
+                  menuX = maxX;
+                }
+                if (menuY > maxY) {
+                  menuY = maxY;
+                }
+
+                menu.style.left = menuX + 'px';
+                menu.style.top = menuY + 'px';
+
+                node_target = evt.target;
+              }
+
+            // 隐藏菜单
+            function hiddenMenu() {
+                // 如果菜单被显示，那么就隐藏
+                if (menu && menu.style.display !== 'none') {
+                  menu.style.display = 'none';
+                }
+              }
+
+              methods.showMenu = showMenu;
+              methods.hiddenMenu = hiddenMenu;
+
+              return methods;
+            })();
+
+        // 右键菜单
+        document.oncontextmenu = function (evt){
+          if(evt.target.className === 'imgs') {
+            // menu.showMenu(evt);
+          }
+          return false;
+        };
+
+        document.onmousedown = function (evt) {
+          if(evt.target.id !== 'menu' && evt.target.parentNode.id !== 'menu'){
+            menu.hiddenMenu();
+          }
+        };
+
+    // dir为对话框显示的方向，右上角为0，右下为1，左下为2，左上为3
+    function smartDialog(transx, transy, dir, texts) {
+      var max_tl = 0,
+            needUpdate = []; // 保存需要更新的text
+            texts.forEach(function(t) {
+              var r;
+              if (Array.isArray(t)) {
+                r = getCodeCounts(t[0] + t[1]);
+              } else {
+                r = getCodeCounts(t);
+              }
+              var l = r.e_counts * 12 + r.z_counts * 18;
+              max_tl = l > max_tl ? l : max_tl;
+            });
+            var xmin = -25,
+            xmax = xmin + 45 + max_tl,
+            ymax = -15,
+            ymin = ymax - texts.length * 20;
+        // 文字显示范围
+        var txmin = xmin,
+        txmax = xmax,
+        tymin = ymin,
+        tymax = ymax,
+        info_count = 3;
+        var d = createDialogPath(xmin, xmax, ymin, ymax);
+        var p = createPath(d, "rgba(60, 60, 60, 0.92)", dir);
+
+        var g_inner = document.createElementNS(SVG_NS, 'g');
+        g_inner.setAttribute('transform', 'scale(0)');
+        g_inner.appendChild(p);
+
+        for (var i = 0, j = texts.length; i < j; i++) {
+          if (typeof texts[i] === 'string') {
+            var y = tymin + (tymax - tymin) * (i + 1) / j;
+            var t = newText(txmin + (txmax - txmin) / 2, y, "middle", texts[i]);
+            var l = newPath("M "+txmin+" "+y+" L "+txmax+" "+y, "none");
+            l.setAttribute('stroke-width', '2');
+            l.setAttribute('stroke', 'gray');
+            g_inner.appendChild(t);
+            g_inner.appendChild(l);
+          } else {
+            var t1 = newText(txmin + (txmax - txmin) * 2 / 3, tymin + 3 + (tymax - tymin) * (i + 1) / 3, "end", texts[i][0]);
+            var t2 = newText(txmin + (txmax - txmin) * 2 / 3, tymin + 3 + (tymax - tymin) * (i + 1) / 3, "start", texts[i][1]);
+            g_inner.appendChild(t1);
+            g_inner.appendChild(t2);
+            needUpdate.push(t2);
+          }
+        }
+
+        var g_out = document.createElementNS(SVG_NS, 'g');
+        g_out.setAttribute('transform', 'translate(' + transx + ',' + transy + ')');
+        g_out.appendChild(g_inner);
+
+        return {
+          dialog: g_out,
+          show: show,
+          hidden: hidden,
+          updateText: updateText
+        };
+
+        function show() {
+          var start = 0,
+          dur = 10;
+          g_out.style.display = "block";
+          function ani() {
+            var s = f(start, 0, 1, dur);
+            start += 1;
+            g_inner.setAttribute('transform', 'scale(' + s + ')');
+            if (start < dur) {
+              requestAnimationFrame(ani);
+            }
+          }
+          requestAnimationFrame(ani);
+        }
+
+        function hidden() {
+          g_out.style.display = "none";
+        }
+
+        function updateText(newValues) {
+          for (var i = 0, j = needUpdate.length; i < j; i++) {
+            needUpdate[i].textContent = newValues[i];
+          }
+        }
+
+        function f(t, b, c, d) {
+          return (t == d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;
+        }
+
+        function createDialogPath(xmin, xmax, ymin, ymax) {
+            var r = 6; // 倒角圆弧半径
+            var d = "M 0 0";
+            d += " L 10 " + ymax;
+            d += " L " + (xmin + r) + " " + ymax;
+            d += " A " + r + " " + r + " 0 0 1 " + xmin + " " + (ymax - r);
+            d += " L " + xmin + " " + (ymin + r);
+            d += " A " + r + " " + r + " 0 0 1 " + (xmin + r) + " " + ymin;
+            d += " L " + (xmax - r) + " " + ymin;
+            d += " A " + r + " " + r + " 0 0 1 " + xmax + " " + (ymin + r);
+            d += " L " + xmax + " " + (ymax - r);
+            d += " A " + r + " " + r + " 0 0 1 " + (xmax - r) + " " + ymax;
+            d += " L 25 " + ymax;
+            d += "L 0 0";
+            return d;
+          }
+
+          function createPath(d, fill, dir) {
+            var p = document.createElementNS(SVG_NS, 'path'),
+            xscale = 1,
+            yscale = 1;
+            p.setAttribute('d', d);
+            p.setAttribute('stroke', 'none');
+            p.setAttribute('fill', fill);
+            switch (dir) {
+              case 2:
+              tymin = -ymax;
+              tymax = -ymin;
+              yscale = -1;
+              break;
+              case 3:
+              txmin = -xmax;
+              txmax = -xmin;
+              tymin = -ymax;
+              tymax = -ymin;
+              xscale = -1;
+              yscale = -1;
+              break;
+              case 4:
+              txmin = -xmax;
+              txmax = -xmin;
+              xscale = -1;
+              break;
+            }
+            p.setAttribute('transform', 'scale(' + xscale + ',' + yscale + ')');
+            return p;
+          }
+
+          function newText(x, y, anchor, str) {
+            var t = document.createElementNS(SVG_NS, 'text');
+            t.setAttribute('x', x);
+            t.setAttribute('y', y);
+            t.setAttribute('dy', '-5');
+            t.setAttribute('text-anchor', anchor);
+            t.style.fontSize = '16px';
+            t.style.fontWeight = "600";
+            t.style.fill = "rgb(216, 216, 216)";
+            t.textContent = str;
+
+            return t;
+          }
+      }
+
+      // 获取字符串中，英文字符个数和中文字符个数
+      function getCodeCounts(str) {
+        var e_counts = 0, // 英文字符个数
+            z_counts = 0; // 中文字符个数
+        for (var i = 0, j = str.length; i < j; i++) {
+          if (str.charCodeAt(i) < 256) {
+            e_counts += 1;
+          } else {
+            z_counts += 1;
+          }
+        }
+        return {
+          e_counts: e_counts,
+          z_counts: z_counts
+        };
+      }
+
+      function circleGroup(x, y, r, deg) {
+        var g = document.createElementNS(SVG_NS, 'g'),
+            c_c = newCircle('0', '0', r),
+            l = 2.5 * r,
+            alpha;
+        g.appendChild(c_c);
+        for (var i = 0; i < 6; i++) {
+            alpha = (1 + 2 * i) * Math.PI / 6;
+            var c = newCircle(l * Math.sin(alpha), l * Math.cos(alpha), r);
+            g.appendChild(c);
+        }
+        g.setAttribute('transform', 'translate(' + x + ', ' + y + ') rotate(' + deg + ')');
+
+        return g;
+
+        function newCircle(cx, cy, r) {
+            var c = document.createElementNS(SVG_NS, 'circle');
+            c.setAttribute('cx', cx);
+            c.setAttribute('cy', cy);
+            c.setAttribute('r', r);
+            c.setAttribute('fill', "#3D4881");
+            return c;
+        }
+      }
+
+    // ---------------------下面创建烟花效果-------------------------
+    var canvas = document.getElementById("cas");
+    var ctx = canvas.getContext("2d");
+    canvas.width = 500;
+    canvas.height = 271;
+    var bigbooms = [];
+
+    var Boom = function (boomArea) {
+        this.booms = []; // 存放所有的烟花瓣
+        this.boomArea = boomArea; // 爆炸位置
+    };
+    Boom.prototype = {
+        _boom: function () {
+            var fragNum = getRandom(10, 50); // 烟花数量
+
+            var fanwei = parseInt(getRandom(80, 150)); // 烟花爆炸范围
+            for (var i = 0; i < fragNum; i++) {
+                var color = {
+                    r: parseInt(getRandom(128, 255)),
+                    g: parseInt(getRandom(128, 255)),
+                    b: parseInt(getRandom(128, 255))
+                };
+
+                var a = getRandom(-Math.PI, Math.PI);
+                var x = getRandom(0, fanwei) * Math.cos(a) + this.boomArea.x;
+                var y = getRandom(0, fanwei) * Math.sin(a) + this.boomArea.y;
+                var radius = getRandom(0, 3);
+                var frag = new Frag(this.boomArea.x, this.boomArea.y, radius, color, x, y);
+                this.booms.push(frag);
+            }
+        }
+    };
+
+    var Frag = function (centerX, centerY, radius, color, tx, ty) {
+        this.tx = tx;
+        this.ty = ty;
+        this.x = centerX;
+        this.y = centerY;
+        this.dead = false;
+        this.radius = radius;
+        this.color = color;
+    };
+    Frag.prototype = {
+        paint: function () {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+            ctx.fillStyle = "rgba(" + this.color.r + "," + this.color.g + "," + this.color.b + ",1)";
+            ctx.fill();
+            ctx.restore();
+        },
+        moveTo: function () {
+            this.ty = this.ty + 0.3;
+            var dx = this.tx - this.x,
+                    dy = this.ty - this.y;
+            this.x = Math.abs(dx) < 0.1 ? this.tx : (this.x + dx * 0.1);
+            this.y = Math.abs(dy) < 0.1 ? this.ty : (this.y + dy * 0.1);
+            if (dx === 0 && Math.abs(dy) <= 80) {
+                this.dead = true;
+            }
+            this.paint();
+        }
+    };
+
+    Array.prototype.foreach = function (callback) {
+        for (var i = 0, j = this.length; i < j; i++) {
+            if (this[i] !== null) callback.apply(this[i], [i]);
+        }
+    };
+
+    function getRandom(a, b) {
+        return Math.random() * (b - a) + a;
+    }
+
+    function updateText(){
+        //设置字体样式
+        ctx.font = "600 16px Arial";
+        //设置字体颜色
+        if(color_flag){
+          first_color_range += 1;
+          if(first_color_range > 90) {
+            color_flag = false;
+          }
+        } else {
+          first_color_range -= 1;
+          if(first_color_range < 30) {
+            color_flag = true;
+          }
+        }
+        ctx.fillStyle = "hsl(" + first_color_range + ", 100%, 50%)";
+        ctx.textAlign="center";
+        ctx.fillText(first || '', 242, 130);
+        ctx.font = "600 15px Arial";
+        ctx.textAlign="start";
+        if(color_flag){
+          second_color_range += 1;
+        } else {
+          second_color_range -= 1;
+        }
+        ctx.fillStyle = "hsl(" + second_color_range + ", 100%, 50%)";
+        ctx.fillText(second || '', 272, 167);
+        ctx.font = "600 13px Arial";
+        ctx.textAlign="end";
+        if(color_flag){
+          third_color_range += 1;
+        } else {
+          third_color_range -= 1;
+        }
+        ctx.fillStyle = "hsl(" + third_color_range + ", 100%, 50%)";
+        ctx.fillText(third || '', 212, 177);
+    }
+
+    function animate() {
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        updateText();
+        ctx.restore();
+
+        var newTime = new Date();
+        // 每隔一定时间生成一个大烟花
+        if (newTime - lastTime > d_time) {
+            var bigboom = new Boom({x: getRandom(80, canvas.width-80), y: getRandom(50, canvas.height/2)});
+            bigbooms.push(bigboom);
+            bigboom._boom();
+            lastTime = newTime;
+            d_time = getRandom(400, 1000);
+        }
+
+        // 遍历大烟花
+        bigbooms.foreach(function () {
+            var that = this;
+            this.booms.foreach(function (index) {  // 遍历烟花瓣
+                if (!this.dead) {
+                    this.moveTo(index);
+                } else if (index === that.booms.length - 1) { // 爆炸完成后清除大烟花
+                    bigbooms[bigbooms.indexOf(that)] = null;
+                }
+            });
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    var lastTime = new Date();
+    var d_time = 500;
+    var first,
+        second,
+        third,
+        first_color_range = 30, // 30-90, hsl
+        second_color_range = 90, // 90-150
+        third_color_range = 270, // 270-330
+        color_flag = true; // true为颜色值上升，false为下降
+    animate();
+    // -----------------以上是烟花效果------------------------------
+
+    // -----------------排名table中的tr相应onmouseover事件----------
+    var sanjiao = document.getElementById("sanjiao");
+    var groupinfo = document.getElementById("groupinfo");
+    var atk_data;
+    document.getElementById("rankingTable1").onmouseover = function(evt) {
+      var tr = evt.target; // 禁用了tr所有子元素的鼠标事件，因此获取到的对象是tr
+      var tr_h = tr.clientHeight;
+      var tr_w = tr.clientWidth;
+      var tr_x = $(tr).offset().left;
+      var tr_y = $(tr).offset().top;
+      var x = tr_x + tr_w;
+      var y = tr_y + tr_h / 2;
+
+      // 获取指定团队的攻击数据
+      var names = null,
+          keys = null;
+      atk_data.forEach(function(item){
+        if(item["atkgroup_id"] == tr.id){
+          names = item["que_name"];
+          keys = item["qud_key"];
+        }
+      });
+
+      // 计算groupinfo的高度
+      var groupinfo_h, 
+          groupinfo_w;
+      if(!keys) {
+        groupinfo_w = 120;
+        groupinfo_h = 20;
+        groupinfo.innerHTML = "暂无答题记录";
+      } else {
+        groupinfo_h = 20 * keys.length;
+        // 向groupinfo中添加信息
+        var str = "<table>";
+        var left_w = 0,
+            right_w = 0;
+        for(var i = 0, j = keys.length; i < j; i++) {
+          str += "<tr><td>"+names[i]+"：</td><td>"+keys[i]+"</td></tr>";
+          var left_counts = getCodeCounts(names[i] + "：");
+          var right_counts = getCodeCounts(keys[i]);
+          left_w = Math.max(left_w, left_counts.e_counts * 12 + left_counts.z_counts * 16);
+          right_w = Math.max(right_w, right_counts.e_counts * 12 + right_counts.z_counts * 16);
+        }
+        var groupinfo_w = left_w + right_w;
+        str += "</table>";
+        groupinfo.innerHTML = str;
+      }
+
+      sanjiao.style.left = (x - 5) + "px";
+      sanjiao.style.top = (y - 5) + "px";
+      groupinfo.style.width = groupinfo_w + "px";
+      groupinfo.style.height = groupinfo_h + "px";
+      groupinfo.style.left = (x + 5) + "px";
+      groupinfo.style.top = (y - groupinfo.clientHeight / 2) + "px";
+
+      sanjiao.style.visibility = "visible";
+      groupinfo.style.visibility = "visible";
+    };
+
+    document.getElementById("rankingTable1").onmouseout = function(){
+      sanjiao.style.visibility = "hidden";
+      groupinfo.style.visibility = "hidden";
+    };
+          });
+</script>
+
+</body>
+{% endblock %}
+</html>

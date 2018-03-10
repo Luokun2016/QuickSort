@@ -1,0 +1,837 @@
+{% extends "templates/index.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}团队管理{% endblock %}
+{% block css %}
+ <style type="text/css">
+ul.dynatree-container
+{
+  height: auto;
+  max-height: 480px;
+}
+</style>   
+{% endblock %}
+{% block script %}
+    <script src='/statics/js/jquery.custom.js' type="text/javascript"></script>
+    <script src='/statics/js/jquery.cookie.js' type="text/javascript"></script>
+    <script src='/statics/js/jquery.dynatree.js' type="text/javascript"></script>
+    <script type="text/javascript" src="/statics/js/ajaxProgressUpload.js"></script>
+    <script src='/statics/js/uploadfile.js' type="text/javascript"></script>
+    <link href="/statics/css/upload.css" rel="stylesheet"/>
+    <script src='/statics/js/jquery.pagination.js' type="text/javascript"></script>
+{% endblock %}
+{% block maincontent %}{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">团队管理</span>
+</div>
+{% endblock %}
+{% block content %}
+<form id="InfoForm" method='post'>
+  <input type='hidden' name="Info" value="{{data}}" id="postgrpid" />
+</form>
+
+<form id='groupform' action="/groups/" method='get'>
+   {% csrf_token %}
+  <div class="bs-docs-section">
+    <table width="100%">
+      <tr>
+        <td>
+          <div style="text-align:left;">
+            <button type="button" class="btn btn-primary" data-target="#myModal" data-toggle="modal" title="添加团队" onclick='mclear()'><span class="glyphicon glyphicon-plus"></span></button>
+            <button type="button" class="btn btn-primary disabled"  onclick='edit()' title="编辑团队" data-toggle="modal" id='editsuccess'><span class="glyphicon glyphicon-pencil"></span></button>
+            <button type="button"  onclick='details()'   title="团队详情" data-toggle="modal" data-target="#detailModal"class="btn btn-primary disabled" id='detailsuccess'><span class="glyphicon glyphicon-info-sign"></span></button>
+            <button id="btndel" type="button" class="btn btn-danger disabled" title="删除团队" onclick='submitdelformedit()'><span class="glyphicon glyphicon-remove"></span></button>
+          </div>
+        </td>
+        <td align="right">
+          <div style="text-align:right;">
+            <input id='querytext' name='querytext' type='text' class="form-control topself_input" placeholder="请输入团队名称关键字" value="{{groselect}}" style="width:185px; display:inline;"></input>
+            <button id="btnquery" type="submit" class="btn btn-danger" formaction="/groups/" title="查找团队" ><span class="glyphicon glyphicon-search"></span></button>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="panel-body" style="padding-left:0px; padding-right:0px;">
+    <!-- Glyphicons
+  ================================================== -->
+    <table  id="lsgro" class="table table-striped topsec_tabletop table-hover" data-selid="0" >
+      <tr>
+        
+        <th>团队名称</th>
+        <th>团队队长</th>
+        <th>创建人</th>
+        <th>创建时间</th>
+        <th>最后修改时间</th>
+      </tr>
+      {% for group in groupls.object_list %}
+      <tr  id="{{group.id}}" >
+        <td>{{group.gname}}</td>
+        <td>
+          {% for gm in gms %}
+          {% ifequal gm.groupid.id group.id %}
+            {% ifequal gm.iscaptain True %} 
+              {{gm.studentid.stuname}}          
+            {% endifequal %}
+          {% endifequal %} 
+          {% endfor %}
+        </td>
+        <td>{{group.createrid.teaname}}</td>
+        <td>{{group.createtime | date:"Y-m-d H:i:s"}}</td>
+        <td>{{group.edittime | date:"Y-m-d H:i:s"}}</td>
+      </tr>
+      {% endfor %}
+
+
+    </table>
+    
+    <div class="flickr">
+        {% if groupls.has_previous %}
+        <a href="?page={{ groupls.previous_page_number }}{% ifnotequal groselect '' %}&groupselect={{groselect}}{% endifnotequal %}">上一页</a>
+        {% else %}
+        <span>上一页</span>
+        {% endif %}
+        <span>
+            {% for p in page_range %}
+
+            {% ifequal p groupls.number %}
+            <span class="current">{{p}}</span>
+            {% else %}
+            <a href="?page={{p}}{% ifnotequal groselect '' %}&groupselect={{groselect}}{% endifnotequal %}" title="第{{p}}页">{{p}}</a>
+            {% endifequal %}
+
+        {% endfor %}
+        </span>
+        {% if groupls.has_next %}
+        <a href="?page={{ groupls.next_page_number }}{% ifnotequal groselect '' %}&groupselect={{groselect}}{% endifnotequal %}">下一页</a>
+        {% else %}
+        <span>下一页</span>
+        {% endif %}
+    </div>
+     
+    
+  </div>
+</form>
+
+
+<form  id='groupaddform'  method='post'>
+  <input type="hidden" name="Infoform" value="{{data}}" id="id_teamdata" />
+  {% csrf_token %}
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">添加团队</h3>
+        </div>
+        <div>
+       <div class="MainContent" >
+        <!--
+       <div class="personLeftSx" style="margin-top:5px; " >
+        <div id="id_student_tree" style="text-align:left; vertical-align:top;"> </div>
+          </div>
+      -->
+          <div id="id_student_div">
+              <table data-selid="0" class="table table-striped topsec_tabletop table-hover" >
+                  <tr>
+                      <td style="text-align: left; vertical-align: top; width: 220px;">
+                          <div style="text-align: left;">
+                              <!-- <a href="javascript: uploadStudents()" style="margin: 5px">导入学生</a> -->
+                              <div id="id_student_tree">
+                              </div>
+                          </div>
+                      </td>
+                      <td style="vertical-align: top; width: 100%">
+                          <table id="id_student_list" style="background-color:transparent;" class="table table-striped topsec_tabletop table-hover"
+                              data-selid="0">
+                              <tr>
+                                  <th width="0">
+                                  </th>
+                                  <th>
+                                      学号
+                                  </th>
+                                  <th>
+                                      姓名
+                                  </th>
+                                  <th>
+                                      性别
+                                  </th>
+                                  <th>
+                                      所属班级
+                                  </th>
+                              </tr>
+                          </table>
+                          <div id="id_students_Page" class="flickr"></div>
+                      </td>
+                  </tr>
+              </table>
+          </div>
+        <div id="info" >
+          <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;"  ><font color="#FF0000">*</font>团队名称：</td>
+              <td style="width:370px; ">
+                <input id='gname'  required="required" name='gname' type='text'   onchange="checkgname()" maxLength="16" placeholder="最多输入16个文字" class="form-control topself_input"/>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>团队队长：</td>
+              <td >
+                <select class="form-control" style="width:200px;"  id='captain' name='captain' required="required">
+                </select>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+      </div>
+    <!--   <div id="MainContent" class="personRightSx" role="main" style="heigth:100%; margin-top:-10px;">
+        <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-15px;"></div>
+      </div> -->
+          <div class="modal-footer"  >
+            <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+            <button class="btn btn-primary" id="btnaddtea" type="submit"  onclick="submitteam()"  title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+            <button id="resetbtn" class="btn btn-default"  type="button" onclick='mclear()' title='重置'><span class="glyphicon glyphicon-retweet"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+
+
+<form  id='groupdetailform'  method='post'>
+  <input type="hidden" name="Infoform" value="{{data}}" id="detailform" />
+  {% csrf_token %}
+  <div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px;">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 id="detailModalLabel">团队详情</h3>
+              </div>
+
+              <div class="MainContent" >
+<!-- *************************** -->
+              <div id="deid_student_div">
+                <table data-selid="0" class="table table-striped topsec_tabletop table-hover">
+                      <tr>
+                          <td style="vertical-align: top; width: 100%">
+                              <table id="deid_student_list" style="background-color:transparent;" class="table table-striped topsec_tabletop table-hover"data-selid="0">
+                                  <tr>
+                                      <th width="0">
+                                      </th>
+                                      <th>
+                                          学号
+                                      </th>
+                                      <th>
+                                          姓名
+                                      </th>
+                                      <th>
+                                          性别
+                                      </th>
+                                      <th>
+                                          所属班级
+                                      </th>
+                                  </tr>
+                              </table>
+                              <div id="deid_students_Page" class="flickr"></div>
+                          </td>
+                      </tr>
+                </table>
+              </div>
+              <div id="deinfo">
+                <table class="table topsec_tabletop">
+                  <tr>
+                    <td style="width:130px; text-align:right; vertical-align:middle;" >团队名称：</td>
+                    <td style="width:370px; ">
+                      <input id='degname' name='degname' type='text' required="required" maxLength="16"  class="form-control topself_input" readonly/>
+
+                    </td>
+                    <td style="width:130px; text-align:right; vertical-align:middle;">团队队长：</td>
+                    <td >
+                      <input class="form-control topself_input" style="width:200px;"  id='decaptain' name='decaptain' required="required" readonly/>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+<!-- *************************** -->
+              </div>
+              <!-- <div id="deMainContent" class="personRightSx"  role="main" style=" heigth:100%; margin-top:-10px; " >
+                <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-15px;"></div>
+              </div> -->
+              <div class="modal-footer" style="text-align:right">
+                <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+              </div>
+       </div>
+    </div>
+    </div>
+</form>
+
+
+<form id='hiddeninfo'>
+<input type="hidden" name="Info" value="" id="Info" />
+</form>
+<script type="text/javascript">
+
+
+setfontcolor("groctrl");
+setTableEvent("lsgro", true);
+setTableEvent("id_student_list", true);
+var g_studentIds = null;
+var g_status = true;//true为add，false为edit
+var g_studentsPage=null;
+var arr = null;
+var g_addselectoption = {};
+$(function () {
+               g_studentIds = null;
+               g_status = true;//true为add，false为edit
+               g_studentsPage=null;
+               arr = null;
+               g_addselectoption = {};
+
+             $("#id_student_tree").dynatree({
+                        onClick: function(node, event) {
+                          
+                        },
+                       onActivate: function(node) {
+                        if(!node.data.isFolder)
+                        {
+                          SaveStudentIds();
+                          var sex='';
+                          g_studentsPage = new page();
+                          $("#Info").val(node.data.key.split('#')[1])
+                          fCallback(0);
+                          RefreshStudentsPagination(g_studentsPage.totallCount,g_studentsPage.perPageCount,g_studentsPage.currentPage,StudentspageselectCallback); 
+                                
+                         // //编辑时点击班级给下拉框添加已存在队员option
+                          if (g_studentIds != "")
+                          {
+                            SelectedStudents();
+                            var trSelected = "#id_student_list>tbody>tr.success";
+                            $(trSelected).each(function()
+                            {
+                                      g_addselectoption[$(this).data("tag")]=$(this).data("selname");
+                            });
+                            selectoptions();
+                          }
+                          setTableEvent("id_student_list", true);                        
+                        }
+            },
+            persist: true,
+            });
+});
+//过滤特殊字符
+// function checkspecial(e)
+// {
+//       var keynum
+//       var keychar
+//       var numcheck
+//       if(window.event) // IE
+//       {
+//             keynum = e.keyCode
+//       }
+//       else if(e.which) // Netscape/Firefox/Opera
+//       {
+//             keynum = e.which
+//       }
+//       keychar = String.fromCharCode(keynum)
+//       // numcheck=^([\u4e00-\u9fa5]+|[a-zA-Z0-9]+)$
+//       numcheck =/(?=[\x21-\x7e]+)[^A-Za-z0-9]/
+//       result=numcheck.test(keychar)
+//       if(result)
+//       {
+//             alert("不能输入特殊字符!");
+//             return false;
+//       }
+//       else
+//       {
+//             return true;
+//       }
+// }
+function RefreshStudentsPagination(totallCount,perPageCount,currentPage,_fcallback)
+          {
+              $("#id_students_Page").pagination(totallCount,{
+                              callback: _fcallback,//PageCallback() 为翻页调用次函数。
+                              prev_text: " 上一页",
+                              next_text: "下一页 ",
+                              items_per_page: perPageCount, //每页的数据个数
+                              num_display_entries: 3, //两侧首尾分页条目数
+                              current_page: currentPage,   //当前页码
+                              num_edge_entries: 2, //连续分页主体部分分页条目数
+              });
+          };
+function detailRefreshStudentsPagination(totallCount,perPageCount,currentPage,_fcallback)
+          {
+              $("#deid_students_Page").pagination(totallCount,{
+                              callback: _fcallback,//PageCallback() 为翻页调用次函数。
+                              prev_text: " 上一页",
+                              next_text: "下一页 ",
+                              items_per_page: perPageCount, //每页的数据个数
+                              num_display_entries: 3, //两侧首尾分页条目数
+                              current_page: currentPage,   //当前页码
+                              num_edge_entries: 2, //连续分页主体部分分页条目数
+              });
+          };
+ function page()
+           {
+              this.currentPage=-1;
+              this.totallCount=-1;
+              this.perPageCount=-1;
+           };
+// function selopt(){
+//   this.s_tag = -1;
+//   this.s_text = ""
+// }           
+  function StudentspageselectCallback(page_id, jq) {
+                  //回调函数，进一步使用请参阅说明文档
+                 g_studentsPage.currentPage = page_id;
+                 SaveStudentIds();
+                 fCallback(page_id);
+
+                 RefreshStudentsPagination(g_studentsPage.totallCount,g_studentsPage.perPageCount,page_id,StudentspageselectCallback);
+};         
+function fCallback(page_id){
+                var pagenum = page_id;
+                result =  ajaxobj("/groupstudentinfo/"+pagenum+"/", "", "post", "#hiddeninfo");
+                          var jsondata = $.parseJSON(result);
+                          html='<tr><th width="0"></th><th>学号</th><th>姓名</th><th>性别</th><th>所属班级</th></tr>';
+                          for(var i=0;i<jsondata.student.length;i++)
+                          {
+                            if (jsondata.student[i][3]==0)
+                            {
+                              sex='男';
+                            }
+                            else
+                            {
+                              sex='女';
+                            }
+                            html=html+'<tr data-selname='+jsondata.student[i][1]+','+jsondata.student[i][2]+' data-tag='+jsondata.student[i][0]+' onclick="multibackcolor(\'id_student_list\',this)"><td></td><td>'+jsondata.student[i][1]+'</td><td>'+jsondata.student[i][2]+'</td><td>'+sex+'</td><td>'+jsondata.student[i][4]+'</td></tr>';//tag为学号
+                          }
+                           $("#id_student_list").html(html);
+
+
+                           SelectedStudents();//点击之前选中学员的页码时，选中学员有addclass
+                           //selectoptions();
+
+                          g_studentsPage.totallCount = jsondata.totalcount;
+                          g_studentsPage.perPageCount =7;
+                          g_studentsPage.currentPage =0;
+                          
+}
+ function TeamInfo()
+{
+        this.id=-1;
+        this.name="";
+        this.selectcaptain = "";
+        this.studentIds=new Array();
+}
+
+function checkgname()
+{
+    var groname=document.getElementById("gname");
+    // var judgeadd;
+    var gro = ajaxobj("/checkgroname/", "", "post", "#groupaddform");
+    var jsondata = $.parseJSON(gro);
+    judgeadd=jsondata.judgegname;
+    // var reg=/^[A-Za-z0-9]+$/;
+    var reg=/^[a-zA-Z0-9\u4e00-\u9fa5（）——_!@#$<>《》？|=-]+$/;
+    if(reg.test(groname.value)==false)
+    {
+      groname.setCustomValidity("不被允许的特殊字符");
+    }
+    else if(judgeadd==1)
+    {
+      groname.setCustomValidity("团队名已存在!");
+    }
+    else
+    {
+      groname.setCustomValidity("");
+    }
+
+}
+function submitteam(){
+
+    var info = new TeamInfo();
+
+    //$("#id_courses_list>tbody>tr.success").each(function(){ info.id=$(this).data("tag");});
+    info.id =$("#lsgro").data("selid");
+    info.name = $("#gname")[0].value;
+
+    info.selectcaptain = $("#captain").val();
+
+    SaveStudentIds();
+    info.studentIds = g_studentIds;
+
+    if(info.studentIds.length ==0)
+    {
+        // Showbo.Msg.alert("请选择学员。");
+        return 0;
+    }
+    var result="";
+    $("#id_teamdata").attr("value",JSON.stringify(info));
+
+    if( g_status == true)
+    {
+       $("#groupaddform").attr("action","/groupadd/")
+    }else{
+
+      $("#groupaddform").attr("action","/groupdate/")
+    }
+
+               
+}
+
+function selectoptions()
+{
+  var cap = $("#captain").val();
+  $("#captain").empty();
+  for(var sop in g_addselectoption){
+      ooption = "<option value="+sop+">"+g_addselectoption[sop]+"</option>";
+      $("#captain").append(ooption);
+
+  }
+  if (cap != null && cap!= "")
+    $("#captain").val(cap);               
+}
+
+function SaveStudentIds()
+          {
+                  //g_studentIds.splice(0,g_studentIds.length);//清空数组所有元素
+                  var str =  ","+g_studentIds.join(",")+ ",";
+                  $("#id_student_list>tbody>tr.success").each(
+                    function(){
+                        if(str.indexOf( ","+$(this).data("tag")+ ",") <0)
+                          {
+                            g_studentIds.push($(this).data("tag"));
+                          }
+                    });
+          };
+
+function multibackcolor(tableId,sender)
+          {
+              var trSelected = "#" + tableId +">tbody>tr.success";
+              var rows = $(trSelected);
+              $(sender).addClass('success'); 
+
+              if ($(sender).data("tag") in g_addselectoption){
+                  delete g_addselectoption[$(sender).data("tag")];
+              }else{
+                  g_addselectoption[$(sender).data("tag")]=$(sender).data("selname");
+              }
+
+              rows.each(function(){
+                  if(this==sender)
+                  {
+                      $(this).removeClass('success');
+                       var indexid = g_studentIds.indexOf( $(this).data("tag"));
+
+                       if(indexid >=0)  {  
+                          g_studentIds.splice(indexid,1);//从g_studentIds中移除removeClass的元素
+                     }
+                  }
+                  else{
+
+                  }
+             });
+            selectoptions();
+          }
+function setTableEvent(tableid, singleSelect) {
+         var tr = "#" + tableid + ">tbody>tr";
+         var trSelected = tr + ".success";
+         $(tr).click(function(event) {
+                    if($(this).attr('id') == undefined)
+                      return;
+                  if (singleSelect) {
+                      $(trSelected).removeClass('success');
+                  }
+                    if($("#editsuccess").hasClass('disabled'))
+                  {
+                    $("#editsuccess").removeClass('disabled');
+                    $("#btndel").removeClass('disabled');
+                    $("#detailsuccess").removeClass('disabled');
+                  }
+                  $(this).addClass('success');
+                  $("#lsgro").data("selid", $(this).attr('id'));
+                  $("#btndel").attr('formaction', '/groupdel/' + $(this).attr('id')+'/');  
+         });
+}
+function SelectedStudents()
+          {
+
+                    str =  ","+g_studentIds.join(",")+ ",";
+                    $("#id_student_list>tbody>tr").each(
+                      function(){
+                        if(str.indexOf( ","+$(this).data("tag")+ ",") >=0)
+                        {
+                           $(this).addClass('success');
+                        }
+                      });
+          }
+
+function editStudentspageselectCallback(page_id, jq) {
+                  //回调函数，进一步使用请参阅说明文档
+                 g_studentsPage.currentPage = page_id;
+                 editgetgroupinfo(page_id);
+                 RefreshStudentsPagination(g_studentsPage.totallCount,g_studentsPage.perPageCount,page_id,editStudentspageselectCallback);
+           };
+function getmembers(){
+    $("#captain").empty();
+    groups = ajaxobj("/Getgroupmembers/", "", "post", "#groupaddform");
+    members = $.parseJSON(groups);
+    g_studentIds = new Array();
+    g_addselectoption = {};                
+    for(var j=0;j<members.groupmers.length;j++)
+    {
+          
+        $("#captain").append("<option value="+members.groupmers[j][0]+">"+members.groupmers[j][1]+","+members.groupmers[j][2]+"</option>");
+        g_addselectoption[members.groupmers[j][0]] = members.groupmers[j][1] + "," + members.groupmers[j][2];
+        g_studentIds[j] = members.groupmers[j][0];
+    }
+    $("#captain").val(members.cap);
+}               
+function editgetgroupinfo(page_id){
+      var pagenum = page_id;
+      result =  ajaxobj("/GetEditInfo/"+pagenum+"/", "", "post", "#groupaddform");
+      teamsInfo = $.parseJSON(result);
+
+      if(teamsInfo != null)
+      {
+          $("#gname").val(teamsInfo.name);
+          
+            h='<tr><th width="0"></th><th>学号</th><th>姓名</th><th>性别</th><th>所属班级</th></tr>';
+           for(var i=0;i<teamsInfo.groupmers.length;i++)
+            {
+              if (teamsInfo.groupmers[i][3]==0)
+              {
+                sex='男';
+              }
+              else
+              {
+                sex='女';
+              }
+              h=h+'<tr data-selname='+teamsInfo.groupmers[i][1]+','+teamsInfo.groupmers[i][2]+' data-tag='+teamsInfo.groupmers[i][0]+'><td></td><td>'+teamsInfo.groupmers[i][1]+'</td><td>'+teamsInfo.groupmers[i][2]+'</td><td>'+sex+'</td><td>'+teamsInfo.groupmers[i][4]+'</td></tr>';//tag是id
+            }
+      }
+      else
+      {
+          teamsInfo =null;
+      }
+      $("#id_student_list").html(h);
+      $("#id_student_list>tbody>tr").each(
+                 function(){
+                      /*if($(this).data("selname")== teamsInfo.captain){
+                                $(this).addClass('success');
+                              }*/
+                 });
+
+      g_studentsPage.totallCount = teamsInfo.totalcount;
+      g_studentsPage.perPageCount =7;
+      g_studentsPage.currentPage =0;
+      /*g_studentIds = teamsInfo.students;*/
+}
+function edit()
+{
+    $("#myModalLabel").text("编辑团队");
+    g_studentIds = new Array()
+    g_studentsPage = new page();
+    g_addselectoption = {};
+    var selgid = $("#lsgro").data("selid");
+    $("#id_teamdata").val(selgid);
+    isinexam = ajaxobj("/Isinexam/", "", "post", "#groupaddform");
+    data = $.parseJSON(isinexam);
+    if(data.cando == 'false'){
+      Showbo.Msg.alert("您没有权限编辑该团队!");
+      return
+    }else if(data.isexam == "1")
+    {
+      var msg='已被启动的竞赛:"'+data.names+'"使用，禁止编辑！'
+      Showbo.Msg.alert(msg)
+    }else if(data.isexam == "2")
+    {
+      var msg='已被启动的攻防:"'+data.names+'"使用，禁止编辑！'
+      Showbo.Msg.alert(msg)
+    }
+    else if(data.isexam == "3")
+    {
+      return;
+    }
+    else
+    {
+      gettree();
+      getmembers();
+      editgetgroupinfo(0);
+      //获取下拉框所有成员
+
+       RefreshStudentsPagination(g_studentsPage.totallCount,g_studentsPage.perPageCount,g_studentsPage.currentPage,editStudentspageselectCallback);
+
+      g_status = false;
+
+      $("#resetbtn").hide();
+      $("#gname").attr("readonly","readonly");
+      $("#myModal").modal('show');
+    }
+}
+
+function submitdelformedit()
+{
+    var preid = $("#lsgro").data("selid");
+    if(preid == "0")
+    {
+      return false;
+    }
+
+    $("#postgrpid").attr("value", preid);
+    result = ajaxobj("/Checkgruse/","","post","#InfoForm");
+    data = $.parseJSON(result);
+    if(data.cando == 'false'){
+      Showbo.Msg.alert("您没有权限编辑该团队!");
+      return
+    }else if(data.isexam == "1")
+    {
+      var msg='已被添加到竞赛:"'+data.names+'"，禁止删除！'
+      Showbo.Msg.alert(msg)
+    }else if(data.isexam == "2")
+    {
+      var msg='已被添加到攻防:"'+data.names+'"，禁止删除！'
+      Showbo.Msg.alert(msg)
+    }
+    else if(data.isexam == "3")
+    {
+      return;
+    }
+    else
+    {
+      Showbo.Msg.oncallback = submitdelformeditcallback;
+      Showbo.Msg.confirm("确定删除吗？");
+    }
+}
+
+function submitdelformeditcallback()
+{
+  var preid = $("#lsgro").data("selid");
+  if (preid!=0)
+  {
+      var editurl="/groupdel/"+preid+'/';
+      document.getElementById("groupform").action=editurl;
+      document.getElementById("groupform").submit();
+  }
+}
+
+function gettree(){
+       var tree = $("#id_student_tree").dynatree("getTree");
+           var node = tree.getRoot();
+           node.removeChildren();
+           var obj = ajaxobj("/groupstudenttree/", "", "get", "");
+           var jsondept = $.parseJSON(obj).depttree;
+           var jsoncla = $.parseJSON(obj).clatree;
+
+
+           for (var i=0;i<jsondept.length;i++)
+           {
+              node.addChild({title: jsondept[i][1],  key: jsondept[i][0] ,isFolder: true ,expand:true });
+           }
+          node.visit(function(node){
+           for(var j=0;j<jsoncla.length;j++)
+            {
+              var judgegrade=true;
+              node.visit(function(node){
+                if(node.data.title==jsoncla[j][1]&&node.data.key==('*'+jsoncla[j][0]))
+                      judgegrade=false
+              });
+             if(node.data.key==jsoncla[j][0]&&judgegrade==true)
+            {
+              node.addChild({title: jsoncla[j][1],  key: '*'+jsoncla[j][0] ,isFolder: true ,expand:true });
+              nodes = node.getChildren();
+              curnode = nodes[nodes.length-1];
+              for(var k=0;k<jsoncla.length;k++)
+              {
+                if(jsoncla[j][0] == jsoncla[k][0] &&jsoncla[j][1]== jsoncla[k][1] )
+                {
+                  curnode.addChild({title: jsoncla[k][2], key: '#'+jsoncla[k][3] , isFolder: false  });
+                }
+              }
+            }
+
+           }
+          });
+
+}
+function mclear()
+{
+    $("#myModalLabel").text("添加团队");
+    g_status = true;
+    g_studentIds = new Array();
+    g_addselectoption = {};
+    document.getElementById('gname').value = '';//清除
+    $("#id_student_list>tbody>tr").empty();
+    $("#id_students_Page").empty();
+    $("#id_student_list>tbody>tr.success").each(
+        function(){
+            $("#id_student_list tr").removeClass();
+        });
+           
+    $("#captain").empty();
+    gettree();
+    $("#gname").removeAttr("readonly","readonly");
+}
+function detailgetgroupinfo(page_id){
+      var pagenum = page_id;
+       result =  ajaxobj("/GetEditInfo/"+pagenum+"/", "", "post", "#groupdetailform");
+       teamsInfo = $.parseJSON(result);
+       if(teamsInfo != null)
+                    {
+                        $("#degname").val(teamsInfo.name);
+                        $("#decaptain").val(teamsInfo.captain.substr(teamsInfo.captain.indexOf(',')+1,teamsInfo.captain.length));//截取逗号后面的名称显示出来
+                        //$("#decaptain").append("<option value="+teamsInfo.captain+">"+teamsInfo.captain+"</option>");
+                          h='<tr><th width="0"></th><th>学号</th><th>姓名</th><th>性别</th><th>所属班级</th></tr>';
+                         for(var i=0;i<teamsInfo.groupmers.length;i++)
+                          {
+                            if (teamsInfo.groupmers[i][3]==0)
+                            {
+                              sex='男';
+                            }
+                            else
+                            {
+                              sex='女';
+                            }
+                            h=h+'<tr data-selname='+teamsInfo.groupmers[i][1]+','+teamsInfo.groupmers[i][2]+' data-tag='+teamsInfo.groupmers[i][0]+' ><td></td><td>'+teamsInfo.groupmers[i][1]+'</td><td>'+teamsInfo.groupmers[i][2]+'</td><td>'+sex+'</td><td>'+teamsInfo.groupmers[i][4]+'</td></tr>';//tag是id
+                            
+                          }
+                          $("#deid_student_list").html(h);
+                          $("#deid_student_list>tbody>tr").each(
+                               function(){
+                                    if($(this).data("selname")== teamsInfo.captain){
+                                              $(this).addClass('success');
+                                            }
+                               });
+
+                    }
+                    else
+                    {
+                        teamsInfo =null;
+                    }
+                    g_studentsPage.totallCount = teamsInfo.totalcount;
+                    g_studentsPage.perPageCount =7;
+                    g_studentsPage.currentPage =0;
+                    /*g_studentIds = teamsInfo.students;*/
+
+}
+function detailStudentspageselectCallback(page_id,jq){
+         g_studentsPage.currentPage = page_id;
+           detailgetgroupinfo(page_id);
+           detailRefreshStudentsPagination(g_studentsPage.totallCount,g_studentsPage.perPageCount,page_id,detailStudentspageselectCallback);
+}
+function details(){
+            g_studentIds = new Array();
+            g_studentsPage = new page();
+            var selgid = $("#lsgro").data("selid");
+            $("#detailform").val(selgid);
+            detailgetgroupinfo(0);
+            detailRefreshStudentsPagination(g_studentsPage.totallCount,g_studentsPage.perPageCount,g_studentsPage.currentPage,detailStudentspageselectCallback);     
+
+}
+</script>
+{% endblock %}

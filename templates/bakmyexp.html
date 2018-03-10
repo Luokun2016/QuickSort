@@ -1,0 +1,512 @@
+{% extends "templates/sysmgrmenu.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}数据字典{% endblock %}
+{% block script1 %}
+
+<style type="text/css">
+
+            /*css flickr style pagination*/
+            div.flickr {
+                padding:0px;margin:0px; text-align:right; font-family:Verdana; font-size:12px;
+            }
+           /* div.flickr a {
+                border-right: #dedfde 1px solid; border-top: #dedfde 1px solid; border-left: #dedfde 1px solid; border-bottom: #dedfde 1px solid; padding-right: 6px; background-position: 50% bottom;  padding-left: 6px; padding-bottom: 2px;  color: #fff; margin-right: 3px; padding-top: 2px;  text-decoration: none
+            }*/
+            /*div.flickr a:hover {
+                border-right: #000 1px solid; border-top: #000 1px solid; background-image: none; border-left: #000 1px solid; color: #fff; border-bottom: #000 1px solid; background-color: #0061de;height: 30px;width: 30px;
+            }*/
+            div.meneame a:active {
+                border-right: #000 1px solid; border-top: #000 1px solid; background-image: none; border-left: #000 1px solid; color: #fff; border-bottom: #000 1px solid; background-color: #0061de
+            }
+            div.flickr span.current {
+                padding-right: 6px; padding-left: 6px; font-weight: bold; padding-bottom: 2px; margin-right: 3px; padding-top: 2px;
+            }
+            div.flickr span.disabled {
+                padding-right: 6px; padding-left: 6px; padding-bottom: 2px; color: #adaaad; margin-right: 3px; padding-top: 2px;
+            }
+</style>
+
+<script src='/statics/js/jquery.pagination.js' type="text/javascript"></script>
+<script type="text/javascript"> 
+       
+       $(function () {
+            setfontcolor("sysctrl");
+            setbackgroundcolor("myexpcolor");
+            var cinfo = $("#idcpage").attr("value");
+            var cjsondata = $.parseJSON(cinfo);
+             RefreshPagination("id_content_page",cjsondata.count,cjsondata.max,cjsondata.page,cpageselectCallback);
+            $("#idcpage").val(0);
+            var einfo = $("#idepage").attr("value");
+            var ejsondata = $.parseJSON(einfo);
+            
+            RefreshPagination("id_enum_page",ejsondata.count,ejsondata.max,ejsondata.page,epageselectCallback);
+             $("#idepage").val(0);
+            });
+
+    function epageselectCallback(page_id, jq) {
+                     $("#idepage").val(page_id); //回调函数，进一步使用请参阅说明文档
+                     var result = ajaxobj("/EnumPageChange/", "", "post", "#idAddEnum");
+                     var josndata = $.parseJSON(result);
+                     if(josndata.error=="")
+                     {
+                      RefreshPagination("id_enum_page",josndata.page.count,josndata.page.max,josndata.page.page,epageselectCallback);
+                      RefreshEnumPage(josndata);
+                     }
+                     
+                };
+
+     function cpageselectCallback(page_id, jq) {
+                   $("#idcpage").val(page_id); //回调函数，进一步使用请参阅说明文档
+                   var result = ajaxobj("/ContentPageChange/", "", "post", "#idAddContent");
+                   var josndata = $.parseJSON(result);
+                    if(josndata.error=="")
+                     {
+                        RefreshPagination("id_content_page",josndata.page.count,josndata.page.max,josndata.page.page,cpageselectCallback);
+                        RefreshContentPage(josndata);
+                     }
+
+
+    };
+
+    function RefreshPagination(paginationname,totallCount,perPageCount,currentPage,_fcallback)
+    {
+        $("#"+ paginationname).pagination(totallCount,{
+                        callback: _fcallback,//PageCallback() 为翻页调用次函数。
+                        prev_text: " 上一页",
+                        next_text: "下一页 ",
+                        items_per_page: perPageCount, //每页的数据个数
+                        num_display_entries: 3, //两侧首尾分页条目数
+                        current_page: currentPage,   //当前页码
+                        num_edge_entries: 2, //连续分页主体部分分页条目数
+        });
+    };
+
+    function EnumPage()
+    {
+
+    };
+
+    function singlebackcolor(tableName, sender) {
+        var trSelected = "#" + tableName + ">tbody>tr.success";
+        $(trSelected).removeClass('success');
+        $(sender).addClass('success');
+    };
+
+    function checkclass() {
+
+    };
+
+    function EnumAddButtonClick() {
+        $("#idenum").data("type", 0);
+        $("#idenumKey").val("");
+        $("#idenumDescription").val("");
+        $("#idenumTitle").html("添加字典");
+        $("#idenumpop").modal("show");
+    };
+
+    function EnumEditButtonClick() {
+        var selection = $("#id_enum_list>tbody>tr.success");
+        if (selection.length == 0) {
+            return false;
+        }
+        else {
+            var courseId = 0;
+            selection.each(function () { courseId = $(this).data("id"); });
+            $("#idenum").attr("value", courseId);
+            result = ajaxobj("/GetEnumEditConfig/", "", "post", "#idAddEnum");
+            var jsonresult = $.parseJSON(result);
+            $("#idenum").data("type", 1);
+            $("#idenumKey").val(jsonresult.key);
+            $("#idenumDescription").val(jsonresult.value);
+            $("#idenumTitle").html("修改字典");
+            $("#idenumpop").modal("show");
+        }
+    };
+
+    function EnumDeleteButtonClick() {
+        var selection = $("#id_enum_list>tbody>tr.success");
+        if (selection.length == 0) {
+            return false;
+        }
+        else {
+            var courseId = 0;
+            selection.each(function () { courseId = $(this).data("id"); });
+            $("#idenum").attr("value", courseId);
+            var result = ajaxobj("/DeleteEnumSubmit/", "", "post", "#idAddEnum");
+            var josndata = $.parseJSON(result);
+            if (josndata.error != "") {
+                alert(josndata.error);
+            }
+            RefreshEnumPage(josndata);
+            RefreshPagination("id_enum_page",josndata.page.count,josndata.page.max,josndata.page.page,epageselectCallback);
+        }
+    };
+
+    function RefreshEnumPage(ojosn) {
+        var rowMark = '<tr data-id=%id% onclick="singlebackcolor(\'id_enum_list\',this)">%rowmark%</tr>';
+        var colMark = "<td>%colmark%</td>";
+        var innerHtml = "<tbody> <tr><th>类型</th><th>描述</th> </tr>";
+        if (ojosn.enums.length != 0) {
+            for (var i = 0; i < ojosn.enums.length; i++) {
+                var row = "";
+                row += colMark.replace("%colmark%", ojosn.enums[i].key);
+                row += colMark.replace("%colmark%", ojosn.enums[i].value);
+                row = rowMark.replace("%rowmark%", row);
+                row = row.replace("%id%", ojosn.enums[i].id);
+                innerHtml += row;
+            };
+        }
+        innerHtml += "</tbody>";
+        $("#id_enum_list").html(innerHtml);
+    };
+
+    function submitEnum() {
+
+        var validation = true;
+        var msg = new Array();
+        if ($("#idenumKey")[0].value == "") { msg.push("请填写类型！"); validation = false; }
+        if ($("#idenumDescription")[0].value == "") { msg.push("请填写描述！"); validation = false; }
+        if (validation == false) {
+            alert(msg.join("\r\n"));
+            return false;
+        }
+
+        var result = "";
+        if ($("#idenum").data("type") == 0) {
+            result = ajaxobj("/AddEnumSubmit/", "", "post", "#idAddEnum");
+        }
+        else {
+            result = ajaxobj("/EditEnumSubmit/", "", "post", "#idAddEnum");
+        }
+        var josndata = $.parseJSON(result);
+        if (josndata.error != "") {
+            alert(josndata.error);
+        }
+        RefreshEnumPage(josndata);
+        RefreshPagination("id_enum_page",josndata.page.count,josndata.page.max,josndata.page.page,epageselectCallback);
+    };
+
+    function ContentAddButtonClick() {
+
+        $("#idcontent").attr("value", -1);
+        $("#idcontent").data("type", 0);
+        var result = ajaxobj("/GetContentEditConfig/", "", "post", "#idAddContent");
+        var jsonresult = $.parseJSON(result);
+        var optionMark = "<option value='%id%'>%key%</option>";
+        var htmlstr = "";
+        for (var i = 0; i < jsonresult.enums.length; i++) {
+            var temp = optionMark.replace("%id%", jsonresult.enums[i].id);
+            temp = temp.replace("%key%", jsonresult.enums[i].key);
+            htmlstr += temp;
+        };
+        $("#idcontentKey").html(htmlstr);
+
+        $("#idcontentDescription").val("");
+         $("#idContentTitle").html("添加字典");
+        $("#idcontentpop").modal("show");
+    };
+
+    function ContentEditButtonClick() {
+        var selection = $("#id_content_list>tbody>tr.success");
+        if (selection.length == 0) {
+            return false;
+        }
+        else {
+            $("#idcontent").data("type", 1);
+            var cId = 0;
+            selection.each(function () { cId = $(this).data("id"); });
+            $("#idcontent").attr("value", cId);
+            var result = ajaxobj("/GetContentEditConfig/", "", "post", "#idAddContent");
+            var jsonresult = $.parseJSON(result);
+            //idcontentKey
+            //<option value='{{ dept.id }}'>{{ dept.deptname }}</option>
+            var optionMark = "<option value='%id%'>%key%</option>";
+            var htmlstr = "";
+            for (var i = 0; i < jsonresult.enums.length; i++) {
+                var temp = optionMark.replace("%id%", jsonresult.enums[i].id);
+                temp = temp.replace("%key%", jsonresult.enums[i].key);
+                htmlstr += temp;
+            };
+            $("#idcontentKey").html(htmlstr);
+            $("#idcontentKey").val(jsonresult.key);
+            $("#idcontent").val(jsonresult.id);
+            $("#idcontentDescription").val(jsonresult.value);
+             $("#idContentTitle").html("修改字典");
+            $("#idcontentpop").modal("show");
+        }
+    };
+
+    function ContentDeleteButtonClick() {
+        var selection = $("#id_content_list>tbody>tr.success");
+        if (selection.length == 0) {
+            return false;
+        }
+        else {
+            Showbo.Msg.oncallback = DeleteItem;
+            Showbo.Msg.confirm("确定删除吗？");
+            // var cId = 0;
+            // selection.each(function () { cId = $(this).data("id"); });
+            // $("#idcontent").attr("value", cId);
+            // var result = ajaxobj("/DeleteContentSubmit/", "", "post", "#idAddContent");
+            // var josndata = $.parseJSON(result);
+            // if (josndata.error != "") {
+            //     alert(josndata.error);
+            // }
+            // RefreshContentPage(josndata);
+            // RefreshPagination("id_content_page",josndata.page.count,josndata.page.max,josndata.page.page,cpageselectCallback);
+        }
+    };
+
+
+    function DeleteItem(){
+            var selection = $("#id_content_list>tbody>tr.success");
+            var cId = 0;
+            selection.each(function () { cId = $(this).data("id"); });
+            $("#idcontent").attr("value", cId);
+            var result = ajaxobj("/DeleteContentSubmit/", "", "post", "#idAddContent");
+            var josndata = $.parseJSON(result);
+            if (josndata.error != "") {
+                alert(josndata.error);
+            }
+            RefreshContentPage(josndata);
+            RefreshPagination("id_content_page",josndata.page.count,josndata.page.max,josndata.page.page,cpageselectCallback);
+    }
+    function submitContent() {
+
+        var validation = true;
+        var msg = new Array();
+        if ($("#idcontentDescription")[0].value == "") { msg.push("请填写名称！"); validation = false; }
+        else if ($("#idcontentDescription")[0].value.length>=200) {msg.push("描述长度须小于50"); validation = false;};
+        if (validation == false) {
+            alert(msg.join("\r\n"));
+            return false;
+        }
+
+        var result = "";
+        if ($("#idcontent").data("type") == 0) {
+            result = ajaxobj("/AddContentSubmit/", "", "post", "#idAddContent");
+        }
+        else {
+            result = ajaxobj("/EditContentSubmit/", "", "post", "#idAddContent");
+        }
+        var josndata = $.parseJSON(result);
+        if (josndata.error != "") {
+            alert(josndata.error);
+        }
+        RefreshContentPage(josndata);
+        RefreshPagination("id_content_page",josndata.page.count,josndata.page.max,josndata.page.page,cpageselectCallback);
+        $("#idcontentpop").modal("hide");
+    }
+
+    function RefreshContentPage(ojosn) {
+        var rowMark = '<tr data-id=%id% onclick="singlebackcolor(\'id_content_list\',this)">%rowmark%</tr>';
+        var colMark = "<td>%colmark%</td>";
+        var innerHtml = "<tbody> <tr><th>类型</th><th>名称</th> </tr>";
+        if (ojosn.contents.length != 0) {
+            for (var i = 0; i < ojosn.contents.length; i++) {
+                var row = "";
+                row += colMark.replace("%colmark%", ojosn.contents[i].key);
+                row += colMark.replace("%colmark%", ojosn.contents[i].value);
+                row = rowMark.replace("%rowmark%", row);
+                row = row.replace("%id%", ojosn.contents[i].id);
+                innerHtml += row;
+            };
+        }
+        innerHtml += "</tbody>";
+        $("#id_content_list").html(innerHtml);
+    };
+
+</script>
+{% endblock %} 
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">数据字典</span>
+</div>
+{% endblock %}
+{% block content1 %}
+<form action="/myexp/" method='post'>
+<!-- <div class="page-header" style="position: relative; top: -10px;">
+    <h3>
+        数据字典</h3>
+</div> -->
+<div class="modal-body" style="font-size: 16px; vertical-align: middle; position: relative;
+    top: -30px;">
+    <ul class="nav nav-tabs">
+        <li class="dlgList active" id="class_baseinfo"><a data-toggle="tab" href="#id_enum_tab">
+            枚举信息</a> </li>
+        <li class="dlgList " id="class_outlines"><a data-toggle="tab" href="#id_content_tab">
+            具体信息</a> </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade in active" id="id_enum_tab" style="position: relative;
+            top: 0px;">
+           <!--  <div class="bs-docs-section ">
+                <button id="addButton" class="btn btn-primary disabled" type="button" onclick="EnumAddButtonClick()"
+                    data-backdrop="static" data-toggle="modal" title="添加">
+                    <span class="glyphicon glyphicon-plus"></span></button>
+                <button id="editButton" type="button" class="btn btn-primary disabled" onclick="EnumEditButtonClick()" title="编辑">
+                    <span class="glyphicon glyphicon-pencil"></span></button>
+                <button id="deleteButton" type="button" class="btn btn-danger disabled" onclick="EnumDeleteButtonClick()" title="删除">
+                    <span class="glyphicon glyphicon-remove"></span></button>
+            </div> -->
+            <div class="panel-body" style="padding-left: 0px; padding-right: 0px;">
+                <!-- Glyphicons
+                          ================================================== -->
+                <table id="id_enum_list" class="table table-striped topsec_tabletop table-hover">
+                    <tr>
+                        <th>
+                            类型
+                        </th>
+                        <th>
+                            名称
+                        </th>
+                    </tr>
+                    {% for type in enums %}
+                    <tr data-id="{{type.id}}" onclick="singlebackcolor('id_enum_list',this)">
+                        <td>
+                            {{ type.enumtype }}
+                        </td>
+                        <td>
+                            {{ type.enumdesc }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                <div id="id_enum_page"  class="flickr" ></div>
+            </div>
+        </div>
+        <div class="tab-pane fade  in" id="id_content_tab" style="position: relative; top: 20px;">
+            <div class="bs-docs-section">
+                <button class="btn btn-primary" type="button" onclick="ContentAddButtonClick()" data-backdrop="static"
+                    data-toggle="modal" title="添加">
+                    <span class="glyphicon glyphicon-plus"></span></button>
+                <button type="button" class="btn btn-primary" onclick="ContentEditButtonClick()"  title="编辑">
+                    <span class="glyphicon glyphicon-pencil"></span></button>
+                <button type="button" class="btn btn-danger" onclick="ContentDeleteButtonClick()" title="删除">
+                    <span class="glyphicon glyphicon-remove"></span></button>
+            </div>
+            <div class="panel-body" style="padding-left: 0px; padding-right: 0px;">
+                <!-- Glyphicons
+                          ================================================== -->
+                <table id="id_content_list" class="table table-striped topsec_tabletop table-hover">
+                    <tr>
+                        <th>
+                            类型
+                        </th>
+                        <th>
+                            名称
+                        </th>
+                    </tr>
+                    {% for item in contents %}
+                    <tr data-id="{{item.id}}" onclick="singlebackcolor('id_content_list',this)">
+                        <td>
+                            {{ item.enumid.enumtype }}
+                        </td>
+                        <td>
+                            {{ item.typename }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+              <div id="id_content_page"  class="flickr" ></div>
+            </div>
+        </div>
+    </div>
+</div>
+</form>
+<form id='idAddEnum'>
+{% csrf_token %}
+<input id="idenum" data-type="0" type="hidden" name="id" />
+<input id="idepage" data-type="0" type="hidden" name="page" value="{{einfo}}"/>
+<div class="modal fade" id="idenumpop" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    ×</button>
+                <h3 id="idenumTitle">
+                    添加字典</h3>
+            </div>
+            <div>
+                <table class="table topsec_tabletop">
+                    <tr>
+                        <td style="width: 100px; vertical-align: middle; text-align: right;">
+                            类型:
+                        </td>
+                        <td>
+                            <input id="idenumKey" maxlength='50' name='enumKey' required="required" type='text'
+                                onchange="checkclass()" class="form-control topself_input" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 100px; vertical-align: middle; text-align: right;">
+                            名称:
+                        </td>
+                        <td>
+                            <input id='idenumDescription' maxlength='50' name='enumDescription' required="required"
+                                type='text' onchange="checkclass()" class="form-control topself_input" />
+                        </td>
+                    </tr>
+                </table>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'>
+                        <span class="glyphicon glyphicon-remove"></span></button>
+                    <button class="btn btn-primary" id="btnaddcla" onclick="submitEnum()" type="submit" title='保存'>
+                       <span class="glyphicon glyphicon-floppy-save"></span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</form>
+<form id='idAddContent'>
+{% csrf_token %}
+<input id="idcontent" data-type="0" type="hidden" name="id" />
+<input id="idcpage" data-type="0" type="hidden" value="{{cinfo}}" name="page" />
+<div class="modal fade" id="idcontentpop" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="width: 600px; ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    ×</button>
+                <h3 id="idContentTitle">
+                    添加字典</h3>
+            </div>
+            <div>
+                <table class="table topsec_tabletop">
+                    <tr>
+                        <td style="width: 100px; vertical-align: middle; text-align: right;">
+                            类型:
+                        </td>
+                        <td>
+                            <select class="form-control" id='idcontentKey' name='contentKey' onchange="checkclass()"
+                                style="width: 200px;">
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 100px; vertical-align: middle; text-align: right;">
+                            名称:
+                        </td>
+                        <td>
+                            <input id='idcontentDescription' maxlength='200' name='contentDescription' required="required"
+                                type='text' onchange="checkclass()" class="form-control topself_input" />
+                        </td>
+                    </tr>
+                </table>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'>
+                       <span class="glyphicon glyphicon-remove"></span></button>
+                    <button class="btn btn-primary" onclick="submitContent()" type="button" title='保存'>
+                        <span class="glyphicon glyphicon-floppy-save"></span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</form>
+{% endblock %}

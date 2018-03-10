@@ -1,0 +1,1774 @@
+{% extends "templates/index.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}学员管理{% endblock %}
+{% block css %}{% endblock %}
+
+{% block script %}
+<script src='/statics/js/jquery.custom.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.cookie.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.dynatree.js' type="text/javascript"></script>
+<script type="text/javascript" src="/statics/js/ajaxProgressUpload.js"></script>
+<script src='/statics/js/uploadfile.js' type="text/javascript"></script>
+<link href="/statics/css/upload.css" rel="stylesheet"/>
+<script src='/statics/js/jquery.pagination.js' type="text/javascript"></script>
+{% endblock %}
+
+{% block maincontent %}{% endblock %}
+
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">学员管理</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<form id='studentform' action="/students/" method='get'>
+ {% csrf_token %}
+
+ <div id="MainContent" class="personRightSx" role="main" style=" heigth:100%; margin-top:-10px;">
+  <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-15px;">
+    <ul class="nav nav-tabs">
+      <li  class="active">
+        <a href="#stuinformation" data-toggle="tab">学员信息</a>
+      </li>
+      <li>
+        <a href="#clainformation" data-toggle="tab">信息详情</a>
+      </li>
+    </ul>
+    <div class="tab-content" style="position: relative; top:20px;">
+      <div class="tab-pane fade in active" id="stuinformation">
+        <div class="bs-docs-section">
+          <table width="100%">
+            <tr>
+              <td >
+                <div style="text-align:left;">
+                  <button type="button" class="btn btn-primary"  data-target="#myModalstuadd" title="添加学员" onclick='mclearstu()' data-toggle="modal"><span class="glyphicon glyphicon-plus"></span></button>
+                  <button type="button" class="btn btn-primary"  data-target="#myModalstusadd" title="批量添加" data-toggle="modal"><span class="glyphicon glyphicon-upload"></span></button>
+                  <button type="button" class="btn btn-primary disabled"  onclick='edit()' title="编辑学员" data-toggle="modal" id='editstusuccess'><span class="glyphicon glyphicon-pencil"></span></button>
+                  <button id="btndel" type="button" class="btn btn-danger disabled" title="删除学员" onclick='submitdelformedit()'><span class="glyphicon glyphicon-remove"></span></button>
+                </div>
+              </td>
+              <td align="right">
+                <div style="text-align:right;">
+                 <input id='querytext' name='querytext' type='text' class="form-control topself_input" placeholder="请输入学号、姓名关键字" value="{{stuselect}}" style="width:185px; display:inline;"/>
+                 <button id="btnquery" type="submit" class="btn btn-danger" title="查找学员" onclick='judegeall()' formaction="/students/" ><span class="glyphicon glyphicon-search"></span></button>
+               </div>
+             </td>
+           </tr>
+         </table>
+       </div>
+
+
+       <div class="panel-body" style="padding-left:0px; padding-right:0px;">
+                <!-- Glyphicons
+                ================================================== -->
+                <table  id="lsstu" class="table table-striped topsec_tabletop table-hover" data-selid="0" >
+                  <tr>
+                    <th>学号</th>
+                    <th>姓名</th>
+                    <th>性别</th>
+                    <th>系别</th>
+                    <th>年级</th>
+                    <th>班级</th>
+                    <th>邮箱</th>
+                    <th>电话</th>
+                  </tr>
+                  {% for student in students.object_list %}
+                  <tr id='{{student.id}}'>
+
+                    <td>{{student.stuno}}</td>
+                    <td>{{student.stuname}}</td>
+                    <td>
+                      <span>{% ifequal student.sex 0 %}男{% else %}女{% endifequal %}</span>
+                    </td>
+                    <td>
+                      {% for department in depts %}{% ifequal department.id student.clasid.departmentid_id %}{{department.deptname}}{% endifequal %}{% endfor %}
+                    </td>    
+                    <td>    
+                      {{student.clasid.grade}}
+                    </td>
+                    <td>     
+                      {{student.clasid.claname}}
+                    </td>
+                    <td title={{student.email}}>{{student.email|truncatechars:20}}</td>
+                    <td>{{student.mobile}}</td>
+                  </tr>
+                  {% endfor %}
+                </table>
+                <table id="tbpage" style="float:right;">
+                  <tr style="hover:opcity:1;">
+                    <td colspan="8" >
+                      <div class="flickr">
+                        {% if students.has_previous %}
+                        <a href="?page={{ students.previous_page_number }}{% ifnotequal stuselect '' %}&studentselect={{stuselect}}{% endifnotequal %}">上一页</a>
+                        {% else %}
+                        <span>上一页</span>
+                        {% endif %}
+                        <span>
+                          {% for p in page_range %}
+                          {% ifequal p students.number %}
+                          <span class="current">{{p}}</span>
+                          {% else %}
+                          <a href="?page={{p}}{% ifnotequal stuselect '' %}&studentselect={{stuselect}}{% endifnotequal %}" title="第{{p}}页">{{p}}</a>
+                          {% endifequal %}
+                          {% endfor %}
+                        </span>
+                        {% if students.has_next %}
+                        <a href="?page={{ students.next_page_number }}{% ifnotequal stuselect '' %}&studentselect={{stuselect}}{% endifnotequal %}">下一页</a>
+                        {% else %}
+                        <span>下一页</span>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <div id="id_crouses_Page" class="flickr"></div>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="clainformation">
+              <table id='cladeptdetail' style="font-size:16px; vertical-align:middle; position:relative; top:0px;">
+               <input id='class_id' name='class_id' type='hidden' value={{claseid}} />
+               {% ifequal judgeclass 1 %}
+               <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                  <p>系名:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{deptinformation.deptname}}</strong></p>
+                </td>
+              </tr>
+              <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                  <p>年级:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{classinformation.grade}}</strong></p>
+                </td>
+              </tr>
+              <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                  <p>名称:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{classinformation.claname}}</strong></p>
+                </td>
+              </tr>
+              <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                  <p>创建时间:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{classinformation.createtime|date:"Y-m-d H:i:s"}}</strong></p>
+                </td>
+              </tr>
+              <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                  <p>修改时间:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{classinformation.edittime|date:"Y-m-d H:i:s"}}</strong></p>
+                </td>
+              </tr>
+              {% endifequal %}
+              {% ifequal judgeclass 2 %}
+              <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                  <p>名称:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{deptinformation.deptname}}</strong></p>
+                </td>
+              </tr>
+              <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                  <p>创建时间:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{deptinformation.createtime|date:"Y-m-d H:i:s"}}</strong></p>
+                </td>
+              </tr>
+              <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                  <p>修改时间:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{deptinformation.edittime|date:"Y-m-d H:i:s"}}</strong></p>
+                </td>
+              </tr>
+              {% endifequal %}   
+              {% ifequal judgeclass 0 %}
+              <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                  <p>系名:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{deptinformation.deptname}}</strong></p>
+                </td>
+              </tr>
+              <tr>
+                <td style="height:40px; text-align:left; width:30%;">
+                  <p>年级:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{classinformation.grade}}</strong></p>
+                </td>
+              </tr>
+              <tr>
+                <td style="height:40px; text-align:left; width:50%;">
+                  <p>创建时间:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{classinformation.createtime|date:"Y-m-d H:i:s"}}</strong></p>
+                </td>
+              </tr>
+              <tr>
+                <td style="height:40px; text-align:left; width:50%;">
+                  <p>修改时间:</p>
+                </td>
+                <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                  <p><strong>{{classinformation.edittime|date:"Y-m-d H:i:s"}}</strong></p>
+                </td>
+              </tr>
+              {% endifequal %}      
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="contentMain">
+     <div id="id_student_tree" style="text-align:left; vertical-align:top; "> </div>
+     <div class="personLeftSx" style=" margin-top:20px;" >
+      <div class="bs-docs-section" >
+        <button type="button" class="btn btn-myprimary" data-target="#myModaldeptadd" title="添加系别" onclick=' mcleardept()' data-toggle="modal"><span class="glyphicon glyphicon-plus"></span><br>添加系</button>
+
+        <button type="button" class="btn btn-myprimary" data-target="#myModalclaadd" title="添加班级" onclick='mclearcla()' data-toggle="modal"><span class="glyphicon glyphicon-plus"></span><br>添加班</button>
+        <button type="button" class="btn btn-myprimary disabled"  onclick="editdeptcla()" title="编辑" id='editclasuccess'><span class="glyphicon glyphicon-pencil"></span><br>编辑</button>
+        <button type="button" class="btn btn-danger disabled"  onclick='deletedeptcla()' title="删除" id='deleteclasuccess'><span class="glyphicon glyphicon-remove"></span><br>删除</button>
+      </div>
+    </div>         
+  </div>
+  <input id='createstu' name='createstu' type='hidden' value='0'/>
+  <input id='judgeall' name='judgeall' type='hidden' value='0'/>
+  <input id='deptid' name='deptid' type='hidden' value='0'/>
+  <input id='claid' name='claid' type='hidden' value='0'/>
+  <input id='page' name='page' type='hidden' value='1'/>
+  <input type='hidden' id='hidtreedept' value="{{ depttree }}" />
+  <input type='hidden' id='hidtreecla' value="{{ clatree }}" />
+</form>
+<form  id='departmentaddform' action="/departmentadd/" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModaldeptadd" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+    <div class="modal-content" style="width:600px;">
+      <div class="modal-header" >
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel">添加系别</h3>
+      </div>
+      <div>
+        <table  class="table topsec_tabletop">
+          <tr >
+            <td style="width:100px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>名称:</td>
+            <td >
+              <input  id='deptname' name='deptname' maxLength="20" required="required"  type='text' onchange="checkdeptname()" class="form-control topself_input"/>
+            </td>
+          </tr>
+        </table>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" title='取消' type="button"><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" id="btnadddept" title='保存' type="submit"><span class="glyphicon glyphicon-floppy-save"></span></button>
+          <button class="btn btn-default"  type="button" title='重置' onclick='mcleardept()'><span class="glyphicon glyphicon-retweet"></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+
+<form  id='departmenteditform' action="/departmentedit/" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModaldeptedit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+    <div class="modal-content" style="width:600px;">
+      <div class="modal-header" >
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel">编辑系别</h3>
+      </div>
+      <div>
+        <table  class="table topsec_tabletop">
+          <tr >
+            <td style="width:100px; vertical-align:middle; text-align:right; ">名称:</td>
+            <td >
+              <input  id='deptnameedit' name='deptname' maxLength="20" required="required"  type='text' onchange="checkdeptnameedit()" class="form-control topself_input"/>
+            </td>
+          </tr>
+        </table>
+        <input id='deptidinfo' name='deptidinfo' type='hidden'/>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" id="btneditdept" type="submit" onclick=' submitdepteditformedit()' title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+
+<form  id='classaddform' action="/classadd/" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModalclaadd" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+    <div class="modal-content" style="width:600px; ">
+      <div class="modal-header" >
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel">添加班级</h3>
+      </div>
+      <div>
+        <table  class="table topsec_tabletop">
+
+          <tr>
+            <td style="width:100px; vertical-align:middle; text-align:right; ">系名:</td>
+            <td>
+              <select  class="form-control" id='deptid2' name='deptid' onchange="checkclass()" style="width:240px;" required="required">
+                {% for dept in deptls %}
+                {% if forloop.first %}
+                <option id='first' value='{{ dept.id }}'>{{ dept.deptname }}</option>
+                {% else %}
+                <option value='{{ dept.id }}'>{{ dept.deptname }}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="width:100px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>年级:</td>
+            <td>
+              <input id='grade' name='grade' required="required" maxLength="10" type='text' onchange="checkclass()" class="form-control topself_input"/>
+            </td>
+          </tr>
+
+
+          <tr >
+            <td style="width:100px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>名称:</td>
+            <td >
+              <input  id='claname' name='claname' required="required" maxLength="20" type='text' onchange="checkclass()" class="form-control topself_input"/>
+            </td>
+          </tr>
+        </table>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" id="btnaddcla"  onclick="return checkclass()" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          <button class="btn btn-default"  type="button" onclick='mclearcla()' title='重置'><span class="glyphicon glyphicon-retweet"></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+
+<form  id='classeditform' action="/classedit/" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModalclaedit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+    <div class="modal-content" >
+      <div class="modal-header" >
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel">编辑班级</h3>
+      </div>
+      <div>
+        <table  class="table topsec_tabletop">
+
+          <tr>
+            <td style="width:100px; vertical-align:middle; text-align:right; ">系名:</td>
+            <td>
+              <select  class="form-control" id='deptid2edit' name='deptid' onchange="checkclassedit()" style="width:240px;" required="required">
+                {% for dept in deptls %}
+                {% if forloop.first %}
+                <option id='first' value='{{ dept.id }}'>{{ dept.deptname }}</option>
+                {% else %}
+                <option value='{{ dept.id }}'>{{ dept.deptname }}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="width:100px; vertical-align:middle; text-align:right; ">年级:</td>
+            <td>
+              <input id='gradeedit' name='grade' required="required" maxLength="9" type='text' onchange="checkclassedit()" class="form-control topself_input"/>
+            </td>
+          </tr>
+
+
+          <tr >
+            <td style="width:100px; vertical-align:middle; text-align:right; ">名称:</td>
+            <td >
+              <input  id='clanameedit' name='claname' required="required" maxLength="20" type='text' onchange="checkclassedit()" class="form-control topself_input"/>
+            </td>
+          </tr>
+        </table>
+        <input id='claidinfo' name='claidinfo' type='hidden'/>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" id="btneditcla" type="submit" onclick='submitclaeditformedit()' title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+
+<form  id='studentaddform' action="/studentadd/" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModalstuadd" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog" style="width:1000px">
+    <div class="modal-content" >
+      <div class="modal-header" >
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel">添加学员</h3>
+      </div>
+      <div>
+       <table class="table topsec_tabletop">
+        <tr>
+          <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>学号：</td>
+          <td style="width:370px; ">
+            <input id='stuno' required="required" maxLength="20" name='stuno' onchange="checkstuno()" class="form-control topself_input" type='text'/>
+          </td>
+          <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>姓名：</td>
+          <td style="width:370px; ">
+            <input id='stuname'  maxLength="20" required="required" name='stuname' type='text' class="form-control topself_input"/>
+          </td>
+        </tr>             
+
+        <tr>
+          <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>性别：</td>
+          <td>
+            <select class="form-control" style="width:120px;" id='sex' name='sex'>
+              <option value="0">男</option>
+              <option value="1">女</option>
+            </select>
+          </td>
+          <td style="width:130px; text-align:right; vertical-align:middle;">邮箱：</td>
+          <td style="width:370px; ">
+            <input id='email' name='email' type='email'  maxLength="50"  class="form-control topself_input"/>
+          </td>
+        </tr>
+        <tr>
+          <td style="width:130px; text-align:right; vertical-align:middle;">电话：</td>
+          <td style="width:370px; ">
+            <input id='mobile' name='mobile' type='text' maxLength="15"  onchange="checknumber()" class="form-control topself_input"/>
+          </td>
+          <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>系名：</td>
+          <td >
+            <select id='departmentid' name='departmentid' onchange="deptgracla()" class="form-control" style="width:240px;" required="required">
+             {% for department in departments %}
+             {% if forloop.first %}
+             <option id='stufirst' value='{{department.id}}'>{{department.deptname}}</option>
+             {% else %}
+             <option value='{{department.id}}'>{{department.deptname}}</option>
+             {% endif %}            
+             {% endfor %}
+           </select>
+         </td>
+       </tr>
+       <tr>
+        <td style="width:130px; text-align:right;  vertical-align:middle;"><font color="#FF0000">*</font>年级：</td>
+        <td>
+          <select id='gradeid' name='gradeid' onchange="gracla()" class="form-control" style="width:240px;" required="required">
+            {% for class in clas %}
+            <option value='{{class.grade}}'>{{class.grade}}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td style="width:130px; text-align:right;  vertical-align:middle;"><font color="#FF0000">*</font>班级：</td>
+        <td>
+          <select id='clasid' name='clasid' class="form-control" style="width:240px;" required="required">
+            {% for class in classes %}   
+            {% ifequal class.departmentid_id dept.id %}
+            {% ifequal class.grade grade %}
+            <option value='{{ class.id }}'>{{ class.claname }}</option>
+            {% endifequal %}
+            {% endifequal %}                              
+            {% endfor %}
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td style="width:130px; padding-left:60px;  vertical-align:middle;"><h4>密码</h4>
+
+        </td>
+        <td  style="width:370px; ">
+
+        </td>
+        <td colspan=2  style="width:370px; ">
+        </td>
+      </tr>
+      <tr>
+        <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>密 码：</td>
+        <td >
+         <input id='pwd' name='pwd' required="required" maxLength="20" type='password' onchange="checkPasswords()" class="form-control topself_input" placeholder="请输入6-20位字母、数字或字符"/>
+       </td>
+       <td style="width:130px; text-align:right;">
+        <input id="checkbox" type="checkbox" value="checkbox" onclick='result()' style="width:50px; height:26px;"/>
+      </td>
+      <td  style="text-align:left; vertical-align:middle; ">
+        使用初始密码
+      </td>
+    </tr>
+    <tr>
+      <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>确认密码：</td>
+      <td style="width:370px; ">
+       <input id='pwdagain' name='pwdagain' required="required" maxLength="20" type='password' onchange="checkPasswords()" placeholder="请输入6-20位字母、数字或字符" class="form-control topself_input"/>
+     </td>
+     <td colspan=2>
+     </td>
+   </tr>
+ </table>
+ <div class="modal-footer">
+  <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+  <button class="btn btn-primary" id="btnaddcla" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+  <button class="btn btn-default"  type="button" onclick='mclearstu()' title='重置'><span class="glyphicon glyphicon-retweet"></span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<input id='classidadd' name='classidadd' type='hidden' value='0'/>
+</form>
+
+<form  id='studenteditform' action="/studentedit/" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModalstuedit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog" style="width:1000px">
+    <div class="modal-content" style="width:950px; ">
+      <div class="modal-header" >
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="myModalLabel">编辑学员</h3>
+      </div>
+      <div>
+       <table class="table topsec_tabletop">
+        <tr>
+          <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>学号：</td>
+          <td style="width:370px; ">
+            <input id='stunoedit' required="required" maxLength="20" name='stuno' onchange="checkstunoedit()" class="form-control topself_input" readonly type='text'/>
+          </td>
+          <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>姓名：</td>
+          <td style="width:370px; ">
+            <input id='stunameedit' required="required" maxLength="20" name='stuname' type='text' class="form-control topself_input"/>
+          </td>
+        </tr>             
+
+        <tr>
+          <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>性别：
+          </td>
+          <td>
+            <select class="form-control" style="width:120px;" id='sexedit' name='sex'>
+              <option value="0">男</option>
+              <option value="1">女</option>
+            </select>
+          </td>
+          <td style="width:130px; text-align:right; vertical-align:middle;">邮箱：</td>
+          <td style="width:370px; ">
+            <input id='emailedit' name='email' type='email' maxLength="50"  class="form-control topself_input"/>
+          </td>
+        </tr>
+        <tr>
+          <td style="width:130px; text-align:right; vertical-align:middle;">电话：</td>
+          <td style="width:370px; ">
+            <input id='mobileedit' name='mobile' type='text'   maxLength="15" onchange="checknumberedit()" class="form-control topself_input"/>
+          </td>
+          <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>系名：</td>
+          <td >
+            <select id='departmentidedit' name='departmentid' onchange="deptgraclaedit()" class="form-control" style="width:240px;" required="required">
+             {% for department in departments %}
+             <option value='{{department.id}}'>{{department.deptname}}</option>
+             {% endfor %}
+           </select>
+         </td>
+       </tr>
+       <tr>
+        <td style="width:130px; text-align:right;  vertical-align:middle;"><font color="#FF0000">*</font>年级：</td>
+        <td>
+          <select id='gradeidedit' name='gradeid' onchange="graclaedit()" class="form-control" style="width:240px;" required="required">
+            {% for class in clas %}
+            <option value='{{class.grade}}'>{{class.grade}}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td style="width:130px; text-align:right;  vertical-align:middle;"><font color="#FF0000">*</font>班级：</td>
+        <td>
+          <select id='clasidedit' name='clasid' class="form-control" style="width:240px;" required="required">
+            {% for class in classes %}   
+            {% ifequal class.departmentid_id dept.id %}
+            {% ifequal class.grade grade %}
+            <option value='{{ class.id }}'>{{ class.claname }}</option>
+            {% endifequal %}
+            {% endifequal %}                              
+            {% endfor %}
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td style="width:130px;  text-align:right; vertical-align:middle;">
+          <input id="recheckboxedit" type="checkbox" value="checkbox" onclick='reresultedit()' style="width:50px; height:26px;"/>
+        </td>
+        <td style="width:370px; text-align:left; ">
+          <h4 width="175px">重置密码</h4>
+        </td>
+        <td colspan=2>
+        </td>
+      </tr>
+      <tr>
+        <td style="width:130px;  text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>密 码：</td>
+        <td >
+         <input id='pwdedit' name='pwd' required="required" maxLength="20" type='password' onchange="checkPasswordsedit()" class="form-control topself_input" placeholder="请输入6-20位字母、数字或字符"  disabled/>
+       </td>
+       <td style="width:130px; text-align:right;">
+        <input id="checkboxedit" type="checkbox" value="checkbox" onclick='resultedit()'  style="width:50px; height:26px;"  disabled/>
+      </td>
+      <td  style="width:130px; text-align:left; vertical-align:left; ">
+        使用初始密码
+      </td>
+    </tr>
+    <tr>
+      <td style="width:130px;  text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>确认密码：</td>
+      <td style="width:370px; vertical-align:middle;">
+       <input id='pwdagainedit' name='pwdagain1' required="required" maxLength="20" type='password' onchange="checkPasswordsedit()" class="form-control topself_input" placeholder="请输入6-20位字母、数字或字符"  disabled/>
+     </td>
+     <td colspan=2>
+     </td>
+   </tr>
+ </table>
+ <input id='stuid' name='stuid' type='hidden'/>
+ <div class="modal-footer">
+  <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+  <button class="btn btn-primary" id="btnaddcla" type="submit" onclick='submitaddformedit()' title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</form>
+
+<!--<form  id='studentsaddform' action="/studentsadd/" method='post' enctype="multipart/form-data" accept-charset="utf-8">-->
+<form id="upload_form" enctype="multipart/form-data" method="" action="">
+  {% csrf_token %}
+  <div class="modal fade" id="myModalstusadd" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog" style="width:1000px">
+    <div class="modal-content" style="width:950px; ">
+      <div class="modal-header" >
+        <button type="sumbit" class="close"  aria-hidden="true" formaction="/students/" onclick="clearuploadfile()">×</button>
+        <h3 id="myModalLabel">批量添加</h3>
+      </div>
+      <div>
+        <table class="table topsec_tabletop">
+          <tr>
+            <td style="width:130px; text-align:right; vertical-align:middle;">学员模板：</td>
+            <td style="width:670px; text-align:left;">
+              <table>
+                <tr>
+                  <td style="border:0px;">
+                    <a href="/download" >学员模板下载</a>
+                  </td>
+                </tr> 
+              </table>              
+            </td>
+          </tr>
+          <tr>
+            <td style="width:130px; text-align:right; vertical-align:middle;">选择模板：</td>
+            <td style="width:670px; vertical-align:middle;">
+              <!--<input id='pic'  type="file" required="required" name='pic' value=""  />-->
+              <table>
+                <tr>
+                  <td style="border:0px; width:370px;vertical-align:middle;"><input type="file" name="image_file" id="image_file" onchange="fileSelected(this);" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/></td>
+                  <td style="border:0px;">
+                    <button class="btn btn-primary" title="上传" type="button" onclick="startUploadingstudent('/studentsadd/', 'progress_percent', 'currentProgress', 'upload_form')"><span class="glyphicon glyphicon-upload"></span></button>
+                  </td>
+                </tr>
+              </table>
+              <div class="upload_form_cont">
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="width:130px; text-align:right; vertical-align:middle;">
+              完成：
+            </td>
+            <td style="width:670px; padding:0px; vertical-align:middle;">
+              <table style="width:100%; margin:13px; padding:0px;">
+                <tr>
+                  <td style="width:52%; border:0px; margin:0px; padding:0px; vertical-align:middle;">
+                    <div class="progress progress-striped" style="margin:0px; padding:0px;">
+                      <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="currentProgress">
+                      </div>
+                    </div>
+                  </td>
+                  <td style="width:48%; border:0px; vertical-align:middle;">
+                    <div id="progress_percent" ></div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>                 
+        </table>
+        <table id="showresult" style="width:100%; margin:0px; padding:0px;">
+          <tr >
+            <td style="width:16%">
+            </td>
+            <td style="vertical-align:middle; text-align: center;">
+             <table id='studentsaddtable'  border="1" style="text-align:center;">
+             </table>
+           </td>
+         </tr>   
+       </table>     
+       <input id='nan' name='nan' type='hidden' value='男'/>
+       <input id='nv' name='nv' type='hidden' value='女'/>
+       <div class="modal-footer">
+        <button class="btn btn-primary" type="submit" formaction="/students/" onclick="clearuploadfile()" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</form>
+<!--</form>-->
+
+<form id='deldeptform'>
+</form>
+<form id='delclaform'>
+</form>
+
+<script type="text/javascript">
+setfontcolor("stuctrl");
+$(function ()
+{  
+  if (($("#class_id")).val() != 0)
+  {
+    checkcla(($("#class_id")).val());
+  }
+  $("#id_student_tree").dynatree(
+  {
+    onActivate : function (node)
+    {
+      
+      if ($("#editclasuccess").hasClass('disabled'))
+      {
+        $("#editclasuccess").removeClass('disabled');
+        $("#deleteclasuccess").removeClass('disabled');
+      }
+      
+      if (node.data.isFolder == true && node.data.key.substr(0, 1) != '*')
+      {
+        checkdept(node.data.key);
+      }
+      else if (node.data.isFolder == true && node.data.key.substr(0, 1) == '*')
+      {
+        $("#editclasuccess").addClass('disabled');
+        $("#deleteclasuccess").addClass('disabled');
+      }
+      else if (node.data.isFolder == false)
+      {
+        // alert(node.data.key.substr(1));
+        checkcla(node.data.key.substr(1));
+      }
+    },
+    persist : true,
+  }
+  ); 
+}
+);
+
+
+function judegeall()
+{         
+  document.getElementById("tbpage").style.display = 'block';
+  if($("#querytext")[0].value=='')
+    $("#judgeall").val('1');
+}
+function mcleardept()
+{
+  document.getElementById('deptname').value = '';
+  document.getElementById('deptname').setCustomValidity("");
+}
+
+function mclearcla()
+{
+  document.getElementById('claname').value = '';
+  document.getElementById('claname').setCustomValidity("");
+  document.getElementById('grade').value = '';
+  document.getElementById('grade').setCustomValidity(""); 
+  document.getElementById('first').selected="Selected";                   
+}
+
+function mclearstu()
+{
+  document.getElementById('stuname').value = '';
+  document.getElementById('stuno').value = '';
+  document.getElementById('stuno').setCustomValidity("");
+  document.getElementById('pwd').value = '';
+  document.getElementById('pwd').setCustomValidity("");
+  document.getElementById('sex').value = 0;
+  document.getElementById('email').value = '';
+  document.getElementById('email').setCustomValidity("");
+  document.getElementById('mobile').value = '';
+  document.getElementById('mobile').setCustomValidity("");
+  document.getElementById('pwdagain').value = '';
+  document.getElementById('pwd').value = '';
+  document.getElementById('checkbox').checked = false;  
+  if(document.readyState=="complete")
+  {
+    document.getElementById('pwd').readOnly=false;
+    document.getElementById('pwdagain').readOnly=false;
+  }       
+  stuaddcla();
+}
+
+function checkdeptname()
+{
+  var deptname = document.getElementById("deptname");
+  var reg = /^[a-zA-Z0-9\u4e00-\u9fa5_]+$/;
+  var res = reg.test(deptname.value);
+  if (!res)
+  {
+    deptname.setCustomValidity("只能输入数字、字母、汉字以及下划线!");
+  }
+  else
+  {
+    var judgeadd;
+    var dept = ajaxobj("/deptnamecheck/", "", "post", "#departmentaddform");
+    var jsondata = $.parseJSON(dept);
+    judgeadd = jsondata.judgedeptname;
+    
+    if (judgeadd == 1)
+      deptname.setCustomValidity("已存在的系名!");
+    else
+      deptname.setCustomValidity("");
+  }
+}
+
+
+function checkdeptnameedit(){
+  var deptname=document.getElementById("deptnameedit");
+  var reg = /^[a-zA-Z0-9\u4e00-\u9fa5_]+$/;
+  var res = reg.test(deptname.value);
+  if (!res){
+    deptname.setCustomValidity("只能输入数字、字母、汉字以及下划线!");
+  }
+  else{
+    var judgeedit;
+    var dept = ajaxobj("/deptnamecheck/", "", "post", "#departmenteditform");
+    var jsondata = $.parseJSON(dept);
+    judgeedit=jsondata.judgedeptname;
+        //alert(judgeedit);
+        if(judgeedit==1)
+          deptname.setCustomValidity("已存在的系名!");
+        else
+          deptname.setCustomValidity("");
+      }
+    }
+
+
+    function checkclass(){
+      var claname=document.getElementById("claname");
+      var gradename=document.getElementById("grade");
+      var reg=/^\d+$/;
+      var judgeadd;
+      //alert(gradename.value);
+      gradename.setCustomValidity("");
+      if(reg.test(gradename.value)==false)
+      {
+        gradename.setCustomValidity("年级只能是数字!");
+      }
+      else if(/^[a-zA-Z0-9\u4e00-\u9fa5_]+$/.test(claname.value)==false){
+        claname.setCustomValidity('只能输入数字、字母、汉字以及下划线!');
+      }
+      else
+      {
+        gradename.setCustomValidity("");
+        var cla = ajaxobj("/clanamecheck/", "", "post", "#classaddform");
+        var jsondata = $.parseJSON(cla);
+        judgeadd=jsondata.judgeclaname;
+        if(judgeadd==1)
+          claname.setCustomValidity("已存在的班级!");
+        else
+          claname.setCustomValidity("");
+      }
+    }
+
+    function checkclassedit(){
+      var claname=document.getElementById("clanameedit");
+      var gradename=document.getElementById("gradeedit");
+      var reg=/^\d+$/;                  
+      var judgeedit;
+      var cla = ajaxobj("/clanamecheck/", "", "post", "#classeditform");
+      if(reg.test(gradename.value)==false)
+      {
+        gradename.setCustomValidity("年级只能是数字!");
+      }
+      else if(/^[a-zA-Z0-9\u4e00-\u9fa5_]+$/.test(claname.value)==false){
+        claname.setCustomValidity('只能输入数字、字母、汉字以及下划线!');
+      }
+      else
+      {
+        gradename.setCustomValidity("");
+        var jsondata = $.parseJSON(cla);
+        judgeedit=jsondata.judgeclaname;
+        if(judgeedit==1)
+          claname.setCustomValidity("已存在的班级!");
+        else
+          claname.setCustomValidity("");
+      }
+    }
+
+    function result()
+    {
+      if(document.getElementById('checkbox').checked == true)
+      {
+        document.getElementById('pwd').type='text'
+        document.getElementById('pwdagain').type='text'
+        document.getElementById('pwd').value = '123456';
+        document.getElementById('pwdagain').value = '123456';
+        if(document.readyState=="complete")
+        {
+          document.getElementById('pwd').readOnly=true;
+          document.getElementById('pwdagain').readOnly=true;
+        }   
+      }
+      else
+      {
+       document.getElementById('pwd').type='password'
+       document.getElementById('pwdagain').type='password'
+     mclearstu();//清空所有数据
+     if(document.readyState=="complete")
+     {
+      document.getElementById('pwd').readOnly=false;
+      document.getElementById('pwdagain').readOnly=false;
+    } 
+    document.getElementById('pwd').value='';
+    document.getElementById('pwdagain').value='';
+  }
+}
+function checkPasswords()
+{
+  var pass1 = document.getElementById("pwd");
+  var pass2 = document.getElementById("pwdagain");
+  if (pass1.value != pass2.value)
+    pass1.setCustomValidity("两次输入密码不一致！");
+  else if(pass1.value.length < 6)
+    pass1.setCustomValidity("密码需大于五位！");
+  else
+    pass1.setCustomValidity("");
+}
+function checknumber(){
+  var mob = document.getElementById("mobile");
+  var reg=/^\d+$/;
+  if(reg.test(mob.value)==false)
+    mob.setCustomValidity("电话只能是数字！");
+  else if(mob.value.length<4  )
+   mob.setCustomValidity("电话位数错误!");
+ else
+  mob.setCustomValidity("");
+}
+
+function checkstuno(){
+ var stun=document.getElementById("stuno");
+ var judgeadd;
+ var stu = ajaxobj("/studentstunocheck/", "", "post", "#studentaddform");
+ var jsondata = $.parseJSON(stu);
+ judgeadd=jsondata.judgestuno;
+   var reg=/^[A-Za-z0-9]+$/;//只能是数字或字母
+
+   if(reg.test(stun.value) == false)
+   {
+    stun.setCustomValidity("只能输入数字或字母！");
+    return
+  }
+  else if(judgeadd==1)
+    stun.setCustomValidity("已存在的学员!");
+  else
+    stun.setCustomValidity("");
+}
+
+function  deptgracla(){
+  var department=document.getElementById("departmentid");
+  var grade=document.getElementById("gradeid");
+  var clas=document.getElementById("clasid");
+  grade.options.length=0;
+  clas.options.length=0;
+
+  var stu = ajaxobj("/stugracla/", "", "get", "");
+  var jsondata = $.parseJSON(stu);
+
+  var clss=jsondata.clss;
+  var classes=jsondata.classes;
+  
+  for(var i=0;i<clss.length;i++)
+  {
+    var a=clss[i][1];     
+    if(a==department.value)           
+      grade.options.add( new Option(clss[i][0],clss[i][0]));
+  }
+  for(var j=0;j<classes.length;j++)
+  {   
+    var b = classes[j][3];
+    var c = classes[j][1];
+    if(c==department.value)
+      if(b==grade.value)
+      {
+       clas.options.add(new Option(classes[j][2],classes[j][0]));
+     }
+   }       
+ }
+
+ function  gracla(){
+  var department=document.getElementById("departmentid");
+  var grade=document.getElementById("gradeid");
+  var clas=document.getElementById("clasid");
+  clas.options.length=0;
+
+  var stu = ajaxobj("/stugracla/", "", "get", "");
+  var jsondata = $.parseJSON(stu);
+  var classes=jsondata.classes;
+  for(var j=0;j<classes.length;j++)
+  {
+   var b = classes[j][3];
+   var c =  classes[j][1];
+   if(c==department.value)
+    if(b==grade.value)
+     clas.options.add(new Option(classes[j][2],classes[j][0]));
+ }
+}
+
+function resultedit()
+{
+  if (document.getElementById('checkboxedit').checked == true)
+  {
+    document.getElementById('pwdedit').type = 'text'
+      document.getElementById('pwdagainedit').type = 'text'
+      document.getElementById('pwdedit').value = '123456';
+    document.getElementById('pwdagainedit').value = '123456';
+    if (document.readyState == "complete")
+    {
+      document.getElementById('pwdedit').readOnly = true;
+      document.getElementById('pwdagainedit').readOnly = true;
+    }
+    
+  }
+  else
+  {
+    document.getElementById('pwdedit').type = 'password'
+      document.getElementById('pwdagainedit').type = 'password'
+      if (document.readyState == "complete")
+      {
+        document.getElementById('pwdedit').readOnly = false;
+        document.getElementById('pwdagainedit').readOnly = false;
+      }
+      document.getElementById('pwdedit').value = '';
+    document.getElementById('pwdagainedit').value = '';
+    
+  }
+}
+
+
+function reresultedit()
+{
+ if(document.getElementById('recheckboxedit').checked == false)
+ {
+   document.getElementById('pwdedit').value='';
+   document.getElementById('pwdagainedit').value='';   
+   document.getElementById('checkboxedit').checked=false;          
+   document.getElementById('pwdedit').disabled=true;
+   document.getElementById('pwdagainedit').disabled=true;
+   document.getElementById('checkboxedit').disabled=true;
+
+ }
+ else
+ {
+   document.getElementById('pwdedit').value='';
+   document.getElementById('pwdagainedit').value='';             
+   document.getElementById('pwdedit').disabled=false;
+   document.getElementById('pwdagainedit').disabled=false;
+   document.getElementById('checkboxedit').disabled=false;
+   document.getElementById('pwdedit').type='password'
+   document.getElementById('pwdagainedit').type='password'
+   if(document.readyState=="complete")
+   {
+    document.getElementById('pwdedit').readOnly=false;
+    document.getElementById('pwdagainedit').readOnly=false;
+  } 
+}
+
+}
+
+function checkPasswordsedit() {
+  var pass1 = document.getElementById("pwdedit");
+  var pass2 = document.getElementById("pwdagainedit");
+  if (pass1.value != pass2.value)
+    pass1.setCustomValidity("两次输入密码不一致！");
+  else if(pass1.value.length < 6)
+    pass1.setCustomValidity("密码需大于五位！");
+  else
+    pass1.setCustomValidity("");
+}
+function checknumberedit(){
+  var mob = document.getElementById("mobileedit");
+  var reg=/^\d+$/;
+  mob.setCustomValidity("");
+  if(mob.value){
+    if(reg.test(mob.value)==false)
+    {
+      mob.setCustomValidity("电话只能是数字！");
+    }
+    else if(mob.value.length<4)
+    {
+      mob.setCustomValidity("电话位数错误！");
+    }
+    else
+    {
+      mob.setCustomValidity("");
+    }
+  }
+}
+
+function checkstunoedit(){
+  var stun=document.getElementById("stunoedit");
+  var judgeedit;
+  var stu = ajaxobj("/studentstunocheck/", "", "post", "#studenteditform");
+  var jsondata = $.parseJSON(stu);
+  judgeedit=jsondata.judgestuno;
+  if(judgeedit==1)
+    stun.setCustomValidity("已存在的学员!");
+  else
+    stun.setCustomValidity("");  
+}
+
+function  deptgraclaedit(){
+  var department=document.getElementById("departmentidedit");   
+  var grade=document.getElementById("gradeidedit");
+  var clas=document.getElementById("clasidedit"); 
+  grade.options.length=0;
+  clas.options.length=0;
+
+  var stu = ajaxobj("/stugracla/", "", "get", "");
+  var jsondata = $.parseJSON(stu);
+  var clss=jsondata.clss;
+  var classes=jsondata.classes;
+  for(var i=0;i<clss.length;i++)
+  {
+    var a=clss[i][1];     
+    if(a==department.value)           
+      grade.options.add( new Option(clss[i][0],clss[i][0]));
+  }
+  var grade=document.getElementById("gradeidedit");
+  for(var j=0;j<classes.length;j++)
+  {   
+   var b = classes[j][3];
+   var c = classes[j][1];
+   if(c==department.value)
+     if(b==grade.value)
+     {
+       clas.options.add(new Option(classes[j][2],classes[j][0]));
+     }
+   }       
+ }
+
+ function  graclaedit(){
+  var department=document.getElementById("departmentidedit");
+  var grade=document.getElementById("gradeidedit");
+  var clas=document.getElementById("clasidedit");
+  clas.options.length=0;
+  var stu = ajaxobj("/stugracla/", "", "get", "");
+  var jsondata = $.parseJSON(stu);
+  var classes=jsondata.classes;
+
+  for(var j=0;j<classes.length;j++)
+  {
+   var b = classes[j][3];
+   var c =  classes[j][1];
+   if(c==department.value)
+    if(b==grade.value)
+     clas.options.add(new Option(classes[j][2],classes[j][0]));
+ }          
+}
+
+function submitaddformedit()
+{
+    // checknumberedit();
+    var preid = $("#lsstu").data("selid");
+    var editurl="/studentedit/"+preid+'/';
+    document.getElementById("studenteditform").action=editurl;
+  }
+
+  function submitclaeditformedit()
+  {
+    var preid=document.getElementById("claidinfo").value;
+    var editurl="/classedit/"+preid+'/';
+    document.getElementById("classeditform").action=editurl;
+  }
+
+  function submitdepteditformedit()
+  {
+    var preid=document.getElementById("deptidinfo").value;
+    var editurl="/departmentedit/"+preid+'/';
+    document.getElementById("departmenteditform").action=editurl;
+  }
+
+  function submitdelformedit(){
+    var preid = $("#lsstu").data("selid");
+    if(preid == "0")
+      return false;
+
+    var isGroupExist = ajaxobj("/GroupcheckforStu/"+preid, "", "get", "#lsstu");
+  var jsondata2 = $.parseJSON(isGroupExist);//返回团队中是否有此学生
+
+  if(jsondata2.cando == 'false'){
+    alert("您没有权限删除该学员!");
+    return
+  }
+  var isCourseExist = ajaxobj("/CoursecheckforStu/"+preid, "", "get", "#lsstu");
+   var jsondata3 = $.parseJSON(isCourseExist);//返回课程中是否有此学生
+   if(jsondata2.success == 'true'){
+    Showbo.Msg.confirm("该学生已被添加到团队中,确定删除吗?");
+  }else if(jsondata3.success == 'true'){
+   Showbo.Msg.confirm("该学生已被添加到课程中,确定删除吗?");
+ }else
+ Showbo.Msg.confirm("确定删除吗？");
+ Showbo.Msg.oncallback = Studentcallback;
+
+}
+
+function Studentcallback(){
+  var preid = $("#lsstu").data("selid");
+  var delurl="/studentdel/"+preid+'/';
+  document.getElementById("studentform").action=delurl;
+  document.getElementById("studentform").submit();
+}  
+
+var checkid;
+var checktype=0;
+var checkdel=0;
+
+
+function checkdept(deptid)
+{
+  document.getElementById("tbpage").style.display = 'none';
+  $("#editstusuccess").addClass('disabled');
+  $("#btndel").addClass('disabled');
+  $("#deptid").val(deptid);
+  $("#claid").val('0');
+  checkid = deptid;
+  checktype = 1;
+  var dept = ajaxobj("/deptinfo/", "", "post", "#studentform");
+  var jsondata = $.parseJSON(dept);
+  
+  checkdel = jsondata.deptdetail[3];
+  var innertext = "<tr><th>学号</th><th>姓名</th><th>性别</th><th>系别</th><th>年级</th><th>班级</th><th>邮箱</th><th>电话</th></tr>";
+  
+  for (var i = 0; i < jsondata.studetail.length; i++)
+  {
+    if (jsondata.studetail[i][3] == 'nan')
+      jsondata.studetail[i][3] = '男';
+    else if (jsondata.studetail[i][3] == 'nv')
+      jsondata.studetail[i][3] = '女';
+    innertext += "<tr  id='" + jsondata.studetail[i][0] + "' ><td>" + jsondata.studetail[i][1] +
+    "</td><td>" + jsondata.studetail[i][2] + "</td><td>" + jsondata.studetail[i][3] +
+    "</td><td>" + jsondata.studetail[i][4] + "</td><td>" + jsondata.studetail[i][5] + "</td><td>" + jsondata.studetail[i][6] +
+    "</td><td>" + jsondata.studetail[i][7] + "</td><td>" + jsondata.studetail[i][8] + "</td></tr>";
+  }
+  
+  RefreshPagination(jsondata.num_pages * 2, 2, jsondata.number - 1, pageselectCallback);
+  document.getElementById("lsstu").innerHTML = innertext;
+  document.getElementById("cladeptdetail").innerHTML = "<tr><td  style='height:40px; text-align:left; width:30%;'><p>系名:</p></td><td style='height:40px; text-align:left;width:70%; padding-left:30px;'><p><strong>" + jsondata.deptdetail[0] + "</strong></p></td></tr><tr><td style='height:40px; text-align:left; width:30%;'><p>创建时间:</p></td><td style='height:40px; text-align:left;width:70%; padding-left:30px;'><p><strong>" + jsondata.deptdetail[1] + "</strong></p></td></tr><tr><td style='height:40px; text-align:left; width:30%;'><p>修改时间:</p></td><td style='height:40px; text-align:left;width:70%; padding-left:30px;'><p><strong>" + jsondata.deptdetail[2] + "</strong></p></td></tr>";
+  setTableEvent("lsstu", true);
+}
+
+
+function RefreshPagination(totallCount, perPageCount, currentPage, _fcallback)
+{
+  $("#id_crouses_Page").pagination(totallCount,{
+                    callback: _fcallback,//PageCallback() 为翻页调用次函数。
+                    prev_text: " 上一页",
+                    next_text: "下一页 ",
+                    items_per_page: perPageCount, //每页的数据个数
+                    num_display_entries: 3, //两侧首尾分页条目数
+                    current_page: currentPage,   //当前页码
+                    num_edge_entries: 2, //连续分页主体部分分页条目数
+                  });
+}
+
+function pageselectCallback(page_id, jq) {
+ deptid = $("#deptid").val();
+ deptpage(deptid, page_id);
+}
+
+function deptpage(deptid,page)
+{
+  $("#page").val(page + 1);
+  checkdept(deptid);
+}
+
+function checkcla(claid)
+{
+  document.getElementById("tbpage").style.display = 'none';
+  $("#editstusuccess").addClass('disabled');
+  $("#btndel").addClass('disabled');
+  $("#claid").val(claid);
+  $("#classidadd").val(claid);
+  $("#deptid").val('0');
+  checkid=claid;
+  checktype=2;
+  var cla = ajaxobj("/clainfo/", "", "post", "#studentform");
+  var jsondata = $.parseJSON(cla);
+
+  if(jsondata.studetail.length==0)
+  {
+    checkdel=1;
+  }
+  else
+  {
+    checkdel=0;
+  }
+
+  var innertext="<tr><th>学号</th><th>姓名</th><th>性别</th><th>系别</th><th>年级</th><th>班级</th><th>邮箱</th><th>电话</th></tr>";
+  for(var i=0;i<jsondata.studetail.length;i++)
+  {
+    if(jsondata.studetail[i][3]=='nan')
+      jsondata.studetail[i][3]='男';
+    else if(jsondata.studetail[i][3]=='nv')
+      jsondata.studetail[i][3]='女';
+
+    innertext +="<tr  id='"+jsondata.studetail[i][0]+"' ><td>"+jsondata.studetail[i][1]+
+    "</td><td>"+jsondata.studetail[i][2]+"</td><td>"+jsondata.studetail[i][3]+
+    "</td><td>"+jsondata.studetail[i][4]+"</td><td>"+jsondata.studetail[i][5]+"</td><td>"+jsondata.studetail[i][6]+
+    "</td><td>"+jsondata.studetail[i][7]+"</td><td>"+jsondata.studetail[i][8]+"</td></tr>";
+  }
+
+  RefreshPagination(jsondata.num_pages * 2, 2, jsondata.number - 1, pageselectCallback1);
+  document.getElementById("lsstu").innerHTML = innertext;
+  document.getElementById("cladeptdetail").innerHTML = "<tr><td  style='height:40px; text-align:left; width:30%;'><p>系名:</p></td><td style='height:40px; text-align:left;width:70%; padding-left:30px;'><p><strong>"+jsondata.cladetail[0]+"</strong></p></td></tr><tr><td  style='height:40px; text-align:left; width:30%;'><p>年级:</p></td><td style='height:40px; text-align:left;width:70%; padding-left:30px;'><p><strong>"+jsondata.cladetail[1]+"</strong></p></td></tr><tr><td  style='height:40px; text-align:left; width:30%;'><p>班级:</p></td><td style='height:40px; text-align:left;width:70%; padding-left:30px;'><p><strong>"+jsondata.cladetail[2]+"</strong></p></td></tr><tr><td style='height:40px; text-align:left; width:30%;'><p>创建时间:</p></td><td style='height:40px; text-align:left;width:70%; padding-left:30px;'><p><strong>"+jsondata.cladetail[3]+"</strong></p></td></tr><tr><td style='height:40px; text-align:left; width:30%;'><p>修改时间:</p></td><td style='height:40px; text-align:left;width:70%; padding-left:30px;'><p><strong>"+jsondata.cladetail[4]+"</strong></p></td></tr>";
+  setTableEvent("lsstu", true);
+}
+
+function pageselectCallback1(page_id, jq) {
+  claid = $("#claid").val();
+  clapage(claid, page_id);
+}
+
+function clapage(claid,page)
+{
+  $("#page").val(page + 1);
+  checkcla(claid);
+}
+
+setTableEvent("lsstu", true);
+
+function setTableEvent(tableid, singleSelect)
+{
+  var tr = "#" + tableid + ">tbody>tr";
+  var trSelected = tr + ".success";
+  
+  $(tr).click(function (event)
+  {
+    if ($(this).attr('id') == undefined)
+      return;
+    if (singleSelect)
+    {
+      $(trSelected).removeClass('success');
+    }
+    
+    if ($("#editstusuccess").hasClass('disabled'))
+    {
+      $("#editstusuccess").removeClass('disabled');
+      $("#btndel").removeClass('disabled');
+    }
+    $(this).addClass('success');
+    $("#lsstu").data("selid", $(this).attr('id'));
+    $("#btndel").attr('formaction', '/studentdel/' + $(this).attr('id') + '/');
+  }
+  );
+}
+
+
+
+function stuaddcla()
+{
+  if (document.getElementById("classidadd").value != '0')
+  {
+    var stu = ajaxobj("/studentaddinfo/", "", "post", "#studentaddform");
+    var jsondata = $.parseJSON(stu);
+    var objSelect = document.getElementById("departmentid");
+    for (var i = 0; i < objSelect.options.length; i++)
+    {
+      if (objSelect.options[i].value == jsondata.departmentid)
+      {
+        objSelect.options[i].selected = true;
+        break;
+      }
+    }
+    clas = jsondata.clas;
+    var grade = document.getElementById("gradeid");
+    var clased = document.getElementById("clasid");
+    grade.options.length = 0;
+    clased.options.length = 0;
+    for (var j = 0; j < clas.length; j++)
+    {
+      grade.options.add(new Option(clas[j], clas[j]));
+    }
+    var objSelect1 = document.getElementById("gradeid");
+    for (var k = 0; k < objSelect1.options.length; k++)
+    {
+      if (objSelect1.options[k].value == jsondata.grade)
+      {
+        objSelect1.options[k].selected = true;
+        break;
+      }
+    }
+    var classes = jsondata.classes;
+    for (i = 0; i < classes.length; i++)
+    {
+      if (jsondata.departmentid == classes[i][1])
+        if (jsondata.grade == classes[i][3])
+          clased.options.add(new Option(classes[i][2], classes[i][0]));
+    }
+    var objSelect2 = document.getElementById("clasid");
+    for (k = 0; k < objSelect2.options.length; k++)
+    {
+      if (objSelect2.options[k].value == jsondata.clasid)
+      {
+        objSelect2.options[k].selected = true;
+        break;
+      }
+    }
+  }
+  else
+  {
+    document.getElementById('stufirst').selected = "Selected";
+    deptgracla();
+    gracla();
+  }
+}
+
+
+function edit()
+{
+  var preid = $("#lsstu").data("selid");
+  if(preid == "0")
+  {
+    return false;
+  }
+  $("#stuid").val(preid);
+
+  var stu = ajaxobj("/studentinfo/", "", "post", "#studenteditform");
+  var jsondata = $.parseJSON(stu);
+
+  if (jsondata.cando=="false")
+  {
+    alert("您没有权限编辑该学生!")
+    return;
+  }
+  var objSelect = document.getElementById("departmentidedit");
+  for(var i=0;i<objSelect.options.length;i++) {  
+    if(objSelect.options[i].value ==  jsondata.departmentid) {  
+      objSelect.options[i].selected = true;  
+      break;  
+    }  
+  }  
+  clas=jsondata.clas;
+  var grade=document.getElementById("gradeidedit");
+  var clased=document.getElementById("clasidedit"); 
+  grade.options.length=0;
+  clased.options.length=0;
+  for (var j=0;j<clas.length;j++)
+  {
+   grade.options.add(new Option(clas[j],clas[j]));
+ } 
+       // var objSelect1 = document.getElementById("gradeidedit");
+       for(var k=0;k<grade.options.length;k++) {  
+        if(grade.options[k].value ==  jsondata.grade) {  
+          grade.options[k].selected = true;  
+          break;  
+        }  
+      }  
+      var classes=jsondata.classes;
+      for(i=0;i<classes.length;i++)
+      {
+        if(jsondata.departmentid==classes[i][1])
+          if( jsondata.grade==classes[i][3])
+            clased.options.add(new Option(classes[i][2],classes[i][0]));
+        }
+        var objSelect2 = document.getElementById("clasidedit");
+        for( k=0;k<objSelect2.options.length;k++) {  
+          if(objSelect2.options[k].value ==  jsondata.clasid) {  
+            objSelect2.options[k].selected = true;  
+            break;  
+          }  
+        }  
+        $("#stunameedit").val(jsondata.stuname);
+        $("#stunoedit").val(jsondata.stuno);
+        $("#sexedit").val(jsondata.sex);
+        $("#emailedit").val(jsondata.email);
+        $("#mobileedit").val(jsondata.mobile);
+        $('#myModalstuedit').modal('show');
+      }
+
+      function editdeptcla()
+      {
+        if(checktype==1)
+        {
+          $("#deptidinfo").val(checkid);
+          var dept = ajaxobj("/depteditinfo/", "", "post", "#departmenteditform");
+          var jsondata = $.parseJSON(dept);
+          $("#deptnameedit").val(jsondata.deptname);
+          $('#myModaldeptedit').modal('show');
+        }
+        if(checktype==2)
+        {
+          $("#claidinfo").val(checkid);
+          var cla = ajaxobj("/claeditinfo/", "", "post", "#classeditform");
+          var jsondata = $.parseJSON(cla);
+          var objSelect = document.getElementById("deptid2edit");
+          for(var i=0;i<objSelect.options.length;i++) {  
+            if(objSelect.options[i].value ==  jsondata.deptid) {  
+              objSelect.options[i].selected = true;  
+              break;  
+            }  
+          }  
+          $("#gradeedit").val(jsondata.clagrade);
+          $("#clanameedit").val(jsondata.claname);
+          $('#myModalclaedit').modal('show');
+        }
+      }
+
+      function deletedeptcla()
+      {
+        if(checktype==1)
+        {
+          if(checkdel==1)
+          {
+            if(confirm("确定删除吗？"))
+            {
+              var delurl="/departmentdel/"+checkid+'/';
+              document.getElementById("deldeptform").action=delurl;
+              document.getElementById("deldeptform").submit();
+            }
+            else
+            {
+              var delurl="/students/";
+              document.getElementById("deldeptform").action=delurl;
+              document.getElementById("deldeptform").submit();
+            }
+          }
+          else
+          {
+            alert('该系内还有班级无法删除！');
+            document.getElementById("deldeptform").submit();
+          }
+
+        }
+        if(checktype==2)
+        {
+          if(checkdel==1)
+          {
+            if(confirm("确定删除吗？"))
+            {
+              var delurl="/classdel/"+checkid+'/';
+              document.getElementById("delclaform").action=delurl;
+              document.getElementById("delclaform").submit();
+            }
+            else
+            {
+              var delurl="/students/";
+              document.getElementById("deldeptform").action=delurl;
+              document.getElementById("deldeptform").submit();
+            }
+          }
+          else
+          {
+            alert('该班内还有学员无法删除！');
+            document.getElementById("delclaform").submit();
+          }
+        }
+      }    
+
+      function clearuploadfile()
+      {
+        $("#image_file").val("");
+        return true;
+      }
+
+      function startUploadingstudent(strURL, progress_percent, currentProgress, upload_form) {
+        if($("#image_file").val() == "")
+    { //document.getElementById("image_file").setCustomValidity("请选择模板");
+    // alert('1');
+    return;
+  }
+  pgpercent = progress_percent;
+  progress = currentProgress;
+  iPreviousBytesLoaded = 0;
+
+  document.getElementById(pgpercent).innerHTML = '';
+
+  var vFD = new FormData(document.getElementById(upload_form)); 
+
+
+  var oXHR = new XMLHttpRequest();        
+  oXHR.upload.addEventListener('progress', uploadProgress, false);
+  oXHR.addEventListener('load', uploadFinish, false);
+    //oXHR.addEventListener('error', uploadError, false);
+    //oXHR.addEventListener('abort', uploadAbort, false);
+    oXHR.open('POST', strURL);
+
+    oXHR.send(vFD);
+
+    oTimer = setInterval(doInnerUpdates, 300);
+  }
+
+  function uploadresult(jsondata)
+  {
+    var showcolor="";
+    document.getElementById("studentsaddtable").border="1" ;
+    var warning;
+    var innertext="<tr><th>学号</th><th>姓名</th><th>性别</th><th>系别</th><th>年级</th><th>班级</th><th>邮箱</th><th>电话</th><th>错误提示</th></tr>";
+    var table=JSON.parse(jsondata).table;
+    if(table.length==0)
+    {
+     innertext="<tr><td><font color='red'>上传了错误的文件！</font></td></tr>"
+     document.getElementById("studentsaddtable").border="0" ;
+   }
+   for(var i=0;i<table.length;i++)
+   {
+    if(table[i][8]=='0')
+      warning='';
+    else if(table[i][8]=='1')
+      warning='性别错误';
+    else if(table[i][8]=='2')
+      warning='密码需大于6位';
+    else if(table[i][8]=='3')
+      warning='密码需小于20位';
+    else if(table[i][8]=='4')
+      warning='学号重复';
+    else if(table[i][8]=='5')
+      warning='班级不存在';
+    else if(table[i][8]=='6')
+      warning='姓名不能为空';
+    else if(table[i][8]=='7')
+      warning='学号不能为空';
+    else if(table[i][8]=='8')
+      warning='姓名需小于30字符';
+    else if(table[i][8]=='9')
+      warning='学号需小于30位';
+    else if(table[i][8]=='10')
+      warning='电话格式错误';
+    else if(table[i][8]=='11')
+      warning='邮箱需小于50位';
+    else if(table[i][8]=='12')
+      warning='邮箱格式错误';
+    else if(table[i][8]=='13')
+      warning='纯数字项没有转换为文本格式';
+    else if(table[i][8]=='14')
+      warning='系别不存在';
+    else if(table[i][8]=='15')
+      warning='年级不存在';    
+    else if(table[i][8]=='16')
+      warning='学号应小于20位'; 
+    else if(table[i][8]=='17')
+      warning='姓名应小于20位';          
+    else
+      warning='未知错误';
+    if(warning=='')
+    {
+      showcolor="green";
+      warning='创建学员成功'
+    }
+    else
+    {
+      showcolor="red";
+    }
+    email_msg="";
+    if(table[i][6].length>20)
+    {
+      email_msg=table[i][6].substr(0,20)+"...";
+    }
+    tel_msg="";
+    if(table[i][7].length>15)
+    {
+      email_msg=table[i][7].substr(0,15)+"...";
+    }
+    innertext+="<tr><td>"+table[i][0]+
+    "</td><td>"+table[i][1]+"</td><td>"+table[i][2]+
+    "</td><td>"+table[i][3]+"</td><td>"+table[i][4]+"</td><td>"+table[i][5]+
+    "</td><td>"+email_msg+"</td><td>"+tel_msg+
+    "</td><td><font color='"+showcolor+"'>"+warning+"</font></td></tr>";
+  }
+  document.getElementById("studentsaddtable").innerHTML = innertext;
+} 
+
+$(document).ready(function ()
+{
+  var tree = $("#id_student_tree").dynatree("getTree");
+  var node = tree.getRoot();
+  var obj1 = $("#hidtreedept")[0].value;
+  var jsondept = $.parseJSON(obj1).key;
+  var obj2 = $("#hidtreecla")[0].value;
+  var jsoncla = $.parseJSON(obj2).key;
+  for (var i = 0; i < jsondept.length; i++)
+  {
+    node.addChild(
+    {
+      title : jsondept[i][1],
+      key : jsondept[i][0],
+      isFolder : true,
+      expand : true
+    }
+    );
+  }
+  node.visit(function (node)
+  {
+    for (var j = 0; j < jsoncla.length; j++)
+    {
+      var judgegrade = true;
+      node.visit(function (node)
+      {
+        if (node.data.title == jsoncla[j][1] && node.data.key == ('*' + jsoncla[j][0]))
+          judgegrade = false
+      }
+      );
+      if (node.data.key == jsoncla[j][0] && judgegrade == true)
+      {
+        node.addChild(
+        {
+          title : jsoncla[j][1],
+          key : '*' + jsoncla[j][0],
+          isFolder : true,
+          expand : true
+        }
+        );
+        nodes = node.getChildren();
+        
+        curnode = nodes[nodes.length - 1];
+        
+        for (var k = 0; k < jsoncla.length; k++)
+        {
+          if (jsoncla[j][0] == jsoncla[k][0] && jsoncla[j][1] == jsoncla[k][1])
+          {
+            curnode.addChild(
+            {
+              title : jsoncla[k][2],
+              key : '#' + jsoncla[k][3],
+              isFolder : false
+            }
+            );
+          }
+        }
+      }
+    }
+  }
+  );
+}
+);
+
+</script>
+{% endblock %}

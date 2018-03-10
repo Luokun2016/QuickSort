@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd
+END
+sheet.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/sheet.py
+END
+book.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/book.py
+END
+formatting.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/formatting.py
+END
+info.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/info.py
+END
+biffh.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/biffh.py
+END
+xlsx.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/xlsx.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/__init__.py
+END
+xldate.py
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/xldate.py
+END
+timemachine.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/timemachine.py
+END
+compdoc.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/compdoc.py
+END
+formula.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/formula.py
+END
+licences.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/TSSv1.0/!svn/ver/20/trunk/tsssite/xlrd-0.9.2/build/lib/xlrd/licences.py
+END

@@ -1,0 +1,263 @@
+{% extends "templates/hackclientindex.html" %}
+{% load i18n %} 
+{% load staticfiles%}
+
+{% block content1 %}
+<input id="hiddendata" type="hidden" value="{{hhdata}}"/>
+<form id="showflag" action="/flags/" method='post'> 
+  <div id ="groupflags">
+      <div id = "firstteam" class="panel-heading">基础题目</div>
+          <div  class="panel-body" style="height:100%;">
+              <div id="firstbutton" style="text-align:left; vertical-align:top;">
+                
+              </div>
+          </div>
+  </div>
+</form>
+<form id="showkey"  method='post'>
+  <input type="hidden" id="totalhidden" name="totalhidden" value=""/>
+  <div class="modal fade" id="totalsubmit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+   <div class="modal-dialog">
+      <div class="modal-content" style="width:600px;">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="infilib">渗透题01</h3>
+        </div>
+        <div style="margin-top:20px;margin-left:20px;">
+          <table id = "infitb" class="table topsec_tabletop">
+            <tr>
+              <td style="width:25px;vertical-align:right; text-align:left;">KEY：</td>
+              <td>
+                <input id='spwd2' name='spwd2' onkeydown='kywdown(event.keyCode)' autocomplete='off' type='text' required="required" class="form-control topself_input"/><input type="text" style="display:none"/>
+              </td>
+            </tr>
+          </table>
+          <div class="modal-footer">
+            <button class="btn btn-default" data-dismiss="modal" type="button">关闭</button>
+            <button id="title" class="btn btn-primary" type="button" data-tid="5" onclick="submitkey()">提交</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</form>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+    function answer(){
+
+        this.ans=""
+        this.keyid=""
+        this.questid=""
+        this.istart=""
+    }
+
+    function kywdown(value)
+    {
+      if (document.getElementById("spwd2").value!="")
+      {
+      if(value==13)
+        {
+          document.getElementById("title").onclick();
+        }
+      }
+    }
+
+    function open_vnc(fscreen, vmid) 
+    {
+        var preid = vmid;
+        var url = '/console/' + preid + '/vm?token=' + preid;
+        if(fscreen)
+          window.open(url,'','width=850,height=485');
+        else
+          document.getElementById("syssframe").src = url;
+
+    }
+    function ajaxobj(_url, _tag, _way, _form)
+    {
+        var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+        var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+        var info = "";
+        $.ajax({
+          type:m,
+          url:_url,
+          data:par,
+          async: false,
+          error: function(request) {
+            //alert("Connection error");
+          },
+          success: function(data) {
+            //$(_tag).html(data);
+            //alert(data);
+            info = data;
+          }
+        });
+        return info;
+    }
+    function LoadDate()
+    {
+        $('.form_date').datetimepicker({
+          language:  'zh-CN',
+          weekStart: 1,
+          todayBtn:  1,
+          autoclose: 1,
+          todayHighlight: 1,
+          startView: 2,
+          minView: 2,
+          forceParse: 0
+        });
+    }
+</script>
+
+<script type="text/javascript">
+arrary = [];
+$(function(){
+        setbackgroundcolor("flagcolor");
+        showflags();
+});
+
+function showflags()
+{    
+    var tp = 0;
+    var dict = {}; 
+    //get团队ID以及团队名称
+    var getgroups = ajaxobj("/getgroups/", "", "get", "");
+    var jsondata = $.parseJSON(getgroups);
+    var groups=jsondata.groups;
+    h='';
+    //创建字典将answerinfo中提交过对抗的题目获取存入字典中
+    var getflag = ajaxobj("/loadflags/", "", "get", "");
+    var getflags = $.parseJSON(getflag);
+    
+
+    if(getflags.datas.length > 0)
+    {
+        for(var k=0;k<getflags.datas.length;k++)
+        {
+            dict[getflags.datas[k][1].toString() +","+ getflags.datas[k][0].toString()] = "1";
+        }
+    }
+    else
+    {
+      dict["null"] = "null";
+    }
+    for(i=0;i<groups.length;i++)
+    {
+      if(groups[i][0] == jsondata.groupname)
+      {
+        tp = 1;
+        h +='<div class="panel panel-default disabled" style="height:100%; margin-top:0px;"><div class="panel-heading">'+groups[i][0]+'  :   '+groups[i][3]+'</div><div class="panel-body" style="height:100%;"><div style="text-align:left; vertical-align:t.replaceop;">'
+      }
+      else
+      {
+        h +='<div class="panel panel-default self_top" style="height:100%; margin-top:0px;"><div class="panel-heading">'+groups[i][0]+'  :   '+groups[i][3]+'</div><div class="panel-body" style="height:100%;"><div style="text-align:left; vertical-align:t.replaceop;">'
+      }
+
+      size = groups[i][1].split(",").length;
+
+      for(j=1;j<=size;j++)
+      {
+        //获取自己团队的key设置disabled属性
+        if(groups[i][0] == jsondata.groupname)
+        {
+          if(dict[groups[i][2].toString() +","+ j.toString()])
+          {
+            h += '<button class="btn btn-warning disabled" type="button" id ="qt'+groups[i][2] + j +'" onclick="showkey(' + j.toString()+','+ groups[i][2] +')">' + j + '</button>';
+          }
+          else
+          {
+            h += '<button class="btn btn-default disabled" type="button" id ="qt'+groups[i][2] + j +'" onclick="showkey(' + j.toString()+','+ groups[i][2] +')">' + j + '</button>';
+          }
+        }
+        else
+        {
+
+          if(dict[groups[i][2].toString() +","+ j.toString()])
+          {
+            h += '<button class="btn btn-warning disabled" type="button" id ="qt'+groups[i][2] + j +'" onclick="showkey(' + j.toString()+','+ groups[i][2] +')">' + j + '</button>';
+          }
+          else
+          {
+            h += '<button class="btn btn-default" type="button" id ="qt'+groups[i][2] + j +'" onclick="showkey(' + j.toString()+','+ groups[i][2] +')">' + j + '</button>';
+          }
+        }
+      }
+      h += '</div></div></div></div>';
+    }
+    $("#groupflags").html(h);
+}
+//点击按钮事件需要传参数
+function showkey(i,s)
+{
+    document.getElementById("spwd2").value = "";
+    var h3text="flag";
+    if(i<10){h3text+='0'+i}else{h3text+=i}
+    $('#infilib').text(h3text);
+    $('#title').attr('data-tid',s);
+    $('#totalsubmit').modal('show');
+}
+function strcat(string)
+{
+        var index = string.split('g');
+        if(index[1][0] == '0')
+        {
+          index = index[1].split('0');
+        }
+        return index[1]
+    
+}
+//提交验证key的正确与否并存储答案
+function submitkey()
+{
+
+    var datas = new answer();
+  //获取输入框中输入的key
+    datas.ans =  $("input[name='spwd2']").val();
+    //后台验证是否正确刷新页面改变按钮状态
+    datas.keyid = $('#infilib').text();
+    datas.questid =$("#title").attr("data-tid");
+    //字符串处理提取数字
+    var num = strcat(datas.keyid);
+    num=datas.questid+num;
+    $("#totalhidden").val(JSON.stringify(datas));
+    var base = ajaxobj("/submitans/", "", "post", "#showkey");
+    data = $.parseJSON(base);
+    if(data.istart == "left")
+    {
+      $('#totalsubmit').modal('hide');
+      $("#qt"+num).removeClass('btn-default');
+      $("#qt"+num).addClass('btn-warning');
+      $("#qt"+num).addClass('disabled');
+      return true
+    }
+    else if(data.istart == "true")
+    {
+      Showbo.Msg.alert("提交的key不正确！");
+      // $('#totalsubmit').modal('hide');
+      return true;
+    }
+    else if(data.istart == "right")
+    {
+      Showbo.Msg.alert("其他团队已解答出此key！");
+      // $('#totalsubmit').modal('hide');
+      return true;
+    }
+    else if(data.istart == "false")
+    {
+      Showbo.Msg.alert("该对抗已关闭或已暂停，禁止答题！");
+      // $('#totalsubmit').modal('hide');
+      return true;
+    }
+}
+
+function timedCount()
+ {
+    var client = ajaxobj("/clientinfor/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    var t=setTimeout("timedCount()",60000);
+ }
+</script>
+{% endblock %}

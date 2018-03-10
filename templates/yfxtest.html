@@ -1,0 +1,279 @@
+{% extends "templates/index.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}yfxtest{% endblock %}
+
+{% block content %}
+
+
+
+
+
+
+<form id='yfxform' action="/yfxtest/" method='get' style="position: relative; top:-10px; background-color:white; ">
+
+
+ <div class="bs-docs-section">
+ 
+
+    <button type="button" class="btn btn-primary" data-target="#yfxModal" data-toggle="modal" title="添加教师" onclick='mclear()'><span class="glyphicon glyphicon-plus"></span></button>
+
+
+    <button type="button" class="btn btn-primary disabled"  onclick='edit()' title="编辑教师" data-toggle="modal" id='yfxedit'><span class="glyphicon glyphicon-pencil"></span></button>
+
+
+    <button id="yfxbtndel" type="submit" class="btn btn-danger disabled" title="删除教师" onclick='submitdelformedit()'><span class="glyphicon glyphicon-remove"></span></button>
+</div>
+
+
+<!-- 显示数据库中所有老师-->
+  <div class="bs-docs-section">
+    <table  id="lsyfxtest" class="table table-striped topsec_tabletop table-hover" data-selid="0" >
+      <tr>     
+        <th>姓名</th>
+        <th>性别</th>
+        <th>地址</th>
+        <th>电话</th>
+        <th>备注</th>
+      </tr>
+
+    <!--   {% for teacher in teacherls %}
+      <tr  id="{{teacher.id}}" >
+        <td>{{teacher.name}}</td>
+        <td>{{teacher.sex}}</td>      
+        <td>{{teacher.addr}}</td>
+        <td>{{teacher.tel}}</td>
+        <td>{{teacher.des}}</td>
+      </tr>
+      {% endfor %}   -->
+    </table>
+  </div>
+</form>
+
+<!-- 新增老师-->
+<form  id='yfxaddform' action="/yfxaddtea/" method='post'>
+   <div class="modal fade" id="yfxModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px; padding-top:5px;">
+          <div class="modal-header" style="background-color: #FFFFFF">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="yfxModalLabel">添加教师</h3>
+          </div>
+          <div>
+          <table class="table topsec_tabletop">
+             <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;">姓名：</td>
+              <td style="width:370px; ">
+                <input id='name' name='name' type='text'  required="required" maxLength="30"  onchange="checkaccountedit()" class="form-control topself_input"/>
+              </td>
+             </tr>             
+
+              <tr>
+                <td style="width:130px; text-align:right; vertical-align:middle;">性别：</td>
+                <td>
+                    <select class="form-control" style="width:120px;" id='yfxsex' name='sex' required="required">
+                      <option value="男">男</option>
+                      <option value="女">女</option>
+                    </select>
+                </td>
+              </tr>
+              <tr>
+                  <td style="width:130px; padding-left:60px;  vertical-align:middle;"><h4>地址：</h4></td>
+                  <td style="width:370px; ">
+                      <input id='addr' name='addr' type='text'  required="required" maxLength="30" class="form-control topself_input"/>
+                  </td>                 
+              </tr>
+              <tr>
+                  <td style="width:130px; padding-left:60px;  vertical-align:middle;"><h4>电话：</h4></td>
+                  <td style="width:370px; ">
+                      <input id='tel' name='tel' type='text'  required="required" maxLength="30" class="form-control topself_input"/>
+                  </td>                 
+              </tr>
+               <tr>
+                  <td style="width:130px; padding-left:60px;  vertical-align:middle;"><h4>备注：</h4></td>
+                  <td style="width:370px; ">
+                      <input id='des' name='des' type='text'  required="required" maxLength="30" class="form-control topself_input"/>
+                  </td>                 
+              </tr>
+          </table>
+
+          <div class="modal-footer">
+              <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+              <button class="btn btn-primary" id="btnaddtea" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+              <button class="btn btn-default"  type="button" onclick='mclear()' title='重置'><span class="glyphicon glyphicon-retweet"></span></button>
+          </div>
+       
+      </div>
+    </div>
+  </div>
+  </div>
+</form>
+
+<!-- 编辑老师-->
+<form  id='yfxeditform'  method='post'>
+  <div class="modal fade" id="yfxModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px; padding-top:5px;">
+
+
+             <div class="modal-header" style="background-color: #FFFFFF">
+                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                 <h3 id="myModalLabel">编辑教师</h3>
+             </div>
+       
+            <table class="table topsec_tabletop">
+                 <tr>
+                  <td style="width:130px; text-align:right; vertical-align:middle;">姓名：</td>
+                  <td style="width:370px; ">
+                    <input id='name1' name='name' type='text'  required="required" maxLength="30"  class="form-control topself_input"/>
+                  </td>
+                 </tr>             
+
+                  <tr>
+                    <td style="width:130px; text-align:right; vertical-align:middle;">性别：</td>
+                    <td>
+                        <select class="form-control" style="width:120px;" id='yfxsex1' name='sex' required="required">
+                          <option value="男">男</option>
+                          <option value="女">女</option>
+                        </select>
+                    </td>
+                  </tr>
+                  <tr>
+                      <td style="width:130px; padding-left:60px;  vertical-align:middle;"><h4>地址：</h4></td>
+                      <td style="width:370px; ">
+                          <input id='addr1' name='addr' type='text'  required="required" maxLength="30" class="form-control topself_input"/>
+                      </td>                 
+                  </tr>
+                  <tr>
+                      <td style="width:130px; padding-left:60px;  vertical-align:middle;"><h4>电话：</h4></td>
+                      <td style="width:370px; ">
+                          <input id='tel1' name='tel' type='text'  required="required" maxLength="30" class="form-control topself_input"/>
+                      </td>                 
+                  </tr>
+                  <tr>
+                    <td style="width:130px; padding-left:60px;  vertical-align:middle;"><h4>备注：</h4></td>
+                    <td style="width:370px; ">
+                        <input id='des1' name='des' type='text'  required="required" maxLength="30" class="form-control topself_input"/>
+                    </td>                 
+                 </tr>
+           </table>
+
+          <input id='yfxteaid' name='yfxteaid' type='hidden'/>
+
+          <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+                <button class="btn btn-primary" type="submit" onclick="submitaddformedit()" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          </div>
+        
+      </div>
+    </div>
+  </div>
+</form>
+
+
+<script>
+
+      function mclear()
+      {
+            // var name=document.getElementById("name");
+            //  account.setCustomValidity("");
+            //  var pass1 = document.getElementById("yfxsex");
+            //  pass1.setCustomValidity("");
+            //  var mob = document.getElementById("mobile");
+            //  mob.setCustomValidity("");
+            //  var em = document.getElementById("email");
+            //  em.setCustomValidity("");
+
+            document.getElementById('name').value = '';
+            document.getElementById('yfxsex').value = '';
+            document.getElementById('addr').value = '';
+            document.getElementById('tel').value = "";
+            document.getElementById('des').value = "";
+      }
+
+
+      function edit()
+      {
+            var preid = $("#lsyfxtest").data("selid");
+            if(preid == "0")
+            {
+                return false;
+            }
+
+            //alert(preid);
+            $("#yfxteaid").val(preid);
+
+            //$('#yfxModal1').modal('show');
+
+            var tea = ajaxobj("/yfxinfo/", "", "post", "#yfxeditform");
+            var jsondata = $.parseJSON(tea);
+              
+            $("#name1").val(jsondata.name);
+            $("#yfxsex1").val(jsondata.sex);
+            $("#addr1").val(jsondata.addr);
+            $("#tel1").val(jsondata.tel);
+            $("#des1").val(jsondata.des);
+            
+            $('#yfxModal1').modal('show');
+      }
+
+
+      function submitaddformedit()
+      {
+            var preid = $("#lsyfxtest").data("selid");
+           
+            var editurl="/yfxedit/"+preid+'/';
+            //alert(editurl);
+
+             document.getElementById("yfxeditform").action=editurl;                
+            //document.getElementById("yfxditform").submit();//按钮的type是submit就可以不需要使用该句话，如果type是buttun则需要
+       }
+
+       setTableEvent("lsyfxtest", true);
+
+      function setTableEvent(tableid, singleSelect)
+      {
+         var tr = "#" + tableid + ">tbody>tr";
+         var trSelected = tr + ".success";
+
+         $(tr).click(function(event) {
+                    if($(this).attr('id') == undefined)
+                      return;
+                  //var id = $("td:first-child", $(this)).text();
+                  // single-select
+                  if (singleSelect) {
+                      $(trSelected).removeClass('success');
+                  }
+                    if($("#yfxedit").hasClass('disabled'))//编辑的btn
+                  {
+                    $("#yfxedit").removeClass('disabled');
+                    $("#yfxbtndel").removeClass('disabled');
+                  }
+                  $(this).addClass('success');
+                  $("#lsyfxtest").data("selid", $(this).attr('id'));
+                  //$("#btndel").attr('formaction', '/teacherdel/' + $(this).attr('id')+'/');  
+         });
+      }
+
+
+      function submitdelformedit()
+      {
+           var preid = $("#lsyfxtest").data("selid");
+            if (preid!=0)
+            {
+                      var editurl="/yfxdel/"+preid+'/';
+                      //alert(editurl);
+                       document.getElementById("yfxform").action=editurl;
+                       //document.getElementById("yfxform").submit();
+            }
+      }
+
+</script>
+
+
+
+
+
+
+
+{% endblock %}

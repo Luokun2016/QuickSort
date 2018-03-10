@@ -1,0 +1,473 @@
+{% extends "templates/sysmgrmenu.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}数据字典{% endblock %}
+{% block script1 %}
+
+<style type="text/css">
+
+            div.flickr {
+                padding:0px;margin:0px; text-align:right; font-family:Verdana; font-size:12px;
+            }
+          
+            div.meneame a:active {
+                border-right: #000 1px solid; border-top: #000 1px solid; background-image: none; border-left: #000 1px solid; color: #fff; border-bottom: #000 1px solid; background-color: #0061de
+            }
+            div.flickr span.current {
+                padding-right: 6px; padding-left: 6px; font-weight: bold; padding-bottom: 2px; margin-right: 3px; padding-top: 2px;
+            }
+            div.flickr span.disabled {
+                padding-right: 6px; padding-left: 6px; padding-bottom: 2px; color: #adaaad; margin-right: 3px; padding-top: 2px;
+            }
+</style>
+<script src='/statics/js/jquery.pagination.js' type="text/javascript"></script>
+{% endblock %} 
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">数据字典</span>
+</div>
+{% endblock %}
+{% block content1 %}
+<form action="/myexp/" method='post' id="myexp">
+    <div class="modal-body" style="font-size: 16px; vertical-align: middle; position: relative;
+    top: -30px;">
+        <ul class="nav nav-tabs">
+            <li class="dlgList active" id="class_baseinfo"><a data-toggle="tab" href="#id_enum_tab">枚举信息</a> </li>
+            <li class="dlgList" id="class_outlines"><a data-toggle="tab" href="#id_content_tab">具体信息</a> </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade in active" id="id_enum_tab" style="position: relative;
+            top: 20px;">
+                <!--<div class="bs-docs-section ">
+                    <button id="addButton" class="btn btn-primary" type="button" onclick="EnumAddButtonClick()" data-backdrop="static" data-toggle="modal" title="添加">
+                        <span class="glyphicon glyphicon-plus"></span>
+                    </button>
+                    <button id="editButton" type="button" class="btn btn-primary disabled" onclick="EnumEditButtonClick()" title="编辑"> 
+                        <span class="glyphicon glyphicon-pencil"></span>
+                    </button>
+                    <button id="deleteButton" type="button" class="btn btn-danger disabled" onclick="EnumDeleteButtonClick()" title="删除">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                </div>-->
+                <div class="panel-body" style="padding-left: 0px; padding-right: 0px;">
+                    <input type="hidden" name="tabtype" id="tabtype" value="{{tabtype}}" />
+                    <table id="id_enum_list" class="table table-striped topsec_tabletop table-hover" data-selid="0" >
+                        <tr>
+                            <th>
+                                类型
+                            </th>
+                            <th>
+                                名称
+                            </th>
+                        </tr>
+                        {% for type in eList.object_list %}
+                        <tr data-id="{{type.id}}" onclick="singlebackcolor('id_enum_list',this)">
+                            <td>
+                                {{ type.enumtype }}
+                            </td>
+                            <td>
+                                {{ type.enumdesc }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <div id="id_enum_page"  class="flickr" >
+                        {% if eList.has_previous %}
+                        <a href="?page={{eList.previous_page_number}}&type=1">上一页</a>
+                        {% else %}
+                        <span>上一页</span>
+                        {% endif %}
+
+                        <span>
+                        {% for  p in page_range0 %}
+                        {% ifequal p eList.number %}
+                        <span class="current">{{p}}</span>
+                        {% else %}
+                        <a href="?page={{p}}&type=1" title="第{{p}}页">{{p}}</a>
+                        {% endifequal %}
+                        {% endfor %}
+                        </span>
+
+                        {% if eList.has_next %}
+                        <a href="?page={{eList.next_page_number}}&type=1">下一页</a>
+                        {% else %}
+                        <span>下一页</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade  in" id="id_content_tab" style="position: relative; top: 20px;">
+                <div class="bs-docs-section">
+                    <button class="btn btn-primary" type="button" onclick="ContentAddButtonClick()" data-backdrop="static" data-toggle="modal" title="添加">
+                        <span class="glyphicon glyphicon-plus"></span>
+                    </button>
+                    <button id="editButton1" type="button" class="btn btn-primary disabled" onclick="ContentEditButtonClick()"  title="编辑">
+                        <span class="glyphicon glyphicon-pencil"></span>
+                    </button>
+                    <button id='deleteButton1' type="button" class="btn btn-danger disabled" onclick="ContentDeleteButtonClick()" title="删除">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                </div>
+                <div class="panel-body" style="padding-left: 0px; padding-right: 0px;">
+                    <table id="id_content_list" class="table table-striped topsec_tabletop table-hover">
+                        <tr>
+                            <th>
+                                类型
+                            </th>
+                            <th>
+                                名称
+                            </th>
+                        </tr>
+                        {% for item in cList.object_list %}
+                        <tr data-id="{{item.id}}" onclick="singlebackcolor('id_content_list',this)">
+                            <td>
+                                {{ item.enumid.enumtype }}
+                            </td>
+                            <td>
+                                {{ item.typename }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <div id="id_content_page"  class="flickr" >
+                        {% if cList.has_previous %}
+                        <a href="?page={{ cList.previous_page_number}}&type=2">上一页</a>
+                        {% else %}
+                        <span>上一页</span>
+                        {% endif %}
+
+                        <span>
+                        {% for  p in page_range %}
+                        {% ifequal p cList.number %}
+                        <span class="current">{{p}}</span>
+                        {% else %}
+                        <a href="?page={{p}}&type=2" title="第{{p}}页">{{p}}</a>
+                        {% endifequal %}
+                        {% endfor %}
+                        </span>
+
+                        {% if cList.has_next %}
+                        <a href="?page={{cList.next_page_number}}&type=2">下一页</a>
+                        {% else %}
+                        <span>下一页</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<form id='idAddEnum'>
+    {% csrf_token %}
+    <input id="idenum" data-type="0" type="hidden" name="id" />
+    <div class="modal fade" id="idenumpop" tabindex="-1" role="dialog"  data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    ×</button>
+                    <h3 id="idenumTitle">
+                        添加字典</h3>
+                    </div>
+                    <div>
+                        <table class="table topsec_tabletop">
+                            <tr>
+                                <td style="width: 100px; vertical-align: middle; text-align: right;">
+                                    类型:
+                                </td>
+                                <td>
+                                    <input id="idenumKey" maxlength='50' name='enumKey' required="required" type='text'
+                                     class="form-control topself_input" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width: 100px; vertical-align: middle; text-align: right;">
+                                    名称:
+                                </td>
+                                <td>
+                                    <input id='idenumDescription' maxlength='50' name='enumDescription' required="required"
+                                    type='text' class="form-control topself_input" />
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="modal-footer">
+                            <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'>
+                                <span class="glyphicon glyphicon-remove"></span></button>
+                                <button class="btn btn-primary" id="btnaddcla" onclick="submitEnum()" type="submit" title='保存'>
+                                 <span class="glyphicon glyphicon-floppy-save"></span></button>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+         </form>
+         <form id='idAddContent'>
+            {% csrf_token %}
+            <input id="idcontent" data-type="0" type="hidden" name="id" />
+            <div class="modal fade" id="idcontentpop" tabindex="-1" role="dialog"  data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content" style="width: 600px; ">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            ×</button>
+                            <h3 id="idContentTitle">
+                                添加字典</h3>
+                            </div>
+                            <div>
+                                <table class="table topsec_tabletop">
+                                    <tr>
+                                        <td style="width: 100px; vertical-align: middle; text-align: right;">
+                                            类型:
+                                        </td>
+                                        <td>
+                                            <select class="form-control" id='idcontentKey' name='contentKey' style="width: 200px;">
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 100px; vertical-align: middle; text-align: right;">
+                                        名称:
+                                    </td>
+                                    <td>
+                                        <input id='idcontentDescription' maxlength='200' name='contentDescription' required="required"
+                                        type='text' class="form-control topself_input" />
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="modal-footer">
+                                <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'>
+                                 <span class="glyphicon glyphicon-remove"></span></button>
+                                 <button class="btn btn-primary" onclick="submitContent()" type="submit" title='保存'>
+                                    <span class="glyphicon glyphicon-floppy-save"></span></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+<script type="text/javascript"> 
+
+    setTableEvent("id_enum_list", true);
+    setTableEvent("id_content_list", true);
+
+    $(function()
+      {
+        var m_type = $('#tabtype').val();
+        if(m_type=='2')
+        {
+          $('#id_enum_tab').removeClass('in');
+          $('#id_enum_tab').removeClass('active');
+          $('#id_content_tab').addClass('in');
+          $('#id_content_tab').addClass('active');
+
+          $('#class_baseinfo').removeClass('active');
+          $('#class_outlines').addClass('active');
+        }
+      });
+
+    function setTableEvent(tableid, singleSelect) {
+        var tr = "#" + tableid + ">tbody>tr";
+        var trSelected = tr + ".success";
+
+        $(tr).click(function(event) {
+
+          if (singleSelect) {
+              $(trSelected).removeClass('success');
+          }
+
+          $(this).addClass('success');
+          $("#id_enum_list").data("selid", $(this).attr('id'));
+          if(tableid == "id_enum_list")
+          {
+            // 点击页面信息，获取ID并赋值给idenum
+            var selection = $("#id_enum_list>tbody>tr.success");
+            if (selection.length == 0) {
+                return false;
+            }
+            else {
+                var courseId = 0;
+                selection.each(function () { courseId = $(this).data("id"); });
+                $("#idenum").attr("value", courseId);
+            }
+            if($("#editButton").hasClass('disabled'))
+            {
+                $("#editButton").removeClass('disabled');
+                $("#deleteButton").removeClass('disabled');
+            }
+        }
+        if(tableid == "id_content_list")
+        {
+            var selection = $("#id_content_list>tbody>tr.success");
+            if (selection.length == 0) {
+                return false;
+            }
+            else {
+                $("#idcontent").data("type", 1);
+                var cId = 0;
+                selection.each(function () { cId = $(this).data("id"); });
+                $("#idcontent").attr("value", cId);
+            }
+            if($("#editButton1").hasClass('disabled'))
+            {
+                $("#editButton1").removeClass('disabled');
+                $("#deleteButton1").removeClass('disabled');
+            }
+        }
+    });
+    }       
+
+    $(function () {
+        setfontcolor("sysctrl");
+        setbackgroundcolor("myexpcolor");
+
+    });
+
+    function singlebackcolor(tableName, sender) {
+        var trSelected = "#" + tableName + ">tbody>tr.success";
+        $(trSelected).removeClass('success');
+        $(sender).addClass('success');
+    }
+
+    // 添加枚举信息按钮点击相应事件
+    function EnumAddButtonClick() {
+        $("#idenum").data("type", 0);
+        $("#idenumKey").val("");
+        $("#idenumDescription").val("");
+        $("#idenumTitle").html("添加字典");
+        $("#idenumpop").modal("show");
+    }
+
+    // 编辑枚举信息按钮点击相应事件
+    function EnumEditButtonClick() {
+        result = ajaxobj("/GetEnumEditConfig/", "", "post", "#idAddEnum");
+        var jsonresult = $.parseJSON(result);
+        $("#idenum").data("type", 1);
+        $("#idenumKey").val(jsonresult.key);
+        $("#idenumDescription").val(jsonresult.value);
+        $("#idenumTitle").html("修改字典");
+        $("#idenumpop").modal("show");
+    }
+
+    // 删除枚举信息按钮点击相应事件    
+    function EnumDeleteButtonClick() {
+        Showbo.Msg.oncallback = submitdelformeditcallback;
+        Showbo.Msg.confirm("确定删除吗？");
+    }
+
+    // 删除回调 
+    function submitdelformeditcallback() {
+        var result = ajaxobj("/DeleteEnumSubmit/", "", "post", "#idAddEnum");
+        var josndata = $.parseJSON(result);
+        if (josndata.error != "") {
+            alert(josndata.error);
+        }else{
+            document.getElementById('myexp').submit();
+        }
+        
+    }
+
+    // 枚举信息保存按钮点击相应事件
+    function submitEnum() {
+
+        var result = "";
+        var idenumKey = document.getElementById("idenumKey");
+        if ($("#idenum").data("type") == 0) 
+        {
+            result = ajaxobj("/AddEnumSubmit/", "", "post", "#idAddEnum");
+        }
+        else 
+        {
+            result = ajaxobj("/EditEnumSubmit/", "", "post", "#idAddEnum");
+        }
+        var josndata = $.parseJSON(result);
+        if (josndata.error == "1") 
+        {
+            idenumKey.setCustomValidity("存在重名的类型名称");
+        }
+        else
+        {
+            idenumKey.setCustomValidity("");
+        }
+    }
+
+    function ContentAddButtonClick() {
+
+        $("#idcontent").attr("value", -1);
+        $("#idcontent").data("type", 0);
+        // 获取下拉列表信息，并生成到页面
+        var result = ajaxobj("/GetContentEditConfig/", "", "post", "#idAddContent");
+        var jsonresult = $.parseJSON(result);
+        var optionMark = "<option value='%id%'>%key%</option>";
+        var htmlstr = "";
+        for (var i = 0; i < jsonresult.enums.length; i++) {
+            var temp = optionMark.replace("%id%", jsonresult.enums[i].id);
+            temp = temp.replace("%key%", jsonresult.enums[i].key);
+            htmlstr += temp;
+        };
+        // 更改页面信息
+        $("#idcontentKey").html(htmlstr);
+        $("#idcontentDescription").val("");
+        $("#idContentTitle").html("添加字典");
+        $("#idcontentpop").modal("show");
+    }
+
+    function ContentEditButtonClick() {
+        var result = ajaxobj("/GetContentEditConfig/", "", "post", "#idAddContent");
+        var jsonresult = $.parseJSON(result);
+        //idcontentKey
+        //<option value='{{ dept.id }}'>{{ dept.deptname }}</option>
+        var optionMark = "<option value='%id%'>%key%</option>";
+        var htmlstr = "";
+        for (var i = 0; i < jsonresult.enums.length; i++) {
+            var temp = optionMark.replace("%id%", jsonresult.enums[i].id);
+            temp = temp.replace("%key%", jsonresult.enums[i].key);
+            htmlstr += temp;
+        };
+        $("#idcontentKey").html(htmlstr);
+        $("#idcontentKey").val(jsonresult.key);
+        $("#idcontent").val(jsonresult.id);
+        $("#idcontentDescription").val(jsonresult.value);
+        $("#idContentTitle").html("修改字典");
+        $("#idcontentpop").modal("show");
+    }
+
+    function ContentDeleteButtonClick() {
+        Showbo.Msg.oncallback = DeleteItem;
+        Showbo.Msg.confirm("确定删除吗？");
+    }
+
+
+    function DeleteItem(){
+        var result = ajaxobj("/DeleteContentSubmit/", "", "post", "#idAddContent");
+        var josndata = $.parseJSON(result);
+        if (josndata.error != "") {
+            alert(josndata.error);
+        }else{
+            document.getElementById('myexp').submit();
+        }
+    }   
+
+    // 具体信息保存按钮点击相应事件
+    function submitContent() {
+        var result = "";
+        var idcontentDes = document.getElementById("idcontentDescription");
+        if ($("#idcontent").data("type") == 0) {
+            result = ajaxobj("/AddContentSubmit/", "", "post", "#idAddContent");
+        }
+        else {
+            result = ajaxobj("/EditContentSubmit/", "", "post", "#idAddContent");
+        }
+        var josndata = $.parseJSON(result);
+        if (josndata.error == "1") 
+        {
+            idcontentDes.setCustomValidity("存在重名的名称");
+        }
+        else
+        {
+            idcontentDes.setCustomValidity("");
+        }
+
+    }    
+</script>
+{% endblock %}

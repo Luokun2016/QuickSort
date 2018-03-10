@@ -1,0 +1,1269 @@
+{% extends "templates/index.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}虚拟服务器{% endblock %}
+{% block script %}
+<script src='/statics/js/jquery.custom.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.cookie.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.dynatree.js' type="text/javascript"></script>
+<script type="text/javascript" src="/statics/js/ajaxProgressUpload.js"></script>
+<script src='/statics/js/uploadfile.js' type="text/javascript"></script>
+<link href="/statics/css/upload.css" rel="stylesheet"/>
+<link type="text/css" href="/statics/myflow/lib/jquery-ui-1.8.4.custom.css" rel="stylesheet" />
+
+<script type="text/javascript" src="/statics/myflow/lib/raphael.js"></script>
+<script type="text/javascript">
+    height = 570;
+    width = 800;
+</script>
+
+<script type="text/javascript" src="/statics/myflow/myflow.js"></script>
+<script type="text/javascript" src="/statics/myflow/myflow.jpdl4.js"></script>
+<script type="text/javascript" src="/statics/myflow/myflow.editors.js"></script>
+<script type="text/javascript">
+                  /*$.each(toolsdata.imgls, function (index, item) 
+            { 
+                  alert(item.id);
+            });*/
+      
+      $(function() 
+      {
+            //var myflow = $.myflow;
+            var myflowtools =  ajaxobj("/initmyflowtools/1","", "get", "");
+            var toolsdata = $.parseJSON(myflowtools);
+
+
+            $("#myflow_tools").append("<div id='myflow_tools_handle' style='text-align: center;' class='ui-widget-header'>操作</div>");
+            $("#myflow_tools").append("<div class='node' id='myflow_save'><img src='/statics/myflow/img/save.gif' />&nbsp;&nbsp;保存</div>");
+            $("#myflow_tools").append("<div class='node' style='display:none' id='myflow_clear'><img src='/statics/myflow/img/16/delete.gif' />&nbsp;&nbsp;清空</div>");
+            /*$("#myflow_tools").append("<div class='node' id='myflow_save'><img style='height:16px;width:16px;' src='/statics/myflow/img/FullScreen.png' />&nbsp;&nbsp;放大</div>");*/
+            $("#myflow_tools").append("<div class='node selectable' id='pointer'><img src='/statics/myflow/img/select16.gif' />&nbsp;&nbsp;选择</div>");
+            $("#myflow_tools").append("<div class='node selectable' id='path'><img src='/statics/myflow/img/16/flow_sequence.png' />&nbsp;&nbsp;连线</div>");
+
+            $("#myflow_tools").append("<div style='text-align: center;' class='ui-widget-header'>虚拟服务器</div>");
+
+            for (var i = 0;i < toolsdata.imgls.length;i++)
+            {
+                  $("#myflow_tools").append("<div class='node state' name='" + toolsdata.imgls[i][1]+ "' id='" + toolsdata.imgls[i][0] + "' desc='" + toolsdata.imgls[i][2] + "' instance='" + toolsdata.imgls[i][1] + "' type='imgls'><img style='height:16px;width:16px;'  src='/statics/myflow/img/128/pc.png' />&nbsp;&nbsp;" + toolsdata.imgls[i][1] + "</div>");
+            }
+
+            $("#myflow_tools").append("<div style='text-align: center;' class='ui-widget-header'>虚拟网关</div>");
+            for (var i = 0;i < toolsdata.imgvgtls.length;i++)
+            {
+                  $("#myflow_tools").append("<div class='node state' name='" + toolsdata.imgvgtls[i][1]+ "' id='" + toolsdata.imgvgtls[i][0] +  "' desc='" + toolsdata.imgvgtls[i][2] + "'  instance='" + toolsdata.imgvgtls[i][1] + "' type='imgvgtls'><img style='height:16px;width:16px;' src='/statics/myflow/img/128/fw.png' />&nbsp;&nbsp;" + toolsdata.imgvgtls[i][1] + "</div>");
+            }
+
+            $("#myflow_tools").append("<div style='text-align: center;' class='ui-widget-header'>虚拟交换</div>");
+            for (var i = 0;i < toolsdata.imgvshls.length;i++)
+            {
+                  $("#myflow_tools").append("<div class='node state' name='" + toolsdata.imgvshls[i][1]+ "' id='" + toolsdata.imgvshls[i][0] +  "' desc='" + toolsdata.imgvshls[i][2] + "'  instance='" + toolsdata.imgvshls[i][1] + "' type='imgvshls'><img style='height:16px;width:16px;' src='/statics/myflow/img/128/switch.png' />&nbsp;&nbsp;" + toolsdata.imgvshls[i][1] + "</div>");
+            }
+
+            myflow = $('#myflow').myflow(
+            {
+                    basePath : "",
+                    restore : ""/*,
+                    tools : 
+                    {
+                          save : 
+                          {
+                                onclick : function(data) 
+                                {
+                                      alert('save:\n' + data);
+                                      //$('#hidTopo').val(data);
+                                      //saveTopo();
+                                }
+                          }
+                    }*/
+            });
+            //debugger;
+      });
+</script>
+
+<style type="text/css">
+/*body {
+  margin: 0;
+  pading: 0;
+  text-align: left;
+  font-family: Arial, sans-serif, Helvetica, Tahoma;
+  font-size: 12px;
+  line-height: 1.5;
+  color: black;
+}*/
+
+.node {
+  width: 90px;
+  text-align: left;
+  vertical-align: middle;
+  border: 1px solid #fff;
+}
+
+.mover {
+  border: 1px solid #ddd;
+  background-color: #ddd;
+}
+
+.selected {
+  background-color: #ddd;
+}
+
+.state {
+  
+}
+
+#myflow_props table {
+  
+}
+
+#myflow_props th {
+  letter-spacing: 2px;
+  text-align: left;
+  padding: 6px;
+  background: #ddd;
+}
+
+#myflow_props td {
+  background: #fff;
+  padding: 6px;
+}
+
+#pointer {
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#path {
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#task {
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#state {
+  background-repeat: no-repeat;
+  background-position: center;
+}
+</style>
+{% endblock %}
+{% block maincontent %}{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">实验大纲</span>
+</div>
+{% endblock %}
+{% block content %}
+
+
+<div class="contentMain">
+        <div class="bs-docs-section" style="margin-top:-13px">
+          <button type="button" class="btn btn-primary" title="添加目录" onclick="addchild(true)"><span class="glyphicon glyphicon-plus"></span><strong>目录</strong></button>
+          <button type="button" class="btn btn-primary" title="添加实验" onclick="addchild(false)"><span class="glyphicon glyphicon-plus"><strong>实验</strong></button>
+          <button type="button" class="btn btn-danger" title="删除实验" onclick="delnode()"><span class="glyphicon glyphicon-remove"></span></button>
+        </div>
+        <div class="personLeftEx" style="margin-top:13px" >
+            <div id="tree" style="text-align:left; vertical-align:top;">
+            </div>
+        </div>
+        <div id="MainContent" class="personRightEx"  role="main" style=" heigth:100%; margin-top:-33px; " >
+            <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-15px; background-color:white;">
+                <ul class="nav nav-tabs">
+                  <li  class="active">
+                    <a href="#basicinfo" data-toggle="tab">基本信息</a>
+                  </li>
+                  <li>
+                    <a href="#topo" data-toggle="tab">实验拓扑</a>
+                  </li>
+                  <li>
+                    <a href="#elements" data-toggle="tab">实验原理</a>
+                  </li>
+                  <li>
+                    <a href="#step" data-toggle="tab">实验步骤</a>
+                  </li>
+                  <li>
+                    <a href="#tools" data-toggle="tab">实验工具</a>
+                  </li>
+                  <li>
+                    <a href="#video" data-toggle="tab">实验录像</a>
+                  </li>
+                </ul>
+                <div class="tab-content" style="position: relative; top:10px;">
+                  <div class="tab-pane fade in active" id="basicinfo">
+                    <form id="frminfo" name="frminfo">
+                    <div class="bs-docs-section">
+                      <button disabled id="btnSave" type="button" title="保存" class="btn btn-primary" onclick="saveexp()"><span class="glyphicon glyphicon-floppy-save"></button>
+                    </div>
+                    <table class="table topsec_tabletop">
+                      <tr>
+                        <td style="width:120px; vertical-align:middle; text-align:right; ">实验名称：</td>
+                        <td>
+                          <input id='txtName' name='txtName' type='text' placeholder='请在此输入实验名称' maxlength='25'  class="form-control topself_input"/>
+                        </td>
+                        <td style="width:120px; vertical-align:middle; text-align:right; ">实验编号：</td>
+                        <td>
+                          <input id='txtCode' name='txtCode' type='text' placeholder='请在此输入实验编号' maxlength='25'  class="form-control topself_input"/>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="width:120px; vertical-align:middle; text-align:right; ">适用专业：</td>
+                        <td>
+                          <input id='txtSpeciality' name='txtSpeciality' type='text' placeholder='请在此输入适用专业' maxlength='25' class="form-control topself_input"/>
+                        </td>
+                        <td style="width:120px;  vertical-align:middle; text-align:right; ">备注：</td>
+                        <td>
+                          <input id='txtRemark' name='txtRemark' type='text' placeholder='请在此输入备注信息' maxlength='200' class="form-control topself_input"/>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="width:120px;  vertical-align:middle; text-align:right; ">创建时间：</td>
+                        <td>
+                          <input readonly id='txtCreateDate' name='txtCreateDate' type='text' class="form-control topself_input"/>
+                        </td>
+                        <td style="width:120px;  vertical-align:middle; text-align:right; ">创建用户：</td>
+                        <td>
+                          <input readonly id='txtCreateUser' name='txtCreateUser' type='text' class="form-control topself_input"/>
+                        </td>
+                      </tr>
+                       <tr>
+                        <td style="width:120px;  vertical-align:middle; text-align:right; ">介绍：</td>
+                        <td colspan="3">
+                          <input id='txtDescription' name='txtDescription' type='text' placeholder='请在此输入介绍信息'  maxlength='200'  class="form-control topself_area"/>
+                        </td>
+                      </tr>
+                    </table>
+                    <input id='hidId' name='hidId' type='hidden'/>
+                  </form>
+                  </div>
+
+                  <!--style="background-image: url(/statics/myflow/img/bg.png);"-->
+
+                  <div class="tab-pane fade" id="topo" class="ui-widget-content">
+                    <form id="topo_form">
+                      <div id="myflow_tools" style="position: absolute; top: 10; left: 10; background-color: #fff; width: 100px; cursor: default; padding: 3px;" class="ui-widget-content">
+                            
+                      </div>
+
+                      <div id="myflow_props"
+                        style="position: absolute; top: 30; right: 50; background-color: #fff; width: 220px; padding: 3px;"
+                        class="ui-widget-content">
+                      <div id="myflow_props_handle" class="ui-widget-header">属性</div>
+                      <table border="1" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td></td>
+                        </tr>
+                      </table>
+                      </div>
+
+                      <div id="myflow" ></div>
+                      <input id='hidTopo' name='hidTopo' type='hidden'/>
+                    </form>
+                  </div>
+
+                  <div class="tab-pane fade" id="elements">
+                      <form id="ele_form">
+                      <div class="bs-docs-section">
+                        <button disabled id="btnEleFile" class="btn btn-primary"  type="button" title="上传" onclick="startUploadingstudent('/savetool/', 'progress_percent_ele', 'currentEleProgress', 'ele_form')"><span class="glyphicon glyphicon-upload"></button>
+                        <button disabled  style="display:none" id="btnEleUrl" type="button" title="保存" class="btn btn-primary" onclick="saveUrl('#ele_form')"><span class="glyphicon glyphicon-floppy-save"></button>
+                        <button disabled type="button" id="viewEle" title="查看"  class="btn btn-primary"  data-target="#viewDoc" data-toggle="modal" onclick="showDoc(1)"> <span class="glyphicon glyphicon-info-sign"></button>
+                      </div>
+                      <table class="table topsec_tabletop">
+                        <tr>
+                          <td style="width:120px; vertical-align:middle; text-align:right; ">保存方式：</td>
+                          <td style="vertical-align:middle; text-align:left; ">
+                            <input type="radio" id="rdoEleFile" name="rdoEleType" checked="true">本地文件</input>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <input type="radio" id="rdoEleUrl" name="rdoEleType">网络链接</input>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <a href="/document/eles.zip">模板下载</a>
+                          </td>
+                        </tr>
+                        <tr id="trEleFile" >
+                          <td></td>
+                          <td style="vertical-align:middle;">
+                            <table>
+                              <tr>
+                                  <td style="border:0px; width:400px;"><input disabled type="file" name="fileEle" id="fileEle" accept="application/x-zip-compressed" onchange="fileSelected(this);selectFileType('ele');" /></td>
+                                  <td style="border:0px;">
+                                    
+                                  </td>
+                              </tr>
+                            </table>
+                            <div class="upload_form_cont">
+                          </td>
+                        </tr>
+                        <tr id="trEleUrl" style="display:none">
+                          <td></td>
+                          <td style="vertical-align:middle;">
+                            <table>
+                              <tr>
+                                  <td style="border:0px; width:400px;">
+                                    <input id='txtEleURL' name='txtEleURL' type='text' placeholder='请在此输入网络链接地址' maxlength='200'  class="form-control topself_input"/></td>
+                                  <td style="border:0px;">
+                                    
+                                  </td>
+                              </tr>
+                            </table>
+                            
+                          </td>
+                        </tr>
+                        <tr id="trEleProgress">
+                          <td style="text-align:right; vertical-align:middle; height:30px; vertical-align:middle;">
+                            完成：
+                          </td>
+                          <td style="height:30px; padding:0px; vertical-align:middle;">
+                            <table style="width:100%; height:30px; margin:0px; padding:0px;">
+                                <tr>
+                                  <td style="width:52%; border:0px; margin:0px; padding:0px; vertical-align:middle;">
+                                    <div class="progress progress-striped" style="margin:0px; padding:0px;">
+                                      <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="currentEleProgress">
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td style="width:48%; border:0px; vertical-align:middle;"><div id="progress_percent_ele" style="text-align:left"></div>
+                                  </td>
+                                </tr>
+                            </table>
+                          </td>
+                        </tr> 
+                      </table>
+                      <input type='hidden' id='hidEleId' value="" name="hidEleId"/>
+                      <input type='hidden' id='hidEleFileType' value="1" name="hidEleFileType"/>
+                      <input type='hidden' id='hidEleType' value="ele" name="hidType"/>
+                    </form>
+                  </div>
+
+                  <div class="tab-pane fade" id="step">
+                      <form id="step_form">
+                      <div class="bs-docs-section">
+                        <button disabled id="btnStepFile" class="btn btn-primary"  type="button" title="上传" onclick="startUploadingstudent('/savetool/', 'progress_percent_step', 'currentStepProgress', 'step_form')"><span class="glyphicon glyphicon-upload"></button>
+                        <button disabled  style="display:none" id="btnStepUrl" type="button" title="保存" class="btn btn-primary" onclick="saveUrl('#step_form')"><span class="glyphicon glyphicon-floppy-save"></button>
+                        <button disabled type="button" id="viewStep" title="查看"  class="btn btn-primary"  data-target="#viewDoc" data-toggle="modal" onclick="showDoc(2)"> <span class="glyphicon glyphicon-info-sign"></button>
+                      </div>
+                      <table class="table topsec_tabletop">
+                        <tr>
+                          <td style="width:120px; vertical-align:middle; text-align:right; ">保存方式：</td>
+                          <td style="vertical-align:middle; text-align:left; ">
+                            <input type="radio" id="rdoStepFile" name="rdoStepType" checked="true">本地文件</input>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <input type="radio" id="rdoStepUrl" name="rdoStepType">网络链接</input>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <a href="/document/steps.zip">模板下载</a>
+                          </td>
+                        </tr>
+                        <tr id="trStepFile" >
+                          <td></td>
+                          <td style="vertical-align:middle;">
+                            <table>
+                              <tr>
+                                  <td style="border:0px; width:400px;"><input disabled type="file" name="fileStep" id="fileStep" accept="application/x-zip-compressed"  onchange="fileSelected(this);selectFileType('step');" /></td>
+                                  <td style="border:0px;">
+                                    
+                                  </td>
+                              </tr>
+                            </table>
+                            <div class="upload_form_cont">
+                          </td>
+                        </tr>
+                        <tr id="trStepUrl" style="display:none">
+                          <td></td>
+                          <td style="vertical-align:middle;">
+                            <table>
+                              <tr>
+                                  <td style="border:0px; width:400px;">
+                                    <input id='txtStepURL' name='txtStepURL' type='text' placeholder='请在此输入网络链接地址' maxlength='200' class="form-control topself_input"/></td>
+                                  <td style="border:0px;">
+                                    
+                                  </td>
+                              </tr>
+                            </table>
+                            
+                          </td>
+                        </tr>
+                        <tr id="trStepProgress">
+                          <td style="text-align:right; vertical-align:middle; height:30px; vertical-align:middle;">
+                            完成：
+                          </td>
+                          <td style="height:30px; padding:0px; vertical-align:middle;">
+                            <table style="width:100%; height:30px; margin:0px; padding:0px;">
+                                <tr>
+                                  <td style="width:52%; border:0px; margin:0px; padding:0px; vertical-align:middle;">
+                                    <div class="progress progress-striped" style="margin:0px; padding:0px;">
+                                      <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="currentStepProgress">
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td style="width:48%; border:0px; vertical-align:middle;"><div id="progress_percent_step" style="text-align:left"></div>
+                                  </td>
+                                </tr>
+                            </table>
+                          </td>
+                        </tr> 
+                      </table>
+                      <input type='hidden' id='hidStepId' value="" name="hidStepId"/>
+                      <input type='hidden' id='hidStepFileType' value="1" name="hidStepFileType"/>
+                      <input type='hidden' id='hidStepType' value="step" name="hidType"/>
+                    </form>
+                  </div>
+
+                  <div class="tab-pane fade" id="tools">
+                    <form id="upload_form">
+                    <div class="bs-docs-section">
+                      <button disabled id="btnFile" class="btn btn-primary"  type="button" title="上传" onclick="startUploadingstudent('/savetool/', 'progress_percent', 'currentProgress', 'upload_form')"><span class="glyphicon glyphicon-upload"></button>
+                      <button disabled  style="display:none" id="btnUrl" type="button" title="保存" class="btn btn-primary" onclick="saveUrl('#upload_form')"><span class="glyphicon glyphicon-floppy-save"></button>
+                      <button disabled type="button" id="viewTool" title="查看"  class="btn btn-primary"  data-target="#viewDoc" data-toggle="modal"  onclick="showDoc(3)"> <span class="glyphicon glyphicon-info-sign"></button>
+                    </div>
+                    <table class="table topsec_tabletop">
+                      <tr>
+                        <td style="width:120px; vertical-align:middle; text-align:right; ">保存方式：</td>
+                        <td style="vertical-align:middle; text-align:left; ">
+                          <input type="radio" id="rdoFile" name="rdoType" checked="true">本地文件</input>
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                          <input type="radio" id="rdoUrl" name="rdoType">网络链接</input>
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                            <a href="/document/tools.zip">模板下载</a>                         
+                          </td>
+                      </tr>
+                      <tr id="trFile" >
+                        <td></td>
+                        <td style="vertical-align:middle;">
+                          <table>
+                            <tr>
+                                <td style="border:0px; width:400px;"><input disabled type="file" name="fileTool" id="fileTool" accept="application/x-zip-compressed"  onchange="fileSelected(this);selectFileType('tool');" /></td>
+                                <td style="border:0px;">
+                                  
+                                </td>
+                            </tr>
+                          </table>
+                          <div class="upload_form_cont">
+                        </td>
+                      </tr>
+                      <tr id="trUrl" style="display:none">
+                        <td></td>
+                        <td style="vertical-align:middle;">
+                          <table>
+                            <tr>
+                                <td style="border:0px; width:400px;">
+                                  <input id='txtURL' name='txtURL' type='text' placeholder='请在此输入网络链接地址' maxlength='200' class="form-control topself_input"/></td>
+                                <td style="border:0px;">
+                                  
+                                </td>
+                            </tr>
+                          </table>
+                          
+                        </td>
+                      </tr>
+                      <tr id="trProgress">
+                        <td style="text-align:right; vertical-align:middle; height:30px; vertical-align:middle;">
+                          完成：
+                        </td>
+                        <td style="height:30px; padding:0px; vertical-align:middle;">
+                          <table style="width:100%; height:30px; margin:0px; padding:0px;">
+                              <tr>
+                                <td style="width:52%; border:0px; margin:0px; padding:0px; vertical-align:middle;">
+                                  <div class="progress progress-striped" style="margin:0px; padding:0px;">
+                                    <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="currentProgress">
+                                    </div>
+                                  </div>
+                                </td>
+                                <td style="width:48%; border:0px; vertical-align:middle;"><div id="progress_percent" style="text-align:left"></div>
+                                </td>
+                              </tr>
+                          </table>
+                        </td>
+                      </tr> 
+                    </table>
+                    <input type='hidden' id='hidToolId' value="" name="hidToolId"/>
+                    <input type='hidden' id='hidToolFileType' value="1" name="hidToolFileType"/>
+                    <input type='hidden' id='hidToolType' value="tool" name="hidType"/>
+                  </form>
+                    <!--<iframe name="content_frame" marginwidth="0" marginheight="0" width="100%" height="400px" src="404.html" frameborder="0"></iframe>-->
+                  </div>
+
+                  <div class="tab-pane fade" id="video">
+                      <form id="video_form">
+                      <div class="bs-docs-section">
+                        <button disabled id="btnVideoFile" class="btn btn-primary"  type="button" title="上传" onclick="startUploadingstudent('/savetool/', 'progress_percent_video', 'currentVideoProgress', 'video_form')"><span class="glyphicon glyphicon-upload"></button>
+                        <button disabled  style="display:none" id="btnVideoUrl" type="button" title="保存" class="btn btn-primary" onclick="saveUrl('#video_form')"><span class="glyphicon glyphicon-floppy-save"></button>
+                        <button disabled type="button" id="viewVideo" title="查看"  class="btn btn-primary"  data-target="#viewDoc" data-toggle="modal" onclick="showDoc(4)"> <span class="glyphicon glyphicon-info-sign"></button>
+                      </div>
+                      <table class="table topsec_tabletop">
+                        <tr>
+                          <td style="width:120px; vertical-align:middle; text-align:right; ">保存方式：</td>
+                          <td style="vertical-align:middle; text-align:left; ">
+                            <input type="radio" id="rdoVideoFile" name="rdoVideoType" checked="true">本地文件</input>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <input type="radio" id="rdoVideoUrl" name="rdoVideoType">网络链接</input>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <a href="/document/videos.zip">模板下载</a>
+                          </td>
+                        </tr>
+                        <tr id="trVideoFile" >
+                          <td></td>
+                          <td style="vertical-align:middle;">
+                            <table>
+                              <tr>
+                                  <td style="border:0px; width:400px;"><input disabled type="file" name="fileVideo" id="fileVideo" accept="application/x-zip-compressed"  onchange="fileSelected(this);selectFileType('video');" /></td>
+                                  <td style="border:0px;">
+                                    
+                                  </td>
+                              </tr>
+                            </table>
+                            <div class="upload_video_cont">
+                          </td>
+                        </tr>
+                        <tr id="trVideoUrl" style="display:none">
+                          <td></td>
+                          <td style="vertical-align:middle;">
+                            <table>
+                              <tr>
+                                  <td style="border:0px; width:400px;">
+                                    <input id='txtVideoURL' name='txtVideoURL' type='text' placeholder='请在此输入网络链接地址' maxlength='200' class="form-control topself_input"/></td>
+                                  <td style="border:0px;">
+                                    
+                                  </td>
+                              </tr>
+                            </table>
+                            
+                          </td>
+                        </tr>
+                        <tr id="trVideoProgress">
+                          <td style="text-align:right; vertical-align:middle; height:30px; vertical-align:middle;">
+                            完成：
+                          </td>
+                          <td style="height:30px; padding:0px; vertical-align:middle;">
+                            <table style="width:100%; height:30px; margin:0px; padding:0px;">
+                                <tr>
+                                  <td style="width:52%; border:0px; margin:0px; padding:0px; vertical-align:middle;">
+                                    <div class="progress progress-striped" style="margin:0px; padding:0px;">
+                                      <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="currentVideoProgress">
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td style="width:48%; border:0px; vertical-align:middle;"><div id="progress_percent_video" style="text-align:left"></div>
+                                  </td>
+                                </tr>
+                            </table>
+                          </td>
+                        </tr> 
+                      </table>
+                      <input type='hidden' id='hidVideoId' value="" name="hidVideoId"/>
+                      <input type='hidden' id='hidVideoFileType' value="1" name="hidVideoFileType"/>
+                      <input type='hidden' id='hidVideoType' value="video" name="hidType"/>
+                    </form>
+                  </div>
+
+                </div>
+            </div>
+        </div>
+
+        <input type='hidden' id='hidtree' value="{{ tree1 }}" />
+        <form id="treeform" name="treeform">
+            <input type='hidden' id='hidtitle' value="" name="nodetitle"/>
+            <input type='hidden' id='hidkey' value="" name="nodekey"/>
+            <input type='hidden' id='hidisfolder' value="" name="nodeisfolder"/>
+            <input type='hidden' id='hidparent' value="" name="nodeparent"/>
+        </form>
+
+        <form  id='studentaddform' action="/studentadd/" method='post'>
+          {% csrf_token %}
+         <div class="modal fade" id="viewDoc" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                 <div class="modal-dialog" style="width:1000px">
+              <div class="modal-content" style="width:950px; padding-top:5px;">
+                <div class="modal-header" style="background-color: #FFFFFF">
+                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                  <h3 id="myModalLabel">信息</h3>
+                </div>
+                <div>
+                  <iframe id="ifmView" name="content_frame" marginwidth="0" marginheight="0" width="100%" height="550px" src="" frameborder="0"></iframe>
+                  <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+                    <!--<button class="btn btn-primary" id="btnaddcla" type="submit">保存</button>
+                    <button class="btn btn-default"  type="button" onclick='mclearstu()'>重置</button>-->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+</div>
+
+
+<script type="text/javascript" src="/statics/js/ajaxProgressUpload.js"></script>
+<script type="text/javascript">
+ setfontcolor("expctrl");
+$(function(){
+        $("#tree").dynatree({
+            onActivate: function(node){
+              if (node.data.key != 0)
+                expinfo(node,true); 
+            },
+            persist: true,
+            children: [ // Pass an array of nodes.
+                {title: "实验体系", key:"-1",  isFolder: true
+                }          
+            ],
+            onClick: function(node, event) {
+                
+
+                if( event.shiftKey ){
+                  if(node.data.key != 'root')
+                  editNode(node);
+                  return false;
+                }
+            },
+            onDblClick: function(node, event) {
+                if(node.data.key != 'root')
+                editNode(node);
+                return false;
+            },
+            onKeydown: function(node, event) {
+                switch( event.which ) {
+                case 113: // [F2]
+                  if(node.data.key != 'root')
+                  editNode(node);
+                  return false;
+                case 13: // [enter]
+                  if( isMac ){
+                    editNode(node);
+                    return false;
+                 }
+              }
+            }
+      });
+});
+
+setTableEvent("lsvm", true, "vmdel");
+setTableEvent("lsimg", true, "imgdel");
+
+function setTableEvent(tableid, singleSelect, url) {
+   var tr = "#" + tableid + ">tbody>tr";
+   var trSelected = tr + ".success";
+
+   $(tr).click(function(event) {
+            if($(this).attr('id') == undefined)
+                      return;
+            // debug
+            //var id = $("td:first-child", $(this)).text();
+            //console.log("tr click: " + id);
+
+            //var hasSelected = $(this).hasClass('success');
+
+            // single-select
+            if (singleSelect) {
+                     $(trSelected).removeClass('success');
+            }
+
+            //if(!hasSelected){
+                $(this).addClass('success');
+                $("#" + tableid).data("selid", $(this).attr('id'));
+                $("#btn" + url).attr('formaction', '/' + url + '/' + $(this).attr('id'));
+            //}
+   });
+}
+
+//ajaxProgressUpload();
+
+function editvm()
+{
+    var preid = $("#lsvm").data("selid");
+    $("#vmid").val(preid);
+    var dev = ajaxobj("/vminfo/", "", "post", "#vminfo");
+    var jsondata = $.parseJSON(dev);
+
+    $("#vmname").val(jsondata.devname);
+    $("#vmxh").val(jsondata.devxh);
+    $("#vmpub").val(jsondata.devpub);
+    $("#vmfac").val(jsondata.devfac);
+    $("#vmtype").val(jsondata.devtype);
+    $("#vmremark").val(jsondata.remark);
+}
+
+function editimg()
+{
+    var preid = $("#lsimg").data("selid");
+    if(preid == "0")
+        return false;
+    $("#imgid").val(preid);
+    var dev = ajaxobj("/imginfo/", "", "post", "#imginfo");
+    var jsondata = $.parseJSON(dev);
+
+    $("#imgname").val(jsondata.imgname);
+    $("#imgexptype").val(jsondata.imgexptype);
+    $("#imgostype").val(jsondata.imgostype);
+    //$("#imgvmcount").val(jsondata.imgvmcount);
+    $("#imgosversion").val(jsondata.imgosversion);
+    $("#imgfname").val(jsondata.imgfilename);
+    $("#remark").val(jsondata.remark);
+
+    $('#myModal1').modal('show');
+}
+function hiddenfname()
+{
+    $("#imgfname").hide();
+}
+
+function addchild(value)
+{
+  var tree = $("#tree").dynatree("getTree");
+      //debugger;
+  var node = tree.getActiveNode();
+  var txt = '自定义节点';
+  //alert(node.data.key);
+  if (node.data.isFolder == true)
+  {
+      node.addChild({title: txt, isFolder: value, key: 0});
+      nodes = node.getChildren();
+      curnode = nodes[nodes.length-1];
+      node.deactivate();
+      curnode.activate();
+      curnode.focus();
+      editNode(curnode);
+      }
+      return false;
+}
+
+function editNode(node){
+  var prevTitle = node.data.title,
+    tree = node.tree;
+  // Disable dynatree mouse- and key handling
+  tree.$widget.unbind();
+  // Replace node with <input>
+  //$(".dynatree-title", node.span).html("<input id='editNode' value='" + prevTitle + "'>");
+  $(".dynatree-title", node.span).replaceWith("<input id='editNode' value='" + prevTitle + "'>");
+  // Focus <input> and bind keyboard handler
+  $("input#editNode")
+    .focus()
+    .keydown(function(event){
+      switch( event.which ) {
+      case 27: // [esc]
+        // discard changes on [esc]
+        $("input#editNode").val(prevTitle);
+        $(this).blur();
+      case 13: // [enter]
+        $(this).blur();
+        break;
+      }
+    })
+    .blur(function(event){
+      // Accept new value, when user leaves <input>
+      var title = $("input#editNode").val();
+      node.setTitle(title);
+      // Re-enable mouse and keyboard handlling
+      tree.$widget.bind();
+      node.focus();
+      node.data.key = savenode(node);
+      expinfo(node,true);
+    })
+}
+
+function expinfo(node, fileclear)
+{
+      $("#myflow_save").unbind("click");
+      $('#myflow_clear').click();
+      $("#myflow_clear").unbind("click");
+      $('#myflow').empty();
+
+      if (fileclear)
+      {
+            $(":input[type=file]").val('');
+            $("#currentProgress").attr('style','width:0px');
+            $("#progress_percent").text('0%');
+
+            $("#currentEleProgress").attr('style','width:0px');
+            $("#progress_percent_ele").text('0%');
+
+            $("#currentStepProgress").attr('style','width:0px');
+            $("#progress_percent_step").text('0%');
+
+            $("#currentVideoProgress").attr('style','width:0px');
+            $("#progress_percent_video").text('0%');
+      }
+
+      if (node.data.isFolder == false)
+      {
+            var result =  ajaxobj("/experimentinfo/" + node.data.key, "", "get", "");
+            var jsondata = $.parseJSON(result);
+
+            if (jsondata.isFolder == false)
+            {
+                  
+
+                  $('#myflow').myflow(
+                  {
+                          basePath : "",
+                          restore : eval("(" + jsondata.topo + ")")
+                          ,
+                          tools : 
+                          {
+                                save : 
+                                {
+                                      onclick : function(data) 
+                                      {
+                                            debugger;
+                                            $('#hidTopo').val(data);
+                                            saveTopo();
+                                      }
+                                }
+                          }
+                  });
+                  
+
+                  $("#hidId").val(jsondata.id);
+                  $("#txtName").val(jsondata.name);
+                  $("#txtCode").val(jsondata.code);
+                  $("#txtSpeciality").val(jsondata.speciality);
+                  $("#txtRemark").val(jsondata.remark);
+                  $("#txtDescription").val(jsondata.description);
+                  $("#txtCreateDate").val(jsondata.createDate);
+                  $("#txtCreateUser").val(jsondata.createUser);
+
+                  $("#hidEleId").val(jsondata.id);
+                  $("#hidEleFileType").val(jsondata.elementsType);
+                  $("#txtEleURL").val(jsondata.elements);
+
+                  $("#hidStepId").val(jsondata.id);
+                  $("#hidStepFileType").val(jsondata.stepType);
+                  $("#txtStepURL").val(jsondata.step);
+
+                  $("#hidToolId").val(jsondata.id);
+                  $("#hidToolFileType").val(jsondata.toolType);
+                  $("#txtURL").val(jsondata.tool);
+
+                  $("#hidVideoId").val(jsondata.id);
+                  $("#hidVideoFileType").val(jsondata.videoType);
+                  $("#txtVideoURL").val(jsondata.video);
+
+                  //原理
+                  if ($("#hidEleFileType").val() == "1" || $("#hidEleFileType").val() == "")
+                  {
+                        $("#hidEleFileType").val("1");
+                        $("#trEleUrl").hide();
+                        $("#btnEleUrl").hide();
+                        $("#trEleFile").show(500);
+                        $("#trEleProgress").show(500);
+                        $("#btnEleFile").show(500);
+                        $("#ele_form :radio")[0].checked = true;
+                  }
+                  else
+                  {
+                        $("#trEleUrl").show(500);
+                        $("#btnEleUrl").show(500);
+                        $("#trEleFile").hide();
+                        $("#trEleProgress").hide();
+                        $("#btnEleFile").hide();
+                        $("#ele_form :radio")[1].checked = true;
+                  }
+
+                  //步骤
+                  if ($("#hidStepFileType").val() == "1" || $("#hidStepFileType").val() == "")
+                  {
+                        $("#hidStepFileType").val("1")
+                        $("#trStepUrl").hide();
+                        $("#btnStepUrl").hide();
+                        $("#trStepFile").show(500);
+                        $("#trStepProgress").show(500);
+                        $("#btnStepFile").show(500);
+                        $("#step_form :radio")[0].checked = true;
+                  }
+                  else
+                  {
+                        $("#trStepUrl").show(500);
+                        $("#btnStepUrl").show(500);
+                        $("#trStepFile").hide();
+                        $("#trStepProgress").hide();
+                        $("#btnStepFile").hide();
+                        $("#step_form :radio")[1].checked = true;
+                  }
+
+                  //工具
+                  if ($("#hidToolFileType").val() == "1" || $("#hidToolFileType").val() == "")
+                  {
+                        $("#hidToolFileType").val("1")
+                        $("#trUrl").hide();
+                        $("#btnUrl").hide();
+                        $("#trFile").show(500);
+                        $("#trProgress").show(500);
+                        $("#btnFile").show(500);
+                        $("#upload_form :radio")[0].checked = true;
+                  }
+                  else
+                  {
+                        $("#trUrl").show(500);
+                        $("#btnUrl").show(500);
+                        $("#trFile").hide();
+                        $("#trProgress").hide();
+                        $("#btnFile").hide();
+                        $("#upload_form :radio")[1].checked = true;
+                  }
+
+                  //录像
+                  if ($("#hidVideoFileType").val() == "1" || $("#hidVideoFileType").val() == "")
+                  {
+                        $("#hidVideoFileType").val("1")
+                        $("#trVideoUrl").hide();
+                        $("#btnVideoUrl").hide();
+                        $("#trVideoFile").show(500);
+                        $("#trVideoProgress").show(500);
+                        $("#btnVideoFile").show(500);
+                        $("#video_form :radio")[0].checked = true;
+                  }
+                  else
+                  {
+                        $("#trVideoUrl").show(500);
+                        $("#btnVideoUrl").show(500);
+                        $("#trVideoFile").hide();
+                        $("#trVideoProgress").hide();
+                        $("#btnVideoFile").hide();
+                        $("#video_form :radio")[1].checked = true;
+                  }
+
+                  $(".btn").removeAttr('disabled');
+                  $(":input[type=file]").removeAttr('disabled');
+
+                  if (jsondata.elements == null || jsondata.elements == "" )
+                  {
+                        $("#viewEle").attr('disabled','disabled');
+                        $("#btnEleFile").attr('disabled','disabled');
+                  }
+                  else
+                  {
+                        $("#viewEle").removeAttr('disabled');
+                        if ($("#fileEle").val() == null || $("#fileEle").val()  == "")
+                        {
+                          $("#btnEleFile").attr('disabled','disabled');
+                        }
+                  }
+
+                  if (jsondata.step == null || jsondata.step == "" )
+                  {
+                        $("#viewStep").attr('disabled','disabled');
+                        $("#btnStepFile").attr('disabled','disabled');
+                  }
+                  else
+                  {
+                        $("#viewStep").removeAttr('disabled');
+                        if ($("#fileStep").val() == null || $("#fileStep").val()  == "")
+                        {
+                          $("#btnStepFile").attr('disabled','disabled');
+                        }
+                  }
+
+                  if (jsondata.tool == null || jsondata.tool == "" )
+                  {
+                        $("#viewTool").attr('disabled','disabled');
+                        $("#btnFile").attr('disabled','disabled');
+                  }
+                  else
+                  {
+                        $("#viewTool").removeAttr('disabled');
+                        if ($("#fileTool").val() == null || $("#fileTool").val()  == "")
+                        {
+                          $("#btnFile").attr('disabled','disabled');
+                        }
+                  } 
+
+                  if (jsondata.video == null || jsondata.video == "" )
+                  {
+                        $("#viewVideo").attr('disabled','disabled');
+                        $("#btnVideoFile").attr('disabled','disabled');
+                  }
+                  else
+                  {
+                        $("#viewVideo").removeAttr('disabled');
+                        if ($("#fileVideo").val() == null || $("#fileVideo").val()  == "")
+                        {
+                          $("#btnVideoFile").attr('disabled','disabled');
+                        }
+                  } 
+            }
+      }
+      else
+      {
+            $(":input[type=file]").attr('disabled','disabled');
+            $("#frminfo :input[type=button]").attr('disabled','disabled');
+            $("#ele_form :input[type=button]").attr('disabled','disabled');
+            $("#step_form :input[type=button]").attr('disabled','disabled');
+            $("#upload_form :input[type=button] ").attr('disabled','disabled');
+            $("#video_form :input[type=button] ").attr('disabled','disabled');
+            $("input[type=text]").val('');
+      }
+
+      
+    
+}
+
+function showDoc(type)
+{
+  if (type == '1')
+  {
+    $("#ifmView").attr('src',$("#txtEleURL").val());
+  }
+  else if (type == '2')
+  {
+    $("#ifmView").attr('src',$("#txtStepURL").val());
+  }
+  else if (type == '3')
+  {
+    $("#ifmView").attr('src',$("#txtURL").val());
+  }
+  else if (type == '4')
+  {
+    $("#ifmView").attr('src',$("#txtVideoURL").val());
+  }
+}
+
+function saveexp()
+{
+  if ($("#txtName").val() != '')
+  {
+    var result =  ajaxobj("/saveexperiment/", "", "post", "#frminfo");
+    var tree = $("#tree").dynatree("getTree");
+    var node = tree.getNodeByKey($("#hidId").val());
+    node.data.title = $("#txtName").val();
+    node.setTitle(node.data.title) ;
+    alert('保存成功！');
+  }
+  else
+  {
+    alert('请输入实验名称！');
+  }
+  
+}
+
+function savenode(node)
+{
+    var par="None";
+    if(node.parent)
+        par = node.parent.data.key;
+    $("#hidtitle").val(node.data.title + "");
+    $("#hidkey").val(node.data.key);
+    $("#hidisfolder").val(node.data.isFolder);
+    $("#hidparent").val(node.parent.data.key);
+    var result =  ajaxobj("/savenode/", "", "post", "#treeform");
+    node.data.key = result;
+    return result;
+}
+
+function delnode()
+{     
+  if(confirm("您确定要删除该节点吗？"))
+  {
+    var tree = $("#tree").dynatree("getTree");
+    var node = tree.getActiveNode();
+    var result =  ajaxobj("/delnode/" + node.data.key , "", "get", "");
+    node.remove();
+    //expinfo(node,true); 
+  }
+}
+
+function startUploadingstudent(strURL, progress_percent, currentProgress, upload_form) {
+    pgpercent = progress_percent;
+    progress = currentProgress;
+    iPreviousBytesLoaded = 0;
+    document.getElementById(pgpercent).innerHTML = '';
+    var vFD = new FormData(document.getElementById(upload_form)); 
+    var oXHR = new XMLHttpRequest();        
+    oXHR.upload.addEventListener('progress', uploadProgress, false);
+    oXHR.addEventListener('load', uploadFinish, false);
+    oXHR.open('POST', strURL);
+    oXHR.send(vFD);
+    oTimer = setInterval(doInnerUpdates, 300);
+}
+
+function uploadresult(jsondata)
+{
+  //************
+  /*$("#fileTool").val('');
+  $("#currentProgress").attr('style','width:0px');
+  $("#progress_percent").text('0%');*/
+  
+  var tree = $("#tree").dynatree("getTree");
+  var node = tree.getNodeByKey($("#hidId").val());
+  expinfo(node,false); 
+}
+
+function saveUrl(frm)
+{
+  ajaxobj("/savetool/", "", "post", frm);
+  var tree = $("#tree").dynatree("getTree");
+  var node = tree.getNodeByKey($("#hidId").val());
+  expinfo(node,true); 
+  alert('保存成功！');
+}
+
+function saveTopo()
+{
+  var tree = $("#tree").dynatree("getTree");
+  var node = tree.getActiveNode();
+  ajaxobj("/savetopo/" + node.data.key + "/", "", "post", "#topo_form");
+  alert('保存成功！');
+}
+
+function selectFileType(type)
+{
+  switch (type)
+  {
+    case 'ele':
+      if(!(/\w+.zip$/).test($('#fileEle').val()))
+      {
+        alert('请选择zip文件');
+        $('#btnEleFile').attr('disabled','disabled');
+      }
+      else
+      {
+        $('#btnEleFile').removeAttr('disabled');
+      }
+      break;
+    case 'step':
+      if(!(/\w+.zip$/).test($('#fileStep').val()))
+      {
+        alert('请选择zip文件');
+        $('#btnStepFile').attr('disabled','disabled');
+      }
+      else
+      {
+        $('#btnStepFile').removeAttr('disabled');
+      }
+      break;
+    case 'tool':
+      if(!(/\w+.zip$/).test($('#fileTool').val()))
+      {
+        alert('请选择zip文件');
+        $('#btnFile').attr('disabled','disabled');
+      }
+      else
+      {
+        $('#btnFile').removeAttr('disabled');
+      }
+      break;
+    case 'video':
+      if(!(/\w+.zip$/).test($('#fileVideo').val()))
+      {
+        alert('请选择zip文件');
+        $('#btnVideoFile').attr('disabled','disabled');
+      }
+      else
+      {
+        $('#btnVideoFile').removeAttr('disabled');
+      }
+      break;
+  }
+}
+
+$(document).ready(function() 
+{
+
+      var obj = $("#hidtree")[0].value;
+      var jsondata = $.parseJSON(obj).key;
+
+      var tree = $("#tree").dynatree("getTree");
+      var node = tree.getNodeByKey("-1");
+      for (var i = 0;i < jsondata.length;i++)
+      {
+
+          if (jsondata[i][2] == "None")
+            node.addChild({title: jsondata[i][1],  key: jsondata[i][0] ,isFolder:  jsondata[i][3]});
+          else
+          {
+            var nodechild = tree.getNodeByKey( jsondata[i][2]);
+            nodechild.addChild({title: jsondata[i][1],  key: jsondata[i][0] ,isFolder:  jsondata[i][3]});
+          }
+      }
+
+      $("#ele_form :radio").click(function()
+        {
+          if ($("#ele_form :radio")[0].checked)
+          {
+            $("#trEleUrl").hide();
+            $("#btnEleUrl").hide();
+            $("#trEleFile").show(500);
+            $("#trEleProgress").show(500);
+            $("#btnEleFile").show(500);
+            $("#hidEleFileType").val("1");
+          }
+          else
+          {
+            $("#trEleUrl").show(500);
+            $("#btnEleUrl").show(500);
+            $("#trEleFile").hide();
+            $("#trEleProgress").hide();
+            $("#btnEleFile").hide();
+            $("#hidEleFileType").val("2");
+          }
+        });
+
+      $("#step_form :radio").click(function()
+        {
+          if ($("#step_form :radio")[0].checked)
+          {
+            $("#trStepUrl").hide();
+            $("#btnStepUrl").hide();
+            $("#trStepFile").show(500);
+            $("#trStepProgress").show(500);
+            $("#btnStepFile").show(500);
+            $("#hidStepFileType").val("1");
+          }
+          else
+          {
+            $("#trStepUrl").show(500);
+            $("#btnStepUrl").show(500);
+            $("#trStepFile").hide();
+            $("#trStepProgress").hide();
+            $("#btnStepFile").hide();
+            $("#hidStepFileType").val("2");
+          }
+        });
+
+        $("#upload_form :radio").click(function()
+        {
+          if ($("#upload_form :radio")[0].checked)
+          {
+            $("#trUrl").hide();
+            $("#btnUrl").hide();
+            $("#trFile").show(500);
+            $("#trProgress").show(500);
+            $("#btnFile").show(500);
+            $("#hidToolFileType").val("1");
+          }
+          else
+          {
+            $("#trUrl").show(500);
+            $("#btnUrl").show(500);
+            $("#trFile").hide();
+            $("#trProgress").hide();
+            $("#btnFile").hide();
+            $("#hidToolFileType").val("2");
+          }
+        });
+
+        $("#video_form :radio").click(function()
+        {
+          if ($("#video_form :radio")[0].checked)
+          {
+            $("#trVideoUrl").hide();
+            $("#btnVideoUrl").hide();
+            $("#trVideoFile").show(500);
+            $("#trVideoProgress").show(500);
+            $("#btnVideoFile").show(500);
+            $("#hidVideoFileType").val("1");
+          }
+          else
+          {
+            $("#trVideoUrl").show(500);
+            $("#btnVideoUrl").show(500);
+            $("#trVideoFile").hide();
+            $("#trVideoProgress").hide();
+            $("#btnVideoFile").hide();
+            $("#hidVideoFileType").val("2");
+          }
+        });
+});
+
+</script>
+{% endblock %}

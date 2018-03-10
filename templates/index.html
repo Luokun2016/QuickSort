@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}天融信安全管理系统实训平台{% endblock %}</title>
+  <!-- Bootstrap core CSS -->
+  <link href="/statics/css/bootstrap.css" rel="stylesheet"/>
+  <!-- Custom styles for this template -->
+  <link href="/statics/css/navbar.css" rel="stylesheet"/>
+  <link href="/statics/css/allStyle.css" rel="stylesheet"/>
+  <link href="/statics/css/docsss.css" rel="stylesheet"/>
+  <link href="/statics/css/showBo.css" rel="stylesheet"/>
+  <link href='/statics/css/ui.dynatree.css' rel='stylesheet'/>
+  <link href='/statics/css/ui.dynatree.custom.css' rel='stylesheet'/>
+  <link href="/statics/css/bootstrap-datetimepicker.min.css" rel="stylesheet"/>
+  <style type="text/css">
+  /* #bodydiv{background:url("/statics/images/bg.png") center no-repeat; background-size: cover; }*/
+#log {width:440px; height:200px; border:1px solid #7F9DB9; overflow:auto;}
+ #msg {width:330px;}
+  .table-hover > tbody > tr:hover > td { cursor: pointer; }
+  </style>
+  
+  <script src="/statics/js/jquery.js"></script>
+  <!--<script type="text/javascript"
+  src="/statics/myflow/lib/jquery-ui-1.8.4.custom/js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript"
+src="/statics/myflow/lib/jquery-ui-1.8.4.custom/js/jquery-ui-1.8.4.custom.min.js">-->
+<script src="/statics/js/bootstrap.min.js"></script>
+<script src="/statics/js/showBo.js"></script>
+<script src="/statics/js/bootstrap-datetimepicker.js"></script>
+<script src="/statics/js/bootstrap-datetimepicker.zh-CN.js"></script>
+<script type="text/javascript" src="/statics/js/pageturning.js"></script>
+{% block css %}
+<link rel="stylesheet" type="text/css" href="/statics/css/style.css"/>
+<script type="text/javascript" src="/statics/js/jquery.animation.easing.js"></script>
+<script type="text/javascript" src="/statics/js/source.js"></script>
+<script type="text/javascript" src="/statics/js/script.js"></script>
+{% endblock %}
+<script src="/statics/js/jquery.animsition.min.js"></script>
+<link rel="stylesheet" href="/statics/css/animsition.min.css">
+<script type="text/javascript" src="/statics/js/jquery.mousewheel.min.js"></script>
+
+{% block script %}{% endblock %}
+<script type="text/javascript">
+
+ var flag = 0;
+ // 闪烁审核按钮
+ // function start(){
+ //   var text = document.getElementById("showbutton");
+ //   if (!flag)
+ //   {
+
+ //   text.style.opacity = 0.3;
+ //   flag = 1;
+ //   }else{
+
+ //   text.style.opacity = 1;
+ //   flag = 0;
+ //   }
+ //   setTimeout("start()",700);
+ // }
+
+
+
+function ajaxobj(_url, _tag, _way, _form)
+{
+    var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+    var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+    var info = "";
+    $.ajax({
+      type:m,
+      url:_url,
+      data:par,
+      async: false,
+      error: function(request) {
+            //alert("Connection error");
+        },
+        success: function(data) {
+            //$(_tag).html(data);
+            //alert(data);
+            info = data;
+        }
+    });
+    return info;
+}
+function LoadDate()
+{
+    $('.form_date').datetimepicker({
+      language:  'zh-CN',
+      weekStart: 1,
+      todayBtn:  1,
+      autoclose: 1,
+      todayHighlight: 1,
+      startView: 2,
+      minView: 2,
+      forceParse: 0
+  });
+}
+$(document).ready(function() 
+{
+  // var result=ajaxobj("/tools/spangled/","","get","");
+  // var jsondata = $.parseJSON(result);
+  // if(jsondata.spangled==1){
+  // //   start();
+  // }
+  $(".animsition").animsition({
+      
+    inClass               :   'fade-in',
+    outClass              :   'fade-out',
+    inDuration            :    500,
+    outDuration           :    200,
+    linkElement           :   '.animsition-link',
+            // e.g. linkElement   :   'a:not([target="_blank"]):not([href^=#])'
+            loading               :    true,
+            loadingParentElement  :   'body', //animsition wrapper element
+            loadingClass          :   'animsition-loading',
+            unSupportCss          : [ 'animation-duration',
+            '-webkit-animation-duration',
+            '-o-animation-duration'
+            ],
+            //"unSupportCss" option allows you to disable the "animsition" in case the css property in the array is not supported by your browser.
+            //The default setting is to disable the "animsition" in a browser that does not support "animation-duration".
+            
+            overlay               :   false,
+            
+            overlayClass          :   'animsition-overlay-slide',
+            overlayParentElement  :   'body'
+        });
+
+var tea = ajaxobj("/roletypecheck/", "", "get", "");
+var jsondata = $.parseJSON(tea);
+var insertname=jsondata.teaname;
+var objname=document.getElementById("insertname");
+if (objname!= null)
+{
+  document.getElementById("insertname").innerHTML=insertname;
+}
+// var roletype=jsondata.roletype;
+// if(roletype==0)
+// {
+      //教练管理隐藏教练管理模块
+      // var liobj = document.getElementById("teachers");
+      // liobj.parentNode.removeChild(liobj);
+// }
+
+});  
+
+function setfontcolor(cur)
+{
+  $("#" + cur).css("color","#FFFFFF");
+}
+
+ function submitClose()
+  {
+    Showbo.Msg.oncallback = submitdelcallback;
+    Showbo.Msg.confirm("确定关闭服务器吗？");
+  }  
+ function submitdelcallback()  
+  {
+    // var Closeurl="/shutdown/";
+    // alert("sssssssss");
+    // $('#shutdown').attr('formaction', Closeurl);
+    // alert(Closeurl);
+    // document.getElementById("shutdown").onclick = null;
+    // document.getElementById("shutdown").click();
+    result=ajaxobj("/shutdown/","","get","");
+    var jsondata = $.parseJSON(result);
+    if(jsondata.result=="shutdown"){
+      Showbo.Msg.alert("服务器正在关闭！");
+    }else{
+      Showbo.Msg.alert("服务器关机失败！");
+    }
+   }  
+
+// "*********chat******************************************"
+var socket;
+function log(msg){
+  // $("#log").innerHTML+="<br>"+msg;
+  $("#logp").append("<p>"+msg+"</p>");
+
+   }
+ 
+function init(){
+  var host = "ws://172.19.8.200:1234/";
+  try{
+    socket = new WebSocket(host);
+    socket.onopen    = function(msg){ ; };
+    socket.onmessage = function(msg){ log(msg.data); };
+    socket.onclose   = function(msg){ log("Lose Connection!"); };
+  }
+  catch(ex){ log(ex); }
+  $("#msg").focus();
+}
+ 
+function send(){
+  var txt,msg;
+  txt = $("#msg")
+  msg = txt.val();
+  if(!msg){ alert("Message can not be empty"); return; }
+  txt.val('');
+  txt.focus();
+  try{ socket.send(msg); } catch(ex){ log(ex); }
+}
+ 
+window.onbeforeunload=function(){
+    try{ 
+        socket.send('quit'); 
+        socket.close();
+        socket=null;
+    }
+    catch(ex){ 
+        log(ex);
+    }
+};
+ 
+ 
+// function $(id){ return document.getElementById(id); }
+function onkey(event){ if(event.keyCode==13){ send(); } }
+// "*********chat******************************************"
+
+
+function register()
+{
+  window.location.href='/tools/registerstudent/';
+}
+function noticeClick(){
+  window.location.href='/notice/';
+
+}
+</script>
+</head>
+<!-- <body style="width:100%;height:100%;" onload="init()"> -->
+<body style="width:100%;height:100%;" >
+
+
+
+{% block maincontent %}
+<form method="post">
+      <div class='pagechange' > 
+        <!-- <button id="shutdown" type="button" class="btn" title="关闭服务器" style="background-color:transparent;border:none;margin-top:0px;margin-right:3px;" onclick='return submitClose()'><img src='/statics/images/gb.png'/></button> -->
+        <button id="notice" type="button" class="btn" title="通知公告"  style="background-color:transparent;border:none;margin-top:0px;margin-right:3px;" onclick="noticeClick()"><img src='/statics/images/chat.gif' width="60px" height="60px" /></button>
+        
+        <button id='showbutton' type="button" class="btn"  onclick="register()" title="审核" style="background-color:transparent;border:none;margin-top:-6px;margin-right:10px;"><img src='/statics/images/gld.png' /></button>      
+
+        <button type="button" class="btn" data-target="#Abouttop" data-toggle="modal" title="关于" style="background-color:transparent;border:none;margin-top:-6px;margin-right:10px;"><img src='/statics/images/about.png'/></button>
+     <!--    <a href="" target="_block"><img src='/statics/images/gld.png'/></a>&nbsp;&nbsp; -->
+<!--         <a href="/logout/"  title="退出登录"><img src='/statics/images/exit.png'/></a> -->
+      </div>
+</form>
+
+<form method="post">
+    <div class="modal fade" id="Abouttop" tabindex="-1" role="dialog" aria-labelledby="myModalLabelabout" aria-hidden="true">
+         <div class="modal-dialog">
+          <div class="modal-content" style="width:600px;">
+                  <div class="modal-header" >
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h3 id="myModalLabelabout">关于</h3>
+                  </div>
+                  <div>
+                        <table style="font-size:16px; vertical-align:middle; position:relative; top:0px; left:100px;">
+                            <tr>
+                              <td style="height:40px; text-align:left; width:30%;">
+                                  <p>发行厂商:</p>
+                              </td>
+                              <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                              <p><strong>北京天融信公司</strong></p>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td style="height:40px; text-align:left; width:30%;">
+                                  <p>产品名称:</p>
+                              </td>
+                              <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                              <p><strong>天融信安全管理系统实训平台</strong></p>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td style="height:40px; text-align:left; width:30%;">
+                                  <p>产品简称:</p>
+                              </td>
+                              <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                              <p><strong>TopADP</strong></p>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td style="height:40px; text-align:left; width:30%;">
+                                  <p>型号:</p>
+                              </td>
+                              <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                              <p><strong>v3</strong></p>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td style="height:40px; text-align:left; width:30%;">
+                                  <p>版权:</p>
+                              </td>
+                              <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                              <p><strong>(C) 2014 Topsec</strong></p>
+                              </td>
+                          </tr>
+                        </table>
+                  </div>
+                  <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+                  </div>
+        </div>
+      </div>
+   </div>
+</form>
+<form>
+    <div id="place">
+       <div id="name1"></div>
+       <div id="userinfo"  class="topsecAbout">
+          <span  id='insertname' style="font-size:18px;" ></span>
+          <img src='/statics/images/admin.png'/>
+      </div>
+ 
+    <div id="wrapper1" class="animsition">
+        <div id="thumb1-1" ></div>
+        <div id="thumb1-2"></div>
+        <div id="thumb1-3"></div>
+        <div id="thumb1-4"></div>
+        <div id="thumb1-5"></div>
+        <div id="thumb1-6"></div>
+        <div id="thumb1-7"></div>
+        <div id="thumb1-8"></div>
+        <div id="thumb1-9"></div>
+        <div id="thumb1-10"></div>
+        <div id="thumb1-11"></div>
+        <div id="thumb1-12"></div>
+        <div id="thumb1-13"></div>
+        <div id="thumb1-14"></div>
+    </div>
+</div>
+<script type="text/javascript">
+
+</script>
+</form>
+{% endblock %}
+
+<div class="container" style="height:100%;">
+    {% block link %}{% endblock %}
+    <div id="HomeContent" style="width:100%;height:100%;">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+  
+  <script type="text/javascript">
+
+</script>
+<!-- </div> -->
+
+
+  <!-- <div class="modal fade" id="chat" tabindex="-1" role="dialog" aria-labelledby="myModalLabelabout" aria-hidden="true"> -->
+         <!-- <div class="modal-dialog">
+          <div class="modal-content" style="width:600px;">
+            <div class="modal-header" ><h3>WebSocket</h3></div> -->
+               <!-- <br><br>
+               <div id="log"><p id="logp">Welcome!!!!!!!</p></div>
+               <input id="msg" type="textbox" onkeypress="onkey(event)"/>
+               <button onclick="send()">发送</button> -->
+<!--           </div>
+    </div>
+  </div> -->
+</body>
+</html>

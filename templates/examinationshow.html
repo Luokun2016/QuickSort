@@ -1,0 +1,878 @@
+{% extends "templates/index.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}竞赛展现{% endblock %}
+
+{% block css %}
+<style type="text/css">
+    html{
+        width: 100%;
+        height: 95%;
+    }
+    .container{
+        display: flex;
+        flex-direction: column;
+    }
+    #HomeContent{
+        display: flex;
+        flex-direction: column;
+        max-height: 700px;
+    }
+    #top{
+        flex-grow: 0;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-end;
+        margin-right: 30px;
+    }
+    #examInfo{
+        font-size: 15px;
+        margin-right: 5px;
+    }
+    #center{
+        flex-grow: 1;
+        display: flex;
+        flex-direction: row;
+    }
+    #allCharts{
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    #lines{
+        min-width: 870px;
+        flex-grow: 1;
+        position: relative;
+    }
+    #lineChart{
+        height: 100%;
+        position: absolute;
+        left: 0;
+        right: -22px;
+    }
+    #otherChart{
+        flex-basis: 220px;
+        display: flex;
+        flex-direction: row;
+    }
+    #pieChart{
+        min-width: 400px;
+        max-width: 400px;
+        display: flex;
+        flex-direction: row;
+        margin-left: 10px;
+        margin-right: 30px;
+    }
+    #smallPieCharts{
+        width: 50px;
+        display: flex;
+        flex-direction: column;
+        margin-left: 8px;
+    }
+    #basal{
+        flex-basis: 50px;
+        margin-top: 0px;
+        opacity: 0.5;
+    }
+    #skill{
+        flex-basis: 50px;
+        margin-top: 4px;
+        opacity: 0.5;
+    }
+    #advanced{
+        flex-basis: 50px;
+        margin-top: 4px;
+        opacity: 0.5;
+    }
+    #ask{
+        flex-basis: 50px;
+        margin-top: 4px;
+        opacity: 0.5;
+    }
+    #bigPieCharts{
+        flex-grow: 1;
+    }
+    #barChart{
+        flex-grow: 1;
+    }
+    #groupShow{
+        background-color: rgba(16, 89, 169, 0.2);
+        display: flex;
+        flex-direction: column;
+        min-height: 580px;
+        margin-top: 8px;
+    }
+    #ranking{
+        flex-grow: 1;
+        width: 270px;
+        overflow: hidden;
+    }
+    #inner{
+        width: 290px;
+        overflow-y: scroll;
+    }
+    .table{
+        width: 270px;
+    }
+    #groupInfo{
+        text-align: center;
+    }
+    .table-hover>tbody>tr:hover{
+        opacity: 0.5;
+    }
+    .progress{
+        margin-bottom: 0;
+    }
+    hr{
+        margin-bottom: 5px;
+        margin-top: 5px;
+        border-color: #2e88cc;
+        border-width: 2px;
+    }
+    .groupName{
+        overflow:hidden;
+        white-space:nowrap;
+        text-overflow:ellipsis;
+        max-width: 90px;
+    }
+</style>
+{% endblock %}
+
+{% block script %}
+<script src='/statics/js/jquery.flot.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.flot.pie.js' type="text/javascript"></script>
+<script src='/statics/js/jQuery.resizeEnd.min.js' type="text/javascript"></script>
+{% endblock %}
+
+{% block maincontent %}{% endblock %}
+
+{% block link %}
+<div style="width:100%;height:70px;">
+    <a href="/examinations/"><img src='/statics/images/Left_Round.png' style="padding-bottom: 8px;"/></a>&nbsp;
+    <span style="font-size:28px;color:#fff;">竞赛展现</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<!--显示竞赛信息-->
+<div id="top">
+    <div id="examInfo">
+        <p id="examNo" hidden>{{exam.no}}</p>
+        <b id="examName" style="margin-right: 10px">当前竞赛：{{exam.name}}</b>
+        <b id="timeLength">竞赛已进行：0分钟</b>
+    </div>
+    <button class="btn btn-primary" title="刷新" onclick="get_data_from_server()">
+        <span class="glyphicon  glyphicon-refresh"></span>
+    </button>
+</div>
+
+<div id="center">
+    <!-- 用于显示实时排名 -->
+    <div id="groupShow">
+        <div id="ranking">
+            <table id="tableHead" class="table table-striped topsec_tabletop table-hover">
+                <thead>
+                    <tr>
+                        <th colspan="3" style="opacity: 0.5">实时排名</th>
+                    </tr>
+                    <tr>
+                        <th width="50px">排名</th>
+                        <th width="90px">团队</th>
+                        <th width="130px">得分</th>
+                    </tr>
+                </thead>
+            </table>
+            <!-- 隐藏滚动条 -->
+            <div id="inner">
+                <table id="rankingTable" class="table table-striped topsec_tabletop table-hover">
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <hr/>
+        <!-- 显示用户选取的团队名称 -->
+        <div id="groupInfo">
+            <b id="nowGroup">当前团队：</b>
+        </div>
+    </div>
+
+    <div id="allCharts">
+        <!--用于放置Chart-->
+        <div id="lines">
+            <div id="lineChart"></div>
+        </div>
+        <div id="otherChart">
+            <div id="pieChart">
+                <div id="smallPieCharts"></div>
+                <div id="bigPieCharts"></div>
+            </div>
+            <div id="barChart"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var selectedExamNo = "";  // 用户选择的要查看的竞赛编号
+    var examStartTime = "";  // 竞赛开始时间，保存为字符串日期
+    var startTime = 0;  // 开始时间转化为时间戳
+    var examEndTime = "";  // 创建竞赛时规定的时长
+    var nowTime = 0; // 当前时间，由服务器传递过来，保存为时间戳
+    var totalScore = 0;  // 试卷总分
+    var showMembers = [];  // 要显示为曲线图的团队，当前默认显示前3名的成绩
+    var showNum = 8;  // 显示前几名，默认为前8名
+    var allDatas = {};  // 该对象保存所有团队的成绩
+    var scoreDetails = {};  // 得分详情，包括基础得分，渗透题得分和技能题得分
+    var drawDatas = [];  // 用于绘制曲线的所有数据
+    var barDrawDatas = [];  // 保存用于绘制柱状图的数据
+    var options = {};  // 该对象用于设置chart
+    var barOptions = {};  // 用于设置柱状图
+    var smallPieChartOption = {};   // 饼状缩略图设置
+    var bigPieChartOption = {};    // 大饼状图设置
+    var interval;   // 用于setInterval和clearInterval
+    var defaultGroup;  // 默认显示详情的团队，默认显示第一名
+    var seletedGroup = null;  // 用户选择的团队
+    var pieChartType = "";   // 用户选取要查看的圆饼图，1：基础题，2：技能题，3：渗透题
+    var paperInfo = {};     // 试卷详细信息
+    var answerInfo = {};    // 所有团队的答题信息
+    // 前8名固定使用的颜色
+    var preColors = ["#BE1E4A", "#663366", "#1f586e", "#891c34", "#85903d", "#983d49", "#b3655c", "#b09d58"];
+    // 其余名次使用默认的颜色
+    var defaultColor = "#336666";
+    // 技能题，渗透题和简单题饼状图颜色
+    var pieColors = ["rgba(110, 150, 93, 0.7)", "rgba(153, 153, 153, 0.8)"];
+    // 基础题饼状图颜色
+    var pieBasalColors = ["rgba(110, 150, 93, 0.7)", "rgba(152, 61, 73, 0.9)", "rgba(153, 153, 153, 0.8)"];
+    // 下面三个变量用于保存某个团队基础题，技能题和渗透题的答题情况，包括正确多少，错误多少和未答多少
+    var basalInfo;
+    var skillInfo;
+    var advancedInfo;
+    var askInfo;
+
+
+    // 获取指定竞赛的信息
+    $(document).ready(function()
+    {
+        // 设置ajax方法为同步
+        // $.ajaxSetup({
+        //     async:false
+        // });
+
+        // 设置排名列表的高度
+        $("#inner").height($("#ranking").height() - $("#tableHead").height());
+
+        // 获取用户选取的竞赛编号
+        selectedExamNo = $("#examNo").text();
+
+        // 首先检查当前竞赛是否在sessionStorage中保存有数据
+        if(selectedExamNo == sessionStorage.getItem("selectedExamNo"))
+        {
+            // 获取用户选择的团队，如果用户之前没有选择团队，那么返回值是null
+            seletedGroup = sessionStorage.getItem("seletedGroup");
+            sessionStorage.removeItem("scrollPos");    // 刷新页面，使滚动条位于顶部
+        }
+        else
+        {
+            // 如果进入了另外的竞赛展现，那么清除之前查看的竞赛的所有key和value
+            sessionStorage.clear();
+            // 保存当前的竞赛编号
+            sessionStorage.setItem("selectedExamNo", selectedExamNo);
+        }
+
+        // 获取指定竞赛的信息
+        get_exam_info();
+    });
+
+
+    // 当浏览器窗口大小改变结束后，刷新当前页面
+    $(window).resizeEnd({
+        delay: 100
+    }, function(){
+        window.location.reload();
+    });
+
+
+    // 记录滚动条位置
+    $("#inner").scroll(function(){
+        // 获取滚动条的位置，保存到sessionStorage中
+        var scrollPos = document.getElementById("inner").scrollTop;
+        sessionStorage.setItem("scrollPos", scrollPos);
+    });
+
+
+    // 获取指定竞赛的信息，参数为竞赛编号
+    function get_exam_info()
+    {
+        $.post("/examinationshow/getexaminfo/", {"examNo":selectedExamNo}, function(data)
+        {
+            var result = $.parseJSON(data);
+            // 竞赛开始时间，保存到examStartTime中
+            examStartTime = result["startTime"];
+            // 获取竞赛理论的结束时间
+            examEndTime = result["endTime"];
+            // 所使用试卷的总分值，保存到totalScore中
+            totalScore = result["totalScore"];
+            // 获取试卷的详细信息
+            paperInfo = result["paperInfo"];
+            // 服务器的当前时间，单位为秒，将其转化为毫秒
+            nowTime = result["nowTime"] * 1000;
+            // 竞赛开始到当前时间的数据记录，时间为字符串格式"2015-11-11 12:23:55"
+            // 将时间字符串转化为时间戳，然后再保存到allDatas中
+            for(var group in result["datas"])  // 遍历所有团队
+            {
+                for(var i=0; i<result["datas"][group].times.length; i++)
+                    result["datas"][group].times[i] = time_str_to_ms(result["datas"][group].times[i]);
+                // 判断lastTime是否为空，如果为null，那么将竞赛开始时间赋给lastTime
+                if(result["datas"][group].lastTime == "")
+                    result["datas"][group].lastTime = examStartTime
+            }
+            allDatas = result["datas"];
+            // 获取详细的得分情况,依次为基础题，技能题，渗透题
+            scoreDetails = result["scoreDetails"];
+            // 获取每个团队，基础题正确和错误的题数，技能题，渗透题正确的题数
+            answerInfo = result["answerInfo"];
+            // 显示页面
+            show_page();
+        });
+    }
+
+
+    // 使用获取的数据渲染页面
+    function show_page()
+    {
+        // 设置坐标轴，通过变量options设置
+        chart_setting();
+        // 设置团队列表以及动态排名
+        groups_show();
+        // 绘制曲线
+        draw_chart();
+        create_small_pie_div();
+        // 绘制详细得分柱状图
+        draw_bar_chart();
+        draw_pie_chart();
+
+        show_time_length();
+        show_selected_group();
+        //每隔一定时间从服务器获取一次数据
+        interval = setInterval(get_data_from_server, 1000*30);
+    }
+
+
+    // 从服务器获取最新的数据
+    // 触发方式：1.定时器，2.点击刷新按键
+    function get_data_from_server()
+    {
+        // 获取指定竞赛所有团队的最新成绩
+        $.post("/examinationshow/getnewdatas/", {"examNo":selectedExamNo}, function(data)
+        {
+            var result = $.parseJSON(data);
+            // result为False，竞赛结束，调用clearInterval()
+            if(result === false)
+            {
+                clearInterval(interval);
+            }
+            else
+            {
+                // 服务器当前时间，保存到nowTime中，转化为毫秒为单位
+                nowTime = result["nowTime"] * 1000;
+                // 将所有团队的最新成绩保存到allDatas中，包括当前时间nowTime
+                for(var group in result["datas"])
+                {
+                    allDatas[group].times.push(nowTime);
+                    allDatas[group].values.push(result["datas"][group]["totalScore"]);
+                    if(result["datas"][group]["lastTime"] == "")
+                        allDatas[group].lastTime = examStartTime
+                    else
+                        allDatas[group].lastTime = result["datas"][group]["lastTime"]
+                }
+                // 获取分数详情
+                scoreDetails = result["scoreDetails"];
+
+                // 获取每个团队，基础题正确和错误的题数，技能题，渗透题正确的题数
+                answerInfo = result["answerInfo"];
+
+                groups_show();
+                draw_chart();
+                draw_bar_chart();
+                draw_pie_chart();
+                show_time_length();
+                show_selected_group();
+            }
+        });
+    }
+
+
+    // 对所有团队的成绩进行排名后显示出来
+    function groups_show()
+    {
+        // 按照当前成绩对所有团队进行排序
+        // 保存团队名称和最新的成绩，用于排序[['a',21,lasttime], ['c',17,lasttime],['b',15,lasttime]...]
+        // lasttime为用户最后一次提交正确答案的时间
+        var grouparray = [];
+        for(var group in allDatas)
+        {
+            grouparray.push([group, allDatas[group].values[allDatas[group].values.length-1], allDatas[group].lastTime]);
+        }
+        grouparray.sort(function(a, b)
+        {
+            // 首先按照分数由大到小进行排名
+            // 如果分数相同，就比较时间，时间小的排前面，大的排后面
+            // 返回1，表示交换a和b，-1表示不交换
+            var r = -1;
+            if(a[1] < b[1]) r = 1;
+            else if(a[1] == b[1])
+            {
+                var atime = time_str_to_ms(a[2]);  // 转化为时间戳
+                var btime = time_str_to_ms(b[2]);
+                // a达到90分的时间比b达到90分的时间更长，就交换a和b
+                if(atime > btime) r = 1;
+            }
+            return r;
+        });  
+
+        // 将前3名的团队保存到showMembers中
+        // 如果团队不足showNum个，那么将showNum设置为团队的个数
+        if(showNum > grouparray.length) showNum = grouparray.length;
+        for(var i=0; i<showNum; i++)
+        {
+            showMembers[i] = grouparray[i][0];
+        }
+
+        // 选取第一名作为默认显示的团队
+        defaultGroup = showMembers[0];
+
+        // 按成绩由高到底显示所有团队
+        var tbody = $("#rankingTable").children("tbody");
+        // 清空tbody
+        tbody.html("");
+        for(i=0; i<grouparray.length; i++)
+        {
+            var tablerow = "<tr><td width='50px'>"+(i+1)+"</td><td width='90px' class='groupName'>"+grouparray[i][0]+"</td><td width='130px' id="+(i+1).toString()+"></td></tr>";
+            tbody.append(tablerow);
+            // showNum指定的前几位用特定的颜色，其余的使用默认颜色
+            if(i<showNum)
+                var score_bar_color = preColors[i];
+            else
+                score_bar_color = defaultColor;
+            // 创建成绩条
+            create_score_bar("#"+(i+1), grouparray[i][1], score_bar_color);
+        }
+
+        // 获取滚动条位置，并设置
+        var scrollPos = sessionStorage.getItem("scrollPos");
+        document.getElementById("inner").scrollTop = scrollPos;
+
+        // 设置tr的点击事件
+        var tr = "#rankingTable>tbody>tr";
+        $(tr).click(function(){
+            seletedGroup = $(this).children('td').eq(1).text();  // 获取选中的团队名称
+
+            // 保存用户选择的团队，避免页面刷新后需要用户重新选择
+            sessionStorage.setItem("seletedGroup", seletedGroup);
+
+            draw_chart();
+            draw_bar_chart();
+            draw_pie_chart();
+            show_selected_group();
+        });
+    }
+
+
+    // 设置chart
+    function chart_setting()
+    {
+        // 将竞赛开始时间和结束时间转化为时间戳
+        startTime = time_str_to_ms(examStartTime);
+        // 理论结束时间戳
+        var examendTime = time_str_to_ms(examEndTime);
+        // 保留一点余量，因为竞赛的具体时长是不确定的
+        var endTime = 1.075*examendTime - 0.075*startTime;
+
+        var startlabel = examStartTime.substr(11, 5) + " " + examStartTime.substr(0, 10);
+        var endlabel = examEndTime.substr(11, 5) + " " + examEndTime.substr(0, 10);
+
+        options.xaxis = {
+            ticks:[[startTime, startlabel], [examendTime, endlabel]],
+            min: startTime, max: endTime,labelWidth: 60
+        };
+        options.yaxis = {
+            ticks:[[totalScore, totalScore]], min: 0, max: 1.05 * totalScore, labelWidth: 25
+        };
+        options.grid = {
+            borderWidth: {top: 0, right: 0, left:2, bottom: 2}
+        };
+        options.lines = {
+            lineWidth: 2
+        };
+        // 添加颜色
+        options.colors = [];
+        for(var i=0; i<showNum; i++)
+        {
+            options.colors[i] = preColors[i];
+        }
+        options.colors.push(defaultColor);
+
+        options.legend = {show: false};
+
+        // 柱状图设置
+        barOptions = {
+            series: {
+                bars: {show: true, barWidth: 0.68, align: "center", horizontal: true,
+                    lineWidth: 0.2, fill: 0.85
+                }
+            },
+            xaxis: {
+                max: Math.max(paperInfo.basal.score, paperInfo.skill.score, paperInfo.advanced.score, paperInfo.ask.score) * 1.07,
+                min: 0, position: 2
+            },
+            yaxis: {
+                ticks: [[1, "基础题"], [2, "技能题"], [3, "渗透题"], [4, "简答题"]],
+                tickLength: 0, min: 0.5, max: 4.5
+            },
+            grid: {
+                borderWidth: {top: 2, right: 2, left: 2, bottom: 2}
+            },
+            colors : ["#336633", "#85903d", "#b3655c", "#0099cc"]
+        };
+
+        // 饼状图设置
+        smallPieChartOption = {
+            series: {
+                pie: {
+                    show: true,
+                    label: {show: false},
+                    radius: 1,
+                    stroke: {width: 0}
+                }
+            },
+            legend: {
+                show: false
+            }
+        };
+
+        bigPieChartOption = {
+            series: {
+                pie: {
+                    show: true,
+                    label: {
+                        show: true,
+                        radius: 0.6,
+                        formatter: function(label,point){
+                            return point.percent.toFixed(1) + '%';
+                        }
+                    },
+                    radius: 0.9,
+                    stroke: {width: 0}
+                }
+            },
+            legend: {
+                show: true,
+                backgroundOpacity: 0,
+                labelBoxBorderColor: "rgba(255,255,255,0)",
+                margin: [40, 5],
+                labelFormatter: function(label){
+                    return '<b style="font-size: 12px; color: #C0C0C0">' + label + '</b>';
+                }
+            }
+        };
+    }
+
+
+    // 设置并绘制Chart
+    function draw_chart()
+    {
+        // 清空drawdatas
+        drawDatas.length = 0;
+        // 只允许用户一次选择一个团队。每次调用draw_chart，首先判断用户是否选取过团队，如果选取过
+        // 首先，清除之前添加到showMembers中的团队，只保留前3（showNum）名
+        // 然后判断用户选取的团队是否在前3名中，如果在，就不向showMembers中添加
+        // 否则，就添加。如果seletedGroup在前3名，那么就显示3条曲线，否则显示4条
+        // 用户选取了团队
+        if(seletedGroup != null)
+        {
+            // 判断seletedGroup是否还在参加竞赛的团队中，因为用户有可能停止竞赛，然后删除了某些团队
+            // 而这些恰恰是用户之前保存到sessionStorage中的团队
+            if(seletedGroup in allDatas)
+            {
+                showMembers.length = showNum;
+                // 该团队没有被显示为曲线，就将其添加进显示为曲线的showMembers中
+                if(showMembers.indexOf(seletedGroup) == -1)
+                {
+                    showMembers.push(seletedGroup);
+                }
+            }
+            else
+            {
+                // 用户在当前的团队中了
+                seletedGroup = null;
+            }
+        }
+        // 从allDatas中，获取指定团队的数据，保存到变量drawDatas中
+        for(var i=0; i<showMembers.length; i++)
+        {
+            // 依次获取指定的团队数据
+            var groupdatas = allDatas[showMembers[i]];
+            var points = [];  // 用于保存从times和values中提取的数据点
+            // 合成数据点
+            for(var j=0; j<groupdatas.times.length; j++)
+            {
+                points[j] = [groupdatas.times[j], groupdatas.values[j]];
+            }
+            // 将合成的数据点保存到drawDatas中，用于绘制曲线
+            drawDatas[i] = {
+                label: showMembers[i],
+                data: points
+            };
+        }
+
+        // 将第一名或者用户选择的团队的曲线，用阴影填充
+        if(seletedGroup !== null)
+        {
+            for(i=0; i<drawDatas.length; i++)
+            {
+                if(seletedGroup == drawDatas[i].label)
+                {
+                    drawDatas[i].lines = {fill: 0.6};
+                    break;
+                }
+            }
+        }
+        else
+        {
+            // 第一名的曲线用阴影填充
+            drawDatas[0].lines = {fill: 0.6};
+        }
+
+        // 绘制图像
+        $.plot($("#lineChart"), drawDatas, options);
+    }
+
+
+    // 根据基础题，技能题和渗透题的个数是否为0，来创建div
+    function create_small_pie_div()
+    {
+        if(paperInfo.basal.count != 0)
+            $("<div id='basal' class='smallpiecharts' title='基础题'></div>").appendTo($("#smallPieCharts"));
+        if(paperInfo.skill.count != 0)
+            $("<div id='skill' class='smallpiecharts' title='技能题'></div>").appendTo($("#smallPieCharts"));
+        if(paperInfo.advanced.count != 0)
+            $("<div id='advanced' class='smallpiecharts' title='渗透题'></div>").appendTo($("#smallPieCharts"));
+        if(paperInfo.ask.count != 0)
+            $("<div id='ask' class='smallpiecharts' title='简答题'></div>").appendTo($("#smallPieCharts"));
+
+        // 默认选择第一个pieChart用于显示, $("#basal").length用于判断节点是否存在，存在返回1，否则返回0
+        if($("#basal").length) pieChartType = $("#basal").attr("id");
+        else if($("#skill").length) pieChartType = $("#skill").attr("id");
+        else if($("#advanced").length) pieChartType = $("#advanced").attr("id");
+        else if($("#ask").length) pieChartType = $("#ask").attr("id");
+
+        // 让第一个pieChart高亮显示
+        $("#" + pieChartType).css("opacity", 1);
+
+        $(".smallpiecharts").hover(
+            function()    // 处理over
+            {
+                if($(this).css("opacity") != 1)
+                {
+                    $(this).css("opacity", 0.8);
+                }
+            },
+            function()    // 处理out
+            {
+                if($(this).css("opacity") != 1)
+                {
+                    $(this).css("opacity", 0.5);
+                }
+            }
+        );
+
+        $(".smallpiecharts").click(function(){
+            $(".smallpiecharts").css("opacity", 0.5);
+            $(this).css("opacity", 1);
+            // 根据用户点击哪个缩略图，记录下用户的选择
+            pieChartType = $(this).attr("id");
+            // 根据选择的缩略图，绘制大的饼状图
+            draw_big_pie_chart();
+        });
+    }
+
+
+    // 绘制条形图
+    function draw_bar_chart()
+    {
+        // 从scoreDetails中，获取指定团队的数据，保存到barDrawDatas中
+        var groupdatas;
+        if(seletedGroup != null)
+            groupdatas = scoreDetails[seletedGroup];
+        else
+            groupdatas = scoreDetails[defaultGroup];
+
+        var m = Math.max(paperInfo.basal.score, paperInfo.skill.score, paperInfo.advanced.score, paperInfo.ask.score);
+        var delta = m * 0.005;    // 偏移量
+
+        barDrawDatas.length = 0;
+        barDrawDatas[0] = {data: [[groupdatas[0] + delta, 1]]};
+        barDrawDatas[1] = {data: [[groupdatas[1] + delta, 2]]};
+        barDrawDatas[2] = {data: [[groupdatas[2] + delta, 3]]};
+        barDrawDatas[3] = {data: [[groupdatas[3] + delta, 4]]};
+
+        // 将colors用大写字母"I"分隔开，用于给不同的tick上颜色
+        barOptions.xaxis.tickColor = "#336633I#85903dI#b3655cI#0099cc";
+        barOptions.xaxis.ticks = [
+            [paperInfo.basal.score + delta, paperInfo.basal.score.toString()],
+            [paperInfo.skill.score + delta, paperInfo.skill.score.toString()],
+            [paperInfo.advanced.score + delta, paperInfo.advanced.score.toString()],
+            [paperInfo.ask.score + delta, paperInfo.ask.score.toString()]
+        ];
+        var somePlot = $.plot("#barChart", barDrawDatas, barOptions);
+
+        // 为每个bar加上数字
+        var ctx = somePlot.getCanvas().getContext("2d");
+        var xaxis = somePlot.getXAxes()[0];
+        var yaxis = somePlot.getYAxes()[0];
+        var offset = somePlot.getPlotOffset();
+        ctx.font = "600 13px 'Segoe UI'";
+        ctx.fillStyle = "#999999";
+        for (var i = 0; i < barDrawDatas.length; i++){
+            var data = somePlot.getData()[i].data;
+            var text = groupdatas[i].toString();
+            var xPos = xaxis.p2c(data[0][0]) + offset.left;
+            var yPos = yaxis.p2c(data[0][1]) + offset.top + 3;
+            ctx.save();
+            ctx.translate(xPos, yPos);
+            ctx.fillText(text, 1, 1);
+            ctx.restore();
+        }
+    }
+
+
+    function draw_pie_chart()
+    {
+        var groupdatas;
+        // 如果用户没有选择团队，那么就默认显示第一名的详细信息
+        if(seletedGroup != null)
+            groupdatas = answerInfo[seletedGroup];
+        else
+            groupdatas = answerInfo[defaultGroup];
+
+        // 计算该团队基础题的正确，错误和未答的题数
+        basalInfo = [groupdatas.basal.correct, groupdatas.basal.error,
+            paperInfo.basal.count-groupdatas.basal.correct-groupdatas.basal.error];
+        // 技能题
+        skillInfo = [groupdatas.skill.correct, paperInfo.skill.count-groupdatas.skill.correct];
+        // 渗透题
+        advancedInfo = [groupdatas.advanced.correct, paperInfo.advanced.count-groupdatas.advanced.correct];
+        // 简答题
+        askInfo = [groupdatas.ask.correct, paperInfo.ask.score - groupdatas.ask.correct];
+        // 绘制缩略图
+        smallPieChartOption.colors = pieColors;
+        if($("#skill").length)
+            $.plot("#skill", skillInfo, smallPieChartOption);
+        if($("#advanced").length)
+            $.plot("#advanced", advancedInfo, smallPieChartOption);
+        if($("#ask").length)
+            $.plot("#ask", askInfo, smallPieChartOption);
+        if($("#basal").length)
+        {
+            smallPieChartOption.colors = pieBasalColors;
+            $.plot("#basal", basalInfo, smallPieChartOption);
+        }
+        // 绘制大的饼状图
+        draw_big_pie_chart();
+    }
+
+
+    function draw_big_pie_chart()
+    {
+        var datas;
+        bigPieChartOption.colors = pieColors;
+        // 根据用户选择的缩略图，获取相应pieChart的数据
+        if(pieChartType == $("#basal").attr("id"))
+        {
+            datas = [
+                {label:"正确", data: basalInfo[0]},
+                {label:"错误", data: basalInfo[1]},
+                {label:"未答", data: basalInfo[2]}
+            ];
+            bigPieChartOption.colors = pieBasalColors;
+        }
+        else if(pieChartType == $("#skill").attr("id"))
+            datas = [
+                {label:"正确", data: skillInfo[0]},
+                {label:"未答", data: skillInfo[1]}
+            ];
+        else if(pieChartType == $("#advanced").attr("id"))
+            datas = [
+                {label:"正确", data: advancedInfo[0]},
+                {label:"未答", data: advancedInfo[1]}
+            ];
+        else if(pieChartType == $("#ask").attr("id"))
+            datas = [
+                {label:"得分", data: askInfo[0]},
+                {label:"失分", data: askInfo[1]}
+            ];
+        $.plot("#bigPieCharts", datas, bigPieChartOption);
+    }
+
+
+    // 计算竞赛已经进行了多长时间，并显示
+    function show_time_length()
+    {
+        var timelength = nowTime - startTime;  // 单位为毫秒
+        var days = Math.floor(timelength/(24*3600*1000));
+        timelength = timelength % (24*3600*1000);
+        var hours = Math.floor(timelength/(3600*1000));
+        timelength = timelength % (3600*1000);
+        var minutes = Math.floor(timelength/(60*1000));
+
+        var string = "竞赛已进行：";
+        if(days != 0)
+            string += days + "天";
+        if(hours != 0 || days != 0)
+            string += hours + "小时";
+        string += minutes + "分钟";
+
+        $("#timeLength").text(string);
+    }
+
+
+    // 将字符串时间如：“2015-11-11 21:15:55”转换为时间戳
+    function time_str_to_ms(datestr)
+    {
+        // "/-/g"为正则表达式，/g表示将所有的'-'转化为'/'
+        var date = new Date(Date.parse(datestr.replace(/-/g, "/")));
+        // 返回的时间戳的单位为ms
+        return date.getTime();
+    }
+
+
+    // 创建分数条
+    function create_score_bar(td, score, color)
+    {
+        var mydiv = $("<div style='position: relative; height: 20px'></div>").appendTo($(td));
+        var progress = $("<div class='progress' style='position: absolute; left: 0'></div>").appendTo(mydiv);
+        var showscore = $("<div id='showscore' style='position: absolute; left: 0'></div>").appendTo(mydiv);
+        progress.width(score*($(td).width()-9)/totalScore + 9);
+        showscore.text(score);
+        progress.css("backgroundColor", color);
+        progress.css("textAlign", "left");
+        progress.css("opacity", 0.85);
+    }
+
+
+    // 显示用户选取的团队名称
+    function show_selected_group()
+    {
+        var str = "当前团队：";
+        if(seletedGroup !== null)
+        {
+            $("#nowGroup").text(str + seletedGroup);
+        }
+        else
+        {
+            $("#nowGroup").text(str + defaultGroup);
+        }
+    }
+</script>
+{% endblock %}

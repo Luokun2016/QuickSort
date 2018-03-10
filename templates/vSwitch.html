@@ -1,0 +1,627 @@
+{% extends "templates/resource.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}资源管理{% endblock %}
+{% block css %}
+    
+{% endblock %}
+{% block script1 %}
+
+{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">虚拟网络设备</span>
+</div>
+{% endblock %}
+{% block content1 %}
+<form action="/vswitches/" method='get'>
+  <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-15px;">
+      <!-- Nav tabs -->
+      <ul class="nav nav-tabs">
+        <li id="vshserverli" class="active">
+          <a href="#vmservers" data-toggle="tab">虚拟网络设备</a>
+        </li>
+        <li id="vshtypeli">
+          <a href="#vmtypes" data-toggle="tab">虚拟网络设备类型</a>
+        </li>
+      </ul>
+      <!-- Tab panes -->
+      <div class="tab-content" style="position: relative; top:10px;">
+        <div class="tab-pane fade in active" id="vmservers">
+          <div class="bs-docs-section">
+             <table width="100%">
+      <tr>
+        <td >
+          <div style="text-align:left;">
+            <!--<button id="expdetail" type="button" class="btn btn-primary disabled">实验情况</button>-->
+            <button type="submit" id="vmdetail" class="btn btn-primary disabled" onclick="vmdetailinfo()" title='详情'><span class="glyphicon glyphicon-info-sign"></span></button>
+            <button id="btnconsole" type="button" class="btn btn-primary disabled" onclick="open_vnc()" title='console'>console</button>
+            <button  id="btnstart" type="submit" class="btn btn-primary disabled" title='启动'><span class="glyphicon glyphicon-play"></span></button>
+            <button id="btnstop" type="submit" class="btn btn-primary disabled" title='停止'><span class="glyphicon glyphicon-stop"></span></button>
+            <button id="btnvmedit" onclick="editvsh()" type="button" class="btn btn-primary disabled" title='编辑'><span class="glyphicon glyphicon-pencil"></span></button>
+            <button  id="btnvshdel" type="submit" formaction="" class="btn btn-danger disabled" title='删除'><span class="glyphicon glyphicon-remove"></span></button>
+              </div>
+        </td>
+        <td align="right">
+            <div style="text-align:right;">
+            <input id='querytext' name='querytext' type='text' class="form-control topself_input" value="{{querytext}}" placeholder="请输入名称、管理IP关键字" style="width:200px; display:inline;"/>
+            <button id="btnquery" type="submit" class="btn btn-danger" formaction="/vswitches/" title='查询'><span class="glyphicon glyphicon-search"></span></button>
+              </div>
+        </td>
+         </tr>
+       </table>
+          </div>
+          <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-10px;">
+            <!-- Glyphicons
+          ================================================== -->
+          <input type="hidden" name="tabtype" id="tabtype" value="{{tabtype}}" />
+            <table id="lsvsh" class="table table-striped topsec_tabletop table-hover" data-selid="0" data-vmstate="-1">
+              <tr>
+                <th>实例名称</th>
+                <th>镜像名称</th>
+                <th>镜像类型</th>
+                <th>管理ip</th>
+                <th>管理端口</th>
+                <th>状态</th>
+                <th>备注</th>
+              </tr>
+              {% for vswitch in vswitchls %}
+              <tr id="{{vswitch.id}}" data-vmstate="{{ vswitch.state }}">
+                <td>{{ vswitch.name }}</td>
+                <td>{{ vswitch.imgtype.name }}</td>
+                <td>{{ vswitch.imgtype.vshtype.typename }}</td>
+                <td>{{ vswitch.mgrip }}</td>
+                <td>{{ vswitch.mgrport }}</td>
+                <td>{% ifequal vswitch.state False %}未运行{% else %}已运行{% endifequal %}</td>
+                <td>{{ vswitch.remark }}</td>
+              </tr>
+              {% endfor %}
+
+            </table>
+
+                  <div class="flickr">
+                    {% if vswitchls.has_previous %}
+                      <a href="?page={{ vswitchls.previous_page_number }}&type=vswitchls">上一页</a>
+                    {% else %}
+                      <span>上一页</span>
+                    {% endif %}
+                    <span>
+                      {% for p in page_range_vswitchls %}
+                        
+                        {% ifequal p vswitchls.number %}
+                          <span class="current">{{p}}</span>
+                        {% else %}
+                          <a href="?page={{p}}&type=vswitchls" title="第{{p}}页">{{p}}</a>
+                        {% endifequal %}
+
+                      {% endfor %}
+                    </span>
+                    {% if vswitchls.has_next %}
+                    <a href="?page={{ vswitchls.next_page_number }}&type=vswitchls">下一页</a>
+                    {% else %}
+                    <span>下一页</span>
+                    {% endif %}
+                  </div>
+ 
+          </div>
+        </div>
+        <div class="tab-pane fade" id="vmtypes">
+          <div class="bs-docs-section">
+             <table width="100%">
+      <tr>
+        <td >
+          <div style="text-align:left;">
+            <button  id="btncreatevm" class="btn btn-primary disabled" data-target="#myModal3" data-toggle="modal" type="button" title='从镜像创建vSwitch'><span class="glyphicon glyphicon-plus"><strong>vSwitch</strong></span></button>
+            <button class="btn btn-primary disabled" data-target="#myModal" data-toggle="modal" type="button" title="添加"><span class="glyphicon glyphicon-plus"></span></button>
+            <button id="btnimgedit" class="btn btn-primary disabled" onclick='editimg()' data-toggle="modal" title='编辑'><span class="glyphicon glyphicon-pencil"></span></button>
+            <button id="btnimgvshdel" type="submit" class="btn btn-danger disabled" formaction='' title='删除'><span class="glyphicon glyphicon-remove"></span></button>
+                </div>
+        </td>
+        <td align="right">
+            <div style="text-align:right;">
+            <input id='queryimg' name='queryimg' value="{{queryimg}}" type='text' class="form-control topself_input" placeholder="请输入名称、类型关键字"style="width:200px; display:inline; "/>
+            <button id="btnqueryimg" name="btnqueryimg" type="submit" class="btn btn-danger" formaction="/vswitches/"  title='查询'><span class="glyphicon glyphicon-search"></span></button>
+              </div>
+        </td>
+         </tr>
+       </table>
+          </div>
+          <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-10px;">
+            <!-- Glyphicons
+          ================================================== -->
+            <table id="lsimg" class="table table-striped topsec_tabletop table-hover" data-selid="0">
+              <tr>
+                <th>镜像名称</th>
+                <th>厂商</th>
+                <th>型号</th>
+                <th>类型</th>
+                <th>版本号</th>
+                <th>启动方式</th>
+                <th>当前实例数</th>
+                <th>文件名</th>
+                <th>备注</th>
+              </tr>
+              {% for imgvsh in imgvshls %}
+              <tr id="{{imgvsh.id}}">
+                <td>{{ imgvsh.name }}</td>
+                <td>{{ imgvsh.fac }}</td>
+                <td>{{ imgvsh.xh }}</td>
+                <td>{{ imgvsh.vshtype.typename }}</td>
+                <td>{{ imgvsh.version }}</td>
+                <td>{{ imgvsh.starting }}</td>
+                <td>{{ imgvsh.vshcount }}</td>
+                <td>{{ imgvsh.filename }}</td>
+                <td>{{ imgvsh.remark }}</td>
+              </tr>
+              {% endfor %}
+
+            </table>
+              <tr>
+                <td colspan="9" >
+                  <div class="flickr">
+                    {% if imgvshls.has_previous %}
+                      <a href="?page={{ imgvshls.previous_page_number }}&type=img">上一页</a>
+                    {% else %}
+                      <span>上一页</span>
+                    {% endif %}
+                    <span>
+                      {% for p in page_range_imgvshls %}
+
+                        {% ifequal p imgvshls.number %}
+                          <span class="current">{{p}}</span>
+                        {% else %}
+                          <a href="?page={{p}}&type=img" title="第{{p}}页">{{p}}</a>
+                        {% endifequal %}
+
+                      {% endfor %}
+                    </span>
+                    {% if imgvshls.has_next %}
+                    <a href="?page={{ imgvshls.next_page_number }}&type=img">下一页</a>
+                    {% else %}
+                    <span>下一页</span>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+          </div>
+        </div>
+      </div>
+  </div>
+</form>
+<form action="/imgvshadd/" method='post' enctype="multipart/form-data" accept-charset="utf-8">
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">添加镜像</h3>
+        </div>
+        <div>
+          <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">名称：</td>
+              <td>
+                <input id='img_name' name='img_name' required="required" type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">厂商：</td>
+              <td>
+                <input id='img_fac' name='img_fac' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">型号：</td>
+              <td>
+                <input id='img_xh' name='img_xh' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">虚拟交换类型：</td>
+              <td>
+                  <select name="img_vshtype" class="form-control" style="width:180px;">
+                            {% for vshtype in vshtypels %}
+                            <option value='{{ vshtype.id }}'>{{ vshtype.typename }}</option>
+                            {% endfor %}
+                  </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">版本号：</td>
+              <td>
+                <input id='img_version' name='img_version' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">文件名：</td>
+              <td>
+                  <input id='vshfile' name='vshfile'  type="file"  value=""/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px;  vertical-align:middle; text-align:right; ">启动方式：</td>
+              <td>
+                <input id='img_starting' name='img_starting' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px;  vertical-align:middle; text-align:right; ">备注：</td>
+              <td>
+                <input id='img_remark' name='img_remark' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+          </table>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<form id="imginfo" action="/imgvshedit/" method='post' enctype="multipart/form-data" accept-charset="utf-8">
+  <div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel1">编辑镜像</h3>
+        </div>
+        <div>
+          <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">名称：</td>
+              <td>
+                <input id='imgname' name='imgname' required="required" type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">厂商：</td>
+              <td>
+                <input id='imgfac' name='imgfac' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">型号：</td>
+              <td>
+                <input id='imgxh' name='imgxh' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">虚拟交换类型：</td>
+              <td>
+                  <select id="imgvshtype" name="imgvshtype" class="form-control" style="width:180px;">
+                            {% for vshtype in vshtypels %}
+                            <option value='{{ vshtype.id }}'>{{ vshtype.typename }}</option>
+                            {% endfor %}
+                  </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">版本号：</td>
+              <td>
+                <input id='imgversion' name='imgversion' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">文件名：</td>
+              <td>
+                  <input id='imgfname' type='text' class="form-control topself_input" readonly="true"/>
+                  <input id='imgfilename' name='imgfilename'  type="file"  value="" onclick="hiddenfname()"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px;  vertical-align:middle; text-align:right; ">启动方式：</td>
+              <td>
+                <input id='imgstarting' name='imgstarting' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px;  vertical-align:middle; text-align:right; ">备注：</td>
+              <td>
+                <input id='imgremark' name='imgremark' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+          </table>
+          <input id='imgid' name='imgid' type='hidden'/>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<form id="vshinfo" action="/vshedit/" method='post' enctype="multipart/form-data" accept-charset="utf-8">
+  <div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel2">编辑虚拟交换设备</h3>
+        </div>
+        <div>
+          <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">名称：</td>
+              <td>
+                <input id='vshname' name='vshname' required="required" type='text' class="form-control topself_input"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">来源镜像：</td>
+              <td>
+                  <select id="vshtype" name="vshtype" class="form-control" style="width:180px;">
+                            {% for vsh in imgvshls %}
+                            <option value='{{ vsh.id }}'>{{ vsh.name }}</option>
+                            {% endfor %}
+                  </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">管理ip：</td>
+              <td>
+                <input id='vshmgrip' name='vshmgrip' type='text' required="required" onchange="isIP('vshmgrip')" class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">管理端口：</td>
+              <td>
+                  <input id='vshmgrport' name='vshmgrport' type='text' required="required" onchange="isPort('vshmgrport')" class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px;  vertical-align:middle; text-align:right; ">备注：</td>
+              <td>
+                <input id='vshremark' name='vshremark' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+          </table>
+          <input id='vshid' name='vshid' type='hidden'/>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<form id="createvsh" action="/createvsh/" method='post' enctype="multipart/form-data" accept-charset="utf-8">
+  <div class="modal fade" id="myModal3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel3">创建虚拟交换设备</h3>
+        </div>
+        <div>
+          <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">名称：</td>
+              <td>
+                <input id='vsh_name' name='vsh_name' required="required" type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">来源镜像：</td>
+              <td>
+                  <select id="vsh_type" name="vsh_type" class="form-control" style="width:180px;" >
+                            {% for vsh in imgvshls %}
+                            <option value='{{ vsh.id }}'>{{ vsh.name }}</option>
+                            {% endfor %}
+                  </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">管理ip：</td>
+              <td>
+                <input id='vsh_mgrip' name='vsh_mgrip' type='text' onchange="isIP('vsh_mgrip')" required="required" class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px; vertical-align:middle; text-align:right; ">管理端口：</td>
+              <td>
+                  <input id='vsh_mgrport' name='vsh_mgrport' type='text' onchange="isPort('vsh_mgrport')" required="required" class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:120px;  vertical-align:middle; text-align:right; ">备注：</td>
+              <td>
+                <input id='vsh_remark' name='vsh_remark' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+          </table>
+          <input id='vsh_id' name='vsh_id' type='hidden'/>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<script type="text/javascript" src="/statics/js/ajaxProgressUpload.js"></script>
+<script type="text/javascript">
+$(function()
+{
+      tabtype = $('#tabtype').val();
+      if(tabtype=='img')
+      {
+          $('#vmservers').removeClass('in');
+          $('#vmservers').removeClass('active');
+          $('#vmtypes').addClass('in');
+          $('#vmtypes').addClass('active');
+
+          $('#vshserverli').removeClass('active');
+          $('#vshtypeli').addClass('active');
+      }
+});
+    function open_vnc() 
+    {
+        var preid = $("#lsvsh").data("selid");
+        var url = '/console/' + preid + '/vsh?token=' + preid;
+        window.open(url,'','width=850,height=485');
+    }
+</script>
+<script type="text/javascript">
+setTableEvent("lsvsh", true, "vshdel");
+setTableEvent("lsimg", true, "imgvshdel");
+setfontcolor("souctrl");
+setbackgroundcolor("vswcolor");
+function setTableEvent(tableid, singleSelect, url) {
+   var tr = "#" + tableid + ">tbody>tr";
+   var trSelected = tr + ".success";
+
+   $(tr).click(function(event) {
+            if($(this).attr('id') == undefined)
+                      return;
+
+            if (singleSelect) {
+                     $(trSelected).removeClass('success');
+            }
+
+            $(this).addClass('success');
+            $("#" + tableid).data("selid", $(this).attr('id'));
+            $("#btn" + url).attr('formaction', '/' + url + '/' + $(this).attr('id'));
+            if(tableid == "lsvsh")
+                {/*
+                    if($("#vmdetail").hasClass('disabled'))
+                    {
+                        $("#vmdetail").removeClass('disabled');
+                        $("#btnvmedit").removeClass('disabled');
+                        $("#btnvshdel").removeClass('disabled');
+                    }
+                    if($(this).data('vmstate') == "False")
+                    {
+                        $("#btnstart").removeClass('disabled');
+                        $("#btnstop").addClass('disabled');
+                        $("#btnconsole").addClass('disabled');
+                    }
+                    else
+                    {
+                        $("#btnstop").removeClass('disabled');
+                        $("#btnstart").addClass('disabled');
+                        $("#btnconsole").removeClass('disabled');
+                    }
+
+                    $("#btnstart").attr('formaction', '/vshstart/' + $(this).attr('id'));
+                    $("#btnstop").attr('formaction', '/vshstop/' + $(this).attr('id'));
+                    */
+                }
+                else
+                {/*
+                    if($("#btncreatevm").hasClass('disabled'))
+                    {
+                        $("#btnimgedit").removeClass('disabled');
+                        $("#btncreatevm").removeClass('disabled');
+                        $("#btnimgvshdel").removeClass('disabled');
+                        $("#btncreatevm").removeClass('disabled');
+                    }
+                    */
+                }
+   });
+}
+
+function editvsh()
+{
+    var preid = $("#lsvsh").data("selid");
+    $("#vshid").val(preid);
+
+    var dev = ajaxobj("/vshinfo/", "", "post", "#vshinfo");
+    var jsondata = $.parseJSON(dev);
+
+    $("#vshname").val(jsondata.vshname);
+    $("#vshmgrip").val(jsondata.vshmgrip);
+    $("#vshmgrport").val(jsondata.vshmgrport);
+    $("#vshtype").val(jsondata.vshtype);
+    $("#vshremark").val(jsondata.remark);
+
+    $('#myModal2').modal('show');
+}
+
+function editimg()
+{
+    var preid = $("#lsimg").data("selid");
+    if(preid == "0")
+        return false;
+    $("#imgid").val(preid);
+    var dev = ajaxobj("/imgvshinfo/", "", "post", "#imginfo");
+    var jsondata = $.parseJSON(dev);
+    $("#imgname").val(jsondata.imgname);
+    $("#imgfac").val(jsondata.imgfac);
+    $("#imgxh").val(jsondata.imgxh);
+    $("#imgvshtype").val(jsondata.imgvshtype);
+    $("#imgversion").val(jsondata.imgversion);
+    $("#imgfname").val(jsondata.imgfilename);
+    $("#imgstarting").val(jsondata.imgstarting);
+    $("#imgremark").val(jsondata.remark);
+
+    $('#myModal1').modal('show');
+}
+function vmdetailinfo()
+{
+    //$('#myModal3').modal('show');
+    var preid = $("#lsvsh").data("selid");
+    if(preid == "0")
+      $('#vmdetail').attr('formaction', "");
+    else
+      $('#vmdetail').attr('formaction', '/vshdetail/' + preid);
+}
+function hiddenfname()
+{
+    $("#imgfname").hide();
+}
+
+function checknumbercpu(cpuid){
+   var mob = document.getElementById(cpuid);
+   var reg=/^\d+$/;
+   if(reg.test(mob.value)==false)
+   mob.setCustomValidity("CPU只能是数字！");
+   else
+  mob.setCustomValidity("");
+    }
+
+function checknumberram(ramid){
+   var mob = document.getElementById(ramid);
+   var reg=/^\d+$/;
+   if(reg.test(mob.value)==false)
+   mob.setCustomValidity("内存只能是数字！");
+   else
+  mob.setCustomValidity("");
+    }
+
+function isIP(strIP) { 
+var ipstr = document.getElementById(strIP);
+var re=/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/g //匹配IP地址的正则表达式 
+if(re.test(ipstr.value)) 
+{ 
+if( RegExp.$1 <256 && RegExp.$2<256 && RegExp.$3<256 && RegExp.$4<256) 
+  ipstr.setCustomValidity("");
+else
+  ipstr.setCustomValidity("ip地址格式错误！");
+} 
+else
+{
+  ipstr.setCustomValidity("ip地址格式错误！");
+}
+} 
+
+function isPort(str){  
+var portstr = document.getElementById(str);
+if (/^\d+$/.test(portstr.value) && parseInt(portstr.value)<65536)
+{
+  portstr.setCustomValidity("");
+}
+else
+{
+  portstr.setCustomValidity("端口号格式错误");
+}
+} 
+
+</script>
+{% endblock %}

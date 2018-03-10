@@ -1,0 +1,1562 @@
+{% extends "templates/resource.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}资源管理{% endblock %}
+{% block css %}
+    
+{% endblock %}
+{% block script1 %}
+
+{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">虚拟终端设备</span>
+</div>
+{% endblock %}
+{% block content1 %}
+<form method='get' id="vmform">
+  <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-15px;">
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs">
+      <li  class="active" id="vmserverli">
+        <a href="#vmservers" data-toggle="tab">虚拟服务器</a>
+      </li >
+      <li id="vmtypeli">
+        <a href="#vmtypes" data-toggle="tab">虚拟服务器类型</a>
+      </li>
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content" style="position: relative; top:10px;">
+      <div class="tab-pane fade in active" id="vmservers">
+        <div class="bs-docs-section">
+         <table width="100%">
+          <tr>
+            <td >
+              <div style="text-align:left;">
+                <!--<button id="expdetail" type="button" class="btn btn-primary disabled">实验情况</button>-->
+                <button type="submit" id="vmdetail"  class="btn btn-primary disabled" onclick="vmdetailinfo()" title='详情'><span class="glyphicon glyphicon-info-sign"></span></button>
+                <button id="btnconsole" type="button" class="btn btn-primary disabled" onclick="open_vnc()" title='console'>console</button>
+                <!--  <button type="submit" class="btn btn-primary disabled" id="btnstart" formaction="" title='启动'><span class="glyphicon glyphicon-play"></span></button> -->
+                <button type="button" class="btn btn-primary disabled" id="btnstart" formaction="" onclick="vmstart()" title='启动'><span class="glyphicon glyphicon-play"></span></button>
+                <button type="button" class="btn btn-primary disabled" id="btnstop" formaction="" title='停止' onclick='vmstop()'><span class="glyphicon glyphicon-stop"></span></button>
+                <button id="btnvmedit" type="button" class="btn btn-primary disabled" onclick='editvm()' title='编辑'><span class="glyphicon glyphicon-pencil"></span></button>
+                <button id="btnvmreset" type="button" class="btn btn-primary disabled" onclick='resetvm()' title='还原'><span class="glyphicon glyphicon-retweet"></span></button>
+                <button id="btnvmdel" type="submit" class="btn btn-danger disabled" formaction="" onclick="return delvm()" title='删除'><span class="glyphicon glyphicon-remove"></span></button>
+              </div>
+            </td>
+            <td align="right">
+              <div style="text-align:right;">
+                <input id='querytext' name='querytext' value="{{querytext}}" type='text' class="form-control topself_input" placeholder="请输入虚拟机、镜像名称关键字" style="width:235px; display:inline;" onchange='vgatelsSearch("vmls")'/> 
+                <button id="btnquery" type="submit" class="btn btn-danger" formaction="/vms/" title='查询' onclick='clearnum()'><span class="glyphicon glyphicon-search"></span></button>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; ">
+            <!-- Glyphicons
+            ================================================== -->
+            <input type="hidden" name="type" id="tabtype" value="{{type}}" />
+            <input type="hidden" name="page" id="page" value="{{page}}" />
+            <table id="lsvm" class="table table-striped topsec_tabletop table-hover" data-selid="0" data-vmstate="-1">
+              <tr>
+                <th>虚拟机名称</th>
+                <!-- <th>镜像名称</th>-->          
+                <th>镜像类型</th>
+                <th>操作系统</th>
+                <th>管理ip</th>
+                <th>管理端口</th>
+                <th>状态</th>
+                <th>使用类型</th>
+                <th>使用中</th>
+
+              </tr>
+              {% for vm in vmls %}
+              <tr id="{{vm.id}}" data-vmstate="{{ vm.state }}">
+                <td>{{ vm.name | truncatechars:13}}</td>
+                <!--<td title='{{vm.imgtype.name}}'>{{ vm.imgtype.name | truncatechars:13}}</td>-->
+                <td>{{ vm.imgtype.exptype | truncatechars:13}}</td>
+                <td>{{ vm.imgtype.ostype.typename | truncatechars:13}}</td>
+                <td>{{ vm.mgrip }}</td>
+                <td>{{ vm.mgrport }}</td>
+                <td>{% ifequal vm.state False %}未运行{% else %}已运行{% endifequal %}</td>
+                <td>
+                  
+                  {%ifequal vm.usetype 0 %}课程{% endifequal %}
+                  {%ifequal vm.usetype 1 %}竞赛{% endifequal %}
+                  {%ifequal vm.usetype 2 %}攻防{% endifequal %}
+
+
+                  {%ifequal vm.usetype None %}--{% endifequal %}
+
+                  
+                </td>
+                <td>
+                 {%if vm.useNo %}
+                 {{vm.useNo | truncatechars:13}}
+                 {%else%}
+                 --
+                 {% endif %}
+               </td>
+             </tr>
+             {% endfor %}
+
+          </table>
+                <div id='flickr1' class="flickr">
+                  <input type="hidden" name="flickr1_current" id="flickr1_current" value="{{page}}" />
+                  <input type="hidden" name="flickr1_total" id="flickr1_total" value="{{page_long_vmls}}" />
+                  <input type="hidden" name="flickr1_querytext" id="flickr1_querytext" value="{{querytext}}" />
+                  <input type="hidden" name="flickr2_querytext" id="flickr2_querytext" value="{{queryimg}}" />
+                  <!-- {% if vmls.has_previous %}
+                  <a href="?page={{ vmls.previous_page_number }}&type=vmls&querytext={{querytext}}">上一页</a>
+                  {% else %}
+                  <span>上一页</span>
+                  {% endif %}
+                  <span>
+                    {% for p in page_range_vmls %}
+
+                      {% ifequal p vmls.number %}
+                      <span class="current">{{p}}</span>
+                      {% else %}
+                      <a href="?page={{p}}&type=vmls{% ifnotequal querytext '' %}&querytext={{querytext}}{% endifnotequal %}" title="第{{p}}页">{{p}}</a>
+                      {% endifequal %}
+
+                    {% endfor %}
+                  </span>
+                  {% if vmls.has_next %}
+                  <a href="?page={{ vmls.next_page_number }}&type=vmls{% ifnotequal querytext '' %}&querytext={{querquerytextyimg}}{% endifnotequal %}">下一页</a>
+                  {% else %}
+                  <span>下一页</span>
+                  {% endif %} -->
+                </div>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="vmtypes">
+        <div class="bs-docs-section">
+          <table width="100%">
+            <tr>
+              <td >
+                <div style="text-align:left;">
+                  <button id="btncreatevm" class="btn btn-primary disabled" onclick="imgcreatevm()" data-toggle="modal" type="button" title='从镜像创建VM'><span class="glyphicon glyphicon-plus"><strong>VM</strong></span></button>
+                  <button class="btn btn-primary" data-target="#myModal" data-toggle="modal" type="button" onclick="newvm()" title="添加"><span class="glyphicon glyphicon-plus"></span></button>
+                  <button id="btnimgedit" type="button" class="btn btn-primary disabled" onclick='editimg()' data-toggle="modal" title='编辑'><span class="glyphicon glyphicon-pencil"></span></button>
+                  <button id="btnimgdel" type="submit" class="btn btn-danger disabled" formaction='' onclick="return delimgvm()" title='删除'><span class="glyphicon glyphicon-remove"></span></button>
+                </div>
+              </td>
+              <td align="right">
+                <div style="text-align:right;">
+                  <input id='queryimg' name='queryimg' placeholder="请输入名称、类型关键字" style="width:185px; display:inline;" value="{{queryimg}}" type='text' class="form-control topself_input" onchange='vgatelsSearch("img")'/>
+                  <button id="btnqueryimg" name="btnqueryimg" type="submit" class="btn btn-danger" formaction="/vms/"  title='查询' onclick='clearnum()'><span class="glyphicon glyphicon-search"></span></button>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; ">
+            <!-- Glyphicons
+            ================================================ -->
+            <table id="lsimg" class="table table-striped topsec_tabletop table-hover" data-selid="0">
+              <tr>
+                <th>镜像名称</th>
+                <!--<th>镜像类型</th>-->
+                <th>操作系统</th>
+                <th>版本号</th>
+                <th>当前实例数</th>
+                <th>文件名</th>
+                <th>备注</th>
+              </tr>
+              {% for img in imgls %}
+              <tr id="{{img.id}}">
+                <td>{{ img.name | truncatechars:13}}</td>
+                <!--<td>{{ img.exptype | truncatechars:13 }}</td>-->
+                <td>{{ img.ostype.typename | truncatechars:13}}</td>
+                <td title='{{img.osversion}}'>{{ img.osversion | truncatechars:13}}</td>
+                <td>{{ img.vmcount }}</td>
+                <td title='{{img.filename}}'>{{ img.filename | truncatechars:13}}</td>
+                <td title='{{img.remark}}'>{{ img.remark | truncatechars:10}}</td>
+              </tr>
+              {% endfor %}
+
+            </table>
+              <tr>
+                <td colspan="8" >
+                  <div class="flickr">
+                    {% if imgls.has_previous %}
+                    <a href="?page={{ imgls.previous_page_number }}&type=img{% ifnotequal querytext '' %}&querytext={{querytext}}{% endifnotequal %}{% ifnotequal queryimg '' %}&queryimg={{queryimg}}{% endifnotequal %}">上一页</a>
+                    {% else %}
+                    <span>上一页</span>
+                    {% endif %}
+                    <span>
+                      {% for p in page_range_imgls %}
+
+                      {% ifequal p imgls.number %}
+                      <span class="current">{{p}}</span>
+                      {% else %}
+                      <a href="?page={{p}}&querytext={{querytext}}&type=img{% ifnotequal querytext '' %}&querytext={{querytext}}{% endifnotequal %}{% ifnotequal queryimg '' %}&queryimg={{queryimg}}{% endifnotequal %}" title="第{{p}}页">{{p}}</a>
+                      {% endifequal %}
+
+                      {% endfor %}
+                    </span>
+                    {% if imgls.has_next %}
+                    <a href="?page={{ imgls.next_page_number }}&type=img{% ifnotequal querytext '' %}&querytext={{querytext}}{% endifnotequal %}{% ifnotequal queryimg '' %}&queryimg={{queryimg}}{% endifnotequal %}">下一页</a>
+                    {% else %}
+                    <span>下一页</span>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+          </div>
+        </div>
+      </div>
+    </div>
+</form>
+<form id="upload_form" action="/imgadd/" method='post' enctype="multipart/form-data" accept-charset="utf-8">
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+      <div class="modal-dialog">
+        <div class="modal-content" style="width:600px;">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="myModalLabel">添加镜像</h3>
+          </div>
+          <div>
+            <table class="table topsec_tabletop">
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>名称：</td>
+                <td>
+                  <input id='img_name' name='img_name' required="required" type='text' class="form-control topself_input" maxLength="20" onchange='checkvmname()'/>
+                </td>
+              </tr>
+              <!--<tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">类型：</td>
+                <td>
+                  <input type="hidden" id='img_exptype' name='img_exptype' type='text' class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr> -->
+              <tr style="display:none;">
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>内存：</td>
+                <td>
+                  <input id='img_ram' name='img_ram' required="required"  onchange="checknumberram('img_ram')" type='text' class="form-control topself_input" style="width:350px;" value='1' maxLength="50" />
+                </td>
+                <td>（MB）
+                </td>
+              </tr>
+              <tr style="display:none;">
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>CPU：</td>
+                <td>
+                  <input id='img_cpu' name='img_cpu' required="required" onchange="checknumbercpu('img_cpu')" type='text' class="form-control topself_input" style="width:350px;" value="1" maxLength="50"/>
+                </td>
+                <td>（个）
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">系统类型：</td>
+                <td>
+                   <input type="hidden" id='img_exptype' name='img_exptype' type='text' class="form-control topself_input" maxLength="50"/>
+                  <select id="img_arc" name="img_arc" class="form-control" style="width:180px;">
+                    <option value='i686'>i686</option>
+                    <option value='x86_64'>x86_64</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">操作系统：</td>
+                <td>
+                  <select name="img_ostype" class="form-control" style="width:180px;">
+                    {% for ostype in ostypels %}
+                    <option value='{{ ostype.id }}'>{{ ostype.typename }}</option>
+                    {% endfor %}
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">操作系统版本：</td>
+                <td>
+                  <input id='img_osversion' name='img_osversion' type='text' class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">文件名：</td>
+                <td>
+                  <table style="margin-top:5px">
+                    <tr>
+                      <td style="padding:0px; width:400px;"><input type="file" name="image_file" id="image_file" onchange="selectFileType();getFileSize(this,'uploadbtn');" />
+                      </td>
+                      <td style="padding:0px;">
+                        <button class="btn btn-primary"   id="uploadbtn"  type="button" onclick="startUploadingimg('/imgupload/', 'progress_percent', 'currentProgress', 'image_file', 'imagefilename', 'upload_form')" disabled="disabled"  title="上传"><span class="glyphicon glyphicon-upload"></span></button>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:130px; text-align:right; vertical-align:middle; height:30px; vertical-align:middle;">
+                  完成：
+                </td>
+                <td style="width:470px; height:30px; padding:10px; vertical-align:middle;">
+                  <table style="width:100%; height:30px; margin:0px; padding:0px;">
+                    <tr>
+                      <td style="width:72%; border:0px; margin:0px; padding:0px; vertical-align:middle;">
+                        <div class="progress progress-striped" style="margin:0px; padding:0px;">
+                          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="currentProgress">
+                          </div>
+                        </div>
+                      </td>
+                      <td style="width:28%; border:0px; vertical-align:middle;"><div id="progress_percent" ></div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>            
+              <tr>
+                <td style="width:120px;  vertical-align:middle; text-align:right; ">备注：</td>
+                <td>
+                  <input id='img_remark' name='img_remark' type='text' class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr>
+            </table>
+            <input id='imagefilename' name='imagefilename' type='hidden' class="form-control topself_input"/>
+            <div class="modal-footer">
+              <button class="btn btn-default" data-dismiss="modal" title='取消' type="button" onclick='clickcancel()' id='cancelbut'><span class="glyphicon glyphicon-remove"></span></button>
+              <button class="btn btn-primary" id="btnsaveimg" onclick="return checkinputfile()" type="submit"   title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+              <button class="btn btn-default" id='resetbutton' type="reset" title='重置'  onclick='clearupload()'><span class="glyphicon glyphicon-retweet"></span></button>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</form>
+<form id="imginfo" action="/imgedit/" method='post' enctype="multipart/form-data" accept-charset="utf-8">
+    <div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+      <div class="modal-dialog">
+        <div class="modal-content" style="width:600px;">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="myModalLabel1">编辑镜像</h3>
+          </div>
+          <div>
+            <table class="table topsec_tabletop">
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>名称：</td>
+                <td>
+                  <input id='imgname' name='img_name' onchange="checkvmnameedit()" required="required" type='text' class="form-control topself_input" maxLength="20" readonly/>
+                </td>
+              </tr>
+              <!-- <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">类型：</td>
+                <td>
+                  <input type="hidden" id='imgexptype' name='imgexptype' type='text' class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr> -->
+              <tr style="display:none;">
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>内存：</td>
+                <td>
+                  <input id='imgram' name='imgram' type='text' class="form-control topself_input" style="width:350px;" maxLength="50" />
+                </td>
+                <td>（MB）
+                </td>
+              </tr>
+              <tr style="display:none;">
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>CPU：</td>
+                <td>
+                  <input id='imgcpu' name='imgcpu' type='text' class="form-control topself_input" style="width:350px;" maxLength="50"/>
+                </td>
+                <td>（个）
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">系统类型：</td>
+                <td>
+                  <input type="hidden" id='imgexptype' name='imgexptype' type='text' class="form-control topself_input" maxLength="50"/>
+                  <select id="imgarc" name="imgarc" class="form-control" style="width:180px;">
+                    <option value='i686'>i686</option>
+                    <option value='x86_64'>x86_64</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">操作系统：</td>
+                <td>
+                  <select id="imgostype" name="imgostype" class="form-control" style="width:180px;">
+                    {% for ostype in ostypels %}
+                    <option value='{{ ostype.id }}'>{{ ostype.typename }}</option>
+                    {% endfor %}
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">操作系统版本：</td>
+                <td>
+                  <input id='imgosversion' name='imgosversion' type='text' class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">文件名：</td>
+                <td>
+                  <table>
+                    <tr>
+                      <td style="padding:0px;" >
+                        <input id='imgfname' type='text' class="form-control topself_input" readonly="true" />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:0px; width:400px;"><input type="file" name="image_file" id="imgfilename" onclick="hiddenfname()" onchange="selectFileTypeedit();getFileSize(this,'uploadbtnedit');" />
+                      </td>
+                      <td style="padding:0px;">
+                        <button class="btn btn-primary"  id="uploadbtnedit" type="button" onclick="startUploadingimg('/imgupload/', 'prog_percent', 'curProgress',  'imgfilename', 'imagefilename1', 'imginfo')" disabled="disabled"  title="上传"><span class="glyphicon glyphicon-upload"></span></button>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:130px; text-align:right; vertical-align:middle; height:30px; vertical-align:middle;" >
+                  完成：
+                </td>
+                <td style="width:470px; height:30px; padding:10px; vertical-align:middle;">
+                  <table style="width:100%; height:30px; margin:0px; padding:0px;">
+                    <tr>
+                      <td style="width:72%; border:0px; margin:0px; padding:0px; vertical-align:middle;">
+                        <div class="progress progress-striped" style="margin:0px; padding:0px;">
+                          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="curProgress">
+                          </div>
+                        </div>
+                      </td>
+                      <td style="width:28%; border:0px; vertical-align:middle;"><div id="prog_percent" style="text-align:left;"></div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr> 
+              <tr>
+                <td style="width:120px;  vertical-align:middle; text-align:right; ">备注：</td>
+                <td>
+                  <input id='remark' name='remark' type='text' class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr>
+            </table>
+            <input id='imgid' name='imgid' type='hidden'/>
+            <input id='imagefilename1' name='imagefilename' type="hidden" class="form-control topself_input"/>
+            <div class="modal-footer">
+              <button class="btn btn-default" data-dismiss="modal" type="button" title='取消' onclick='clickcancel()'><span class="glyphicon glyphicon-remove"></span></button>
+              <button class="btn btn-primary" type="submit"  title='保存' id="btnsaveimgedit" onclick="return checkeditinputfile()"><span class="glyphicon glyphicon-floppy-save"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</form>
+<form id="vminfo" action="/vmedit/" method='post' accept-charset="utf-8">
+    <div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" >
+      <div class="modal-dialog">
+        <div class="modal-content" style="width:600px;">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="myModalLabel2">编辑虚拟机</h3>
+          </div>
+          <div>
+            <table class="table topsec_tabletop">
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>名称：</td>
+                <td colspan=2>
+                  <input id='vmname' name='vmname' required="required" type='text' class="form-control topself_input" maxLength="20" readonly='true'/>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>内存：</td>
+                <td>
+                  <input id='vmram' name='vmram' required="required" onchange="checknumberram('vmram')"  type='text' class="form-control topself_input" style="width:400px;" maxLength="50" />
+                </td>
+                <td>（MB）
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>CPU：</td>
+                <td>
+                  <input id='vmcpu' name='vmcpu' required="required" onchange="checknumbercpu('vmcpu')"  type='text' class="form-control topself_input" style="width:400px;" maxLength="50"/>
+                </td>
+                <td>（个）
+                </td>
+              </tr>
+              <tr>
+                <td   style="width:120px; vertical-align:middle; text-align:right; ">来源镜像：</td>
+                <td colspan=2>
+                  <select disabled="true" id="vmtype" name="vmtype" class="form-control" style="width:180px;">
+                    {% for img in imgls %}
+                    <option value='{{ img.id }}'>{{ img.name }}</option>
+                    {% endfor %}
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>管理ip：</td>
+                <td colspan=2>
+                  <input id='vmmgrip' name='vmmgrip' type='text' onchange="isIP_edit('vmmgrip')" required="required" class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>管理端口：</td>
+                <td colspan=2>
+                  <input id='vmmgrport' name='vmmgrport'  onchange="isPort_edit('vmmgrport')" required="required" type='text' class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px;  vertical-align:middle; text-align:right; ">备注：</td>
+                <td colspan=2>
+                  <input id='vmremark' name='vmremark' type='text' class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr>
+            </table>
+            <input id='vmid' name='vmid' type='hidden'/>
+            <button id='hidebtn_edit'  type="submit" hidden>kkk</button>
+            <div class="modal-footer">
+              <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+              <button class="btn btn-primary" type="button" title='保存' id='editsave' onclick='editsaveinfo()'><span class="glyphicon glyphicon-floppy-save"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</form>
+<form id="createvm" method='post' accept-charset="utf-8">
+    <div class="modal fade" id="myModal3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true" >
+      <div class="modal-dialog">
+        <div class="modal-content" style="width:600px;">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="myModalLabel3">创建虚拟机</h3>
+          </div>
+          <div>
+            <table class="table topsec_tabletop">
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>名称：</td>
+                <td colspan=2>
+                  <input id='vm_name' name='vm_name' required="required" type='text' class="form-control topself_input" maxLength="20" />
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>内存：</td>
+                <td>
+                  <input id='vm_ram' name='vm_ram' required="required"  type='text' class="form-control topself_input" style="width:400px;" maxLength="50" placeholder="输入1到8192之间的数字"/>
+                </td>
+                <td>（MB）
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>CPU：</td>
+                <td>
+                  <input id='vm_cpu' name='vm_cpu' required="required"  type='text' class="form-control topself_input" style="width:400px;" maxLength="50" placeholder="输入1到4之间的数字"/>
+                </td>
+                <td>（个）
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">来源镜像：</td>
+                <td colspan=2>
+                  <select id="vm_type" name="vm_type" class="form-control" style="width:180px;">
+                    {% for img in imgls %}
+                    <option value='{{ img.id }}'>{{ img.name }}</option>
+                    {% endfor %}
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>管理ip：</td>
+                <td colspan=2>
+                  <input id='vm_mgrip' name='vm_mgrip' required="required" type='text' class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>管理端口：</td>
+                <td colspan=2>
+                  <input id='vm_mgrport' name='vm_mgrport'  placeholder="请输入1到65535的数字" required="required" type='text' class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:120px;  vertical-align:middle; text-align:right; ">备注：</td>
+                <td colspan=2>
+                  <input id='vm_remark' name='vm_remark' type='text' class="form-control topself_input" maxLength="50"/>
+                </td>
+              </tr>
+            </table>
+            <input id='instance_add' name='instance_add' type='hidden'/>
+            <div class="modal-footer">
+              <button id='hidebtn'  type="submit" hidden>kkk</button>
+
+              <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+              <button class="btn btn-primary" type="button" onclick='createvmbar()' title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+              <button class="btn btn-default" type="reset" title='重置'  ><span class="glyphicon glyphicon-retweet"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</form>
+<!-- <form id="reset_form" enctype="multipart/form-data" accept-charset="utf-8">
+    <div class="modal fade" id="reset_div"  tabindex="-1" role="dialog" aria-hidden="true" >
+      <div class="modal-dialog">
+        <div class="modal-content" style="width:600px;">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3>重置虚拟机</h3>
+          </div> 
+          <div>
+            <table class="table topsec_tabletop">
+              <tr>
+                <td style="width:120px; vertical-align:middle; text-align:right; ">名称：</td>
+                <td  style="vertical-align:middle; text-align:left;" id="show_name"></td>
+              </tr>
+
+              <tr>
+                <td style="width:130px; text-align:right; vertical-align:middle; height:30px; vertical-align:middle;">
+                  完成：
+                </td>
+                <td style="width:470px; height:30px; padding:10px; vertical-align:middle;">
+                  <table style="width:100%; height:30px; margin:0px; padding:0px;">
+                    <tr>
+                      <td style="width:82%; border:0px; margin:0px; padding:0px; vertical-align:middle;">
+                        <div class="progress progress-striped" style="margin:0px; padding:0px;">
+                          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="currentProgress4">
+                          </div>
+                        </div>
+                      </td>
+                      <td style="width:28%; border:0px; vertical-align:middle;"><div id="progress_percent4" ></div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+                <td>
+                  <button class="btn btn-primary" id="btnsaveimg" onclick="
+                  btn_resetvm()" type="button"   title='还原'>还原<span ></span></button>  
+                </td>
+              </tr>            
+            </table>
+            
+            <div class="modal-footer">            
+              <button class="btn btn-default" data-dismiss="modal" title='取消' type="button" onclick='clickcancel()' id='cancelbut'><span class="glyphicon glyphicon-remove"></span></button>             
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</form> -->
+<script type="text/javascript">
+  function open_vnc()
+  {
+      var preid = $("#lsvm").data("selid");
+      $.post('/tools/getServerIp/', {'vmid': preid}, function(re){
+          ip = JSON.parse(re);
+          var url = 'http://' + ip + '/console/' + preid + '/vm?token=' + preid;
+          window.open(url,'','width=850,height=485');
+      });
+  }
+</script>
+<script type="text/javascript" src="/statics/js/ajaxProgressUpload.js"></script>
+
+<script type="text/javascript">
+  var goonUpload=true;
+$(function()
+  {
+    var tabtype = $('#tabtype').val();
+    if(tabtype=='img')
+    {
+      $('#vmservers').removeClass('in');
+      $('#vmservers').removeClass('active');
+      $('#vmtypes').addClass('in');
+      $('#vmtypes').addClass('active');
+
+      $('#vmserverli').removeClass('active');
+      $('#vmtypeli').addClass('active');
+    }
+    var total_page=parseInt($('#flickr1_total').val());
+    var current_page=parseInt($('#flickr1_current').val());
+    var flickr1_querytext=$('#flickr1_querytext').val();
+    var flickr2_querytext=$('#flickr2_querytext').val();
+    var dic = new Array();      //注意它的类型是Array
+    dic["type"] = "vmls";
+    if(flickr1_querytext!=''){
+      dic["querytext"] = flickr1_querytext;
+    }
+    if(flickr2_querytext!=''){
+      dic["queryimg"] = flickr2_querytext;
+    }
+    document.getElementById('flickr1').innerHTML=setflickr(total_page,current_page,dic);
+
+  });
+
+
+function clearnum()
+{
+  $('#flickr1_current').val('1');
+}
+
+function vgatelsSearch(obj)
+{
+  $('#tabtype').val(obj);
+}
+
+
+  setTableEvent("lsvm", true, "vmdel");
+  setTableEvent("lsimg", true, "imgdel");
+  setfontcolor("souctrl");
+  setbackgroundcolor("vmcolor");
+function setTableEvent(tableid, singleSelect, url) {
+   var tr = "#" + tableid + ">tbody>tr";
+   var trSelected = tr + ".success";
+
+   $(tr).click(function(event) {
+    if($(this).attr('id') == undefined)
+      return;
+            // debug
+            //var id = $("td:first-child", $(this)).text();
+            //console.log("tr click: " + id);
+
+            //var hasSelected = $(this).hasClass('success');
+
+            // single-select
+            if (singleSelect) {
+             $(trSelected).removeClass('success');
+           }
+
+            //if(!hasSelected){
+              $(this).addClass('success');
+              $("#" + tableid).data("selid", $(this).attr('id'));
+
+              $("#btn" + url).attr('formaction', '/' + url + '/' + $(this).attr('id'));
+              if(tableid == "lsvm")
+              {
+                if($("#vmdetail").hasClass('disabled'))
+                {
+                  $("#vmdetail").removeClass('disabled');
+                  $("#btnvmedit").removeClass('disabled');
+                  $("#btnvmreset").removeClass('disabled');
+                  $("#btnvmdel").removeClass('disabled');
+                  
+                }
+                if($(this).data('vmstate') == "False")
+                {
+                  $("#btnstart").removeClass('disabled');
+                  $("#btnvmdel").removeClass('disabled');
+                  $("#btnvmedit").removeClass('disabled');
+                  $("#btnvmreset").removeClass('disabled');
+                  $("#btnstop").addClass('disabled');
+                  $("#btnconsole").addClass('disabled');
+                }
+                else
+                {
+                  $("#btnstop").removeClass('disabled');
+                  $("#btnstart").addClass('disabled');
+                  $("#btnvmdel").addClass('disabled');
+                  $("#btnvmedit").addClass('disabled');
+                  $("#btnvmreset").addClass('disabled');
+                  $("#btnconsole").removeClass('disabled');
+                }
+
+                    // $("#btnstart").attr('formaction', '/vmstart/' + $(this).attr('id'));
+                    // $("#btnstop").attr('formaction', '/vmstop/' + $(this).attr('id'));
+                  }
+                  else
+                  {
+                    if($("#btncreatevm").hasClass('disabled'))
+                    {
+                      $("#btnimgedit").removeClass('disabled');
+                      $("#btncreatevm").removeClass('disabled');
+                      $("#btnimgdel").removeClass('disabled');
+                      $("#btncreatevm").removeClass('disabled');     
+                    }
+                  }
+                  
+            //}
+          });
+  }
+
+
+function createvmbar()
+{
+    if(checkvgavmname() && checknum('vm_ram') &&checknum('vm_cpu') && isIP('vm_mgrip') && isPort('vm_mgrport'))
+    {
+        $("body").append("<div id='imgload' style='position:fixed;width: 130px; display: block; top: 300px; left: 650px;'></div>");
+        $("#imgload").append("<img src='/statics/images/loading.gif' />");
+        $("#myModal3").modal('hide');
+        $("body *:not('#imgload')").each(function(i,dom)
+        {
+          $(this).css({opacity: 0.9,});
+        });
+
+        var jresult = ajaxobj("/tools/selectServer/", "", "post", "#createvm");
+        var jsonresult = $.parseJSON(jresult);
+        if(jsonresult.result=='0')
+        {
+          $('#imgload').remove();
+          Showbo.Msg.alert("创建失败!");
+        }
+        else
+        {
+          document.getElementById("vmform").submit(); 
+        }
+        $("body *").each(function(i,dom)
+        {
+          $(this).css({opacity: '',});  
+        });
+    }
+    else
+    {
+        $('#imgload').remove();
+        // Showbo.Msg.alert("创建失败!");
+        $("body *").each(function(i,dom)
+        {
+          $(this).css({opacity: '',});  
+        });
+        return;
+    }
+}
+
+function delimgvm(){
+  var id = document.getElementById('btnimgdel').getAttribute('formaction').split('/')[2];
+  $.post('/tools/getVmStatus/', {'id': id}, function(re){
+        if(re === '1'){
+          Showbo.Msg.alert("该类型下有虚拟机正在运行，请先关闭");
+        } else{
+          Showbo.Msg.oncallback = delimgvmcallback;
+          Showbo.Msg.confirm("确定删除镜像以及其所有虚拟机吗？");
+        }
+  });
+  return false;
+}
+
+function delimgvmcallback()
+  {
+    document.getElementById("btnimgdel").onclick = null;
+    document.getElementById("btnimgdel").click();
+  }
+
+function delvm()
+  {
+    Showbo.Msg.oncallback = delvmcallback;
+    Showbo.Msg.confirm("确定删除吗？");
+    return false;
+  }
+function delvmcallback()
+  {
+    document.getElementById("btnvmdel").onclick = null;
+    document.getElementById("btnvmdel").click();
+  }
+
+  //ajaxProgressUpload();
+function imgcreatevm()
+  {
+    var preid = $("#lsimg").data("selid");
+    $("#vm_type").find("option[value='"+preid+"']").attr("selected",true);
+    $('#myModal3').modal('show');
+  }
+function editsaveinfo()
+  {
+    if(!checknumberram('vmram') || !checknumbercpu('vmcpu')|| !isIP_edit('vmmgrip') || !isPort_edit('vmmgrport')){
+      return false;
+    }
+
+    var json = ajaxobj("/tools/selectServerEditVM/", "", "post", "#vminfo");
+    var jsondata = $.parseJSON(json);
+    if(jsondata.result == 0)
+    {
+      Showbo.Msg.alert("编辑失败");
+    }
+    else
+    {
+     document.getElementById("vmform").submit();
+   }
+  }
+
+function resetvm()
+  {
+     // $('#show_name').text('名称');
+
+     // $('#reset_div').modal('show');
+    Showbo.Msg.oncallback = resetvmcallback;
+    Showbo.Msg.confirm("确定还原该虚拟机吗？");
+  }
+
+function btn_resetvm(){
+    document.getElementById("progress_percent4").innerHTML = '0%';
+    $("#currentProgress4").width("0%");
+    var preid = $("#lsvm").data("selid");
+    $("#vmid").val(preid);
+
+
+     //构造一个表单，FormData是HTML5新增的
+    var form = new FormData();
+    form.append("vmid", preid); 
+    
+    //Ajax提交
+    var uploadajax = $.ajax({
+      url: "/tools/selectServerResetVM/",
+      type: "POST",
+      async: true,//异步
+      processData: false,//很重要，告诉jquery不要对form进行处理
+      contentType: false,  //很重要，指定为false才能形成正确的Content-Type
+      success: function(){
+        ++succeed;
+        m_percent=Math.round((succeed)/(shardCount)*100*1)/1;// 计算结果保留整数位
+        document.getElementById(pgpercent).innerHTML = m_percent+"%";
+        $("#"+progress).width(m_percent+"%");
+
+        if(m_percent==100){
+          $("#btnsavevm").attr('disabled',false);
+          $("#btnsaveimg").attr('disabled',false);
+          $("#resetbutton").attr('disabled',false);    
+          $("#savebutton1").attr('disabled',false);
+          $("#savebutton1").attr('disabled',false);       
+        }
+      }
+    });
+
+
+    var dev = ajaxobj("/tools/selectServerResetVM/", "", "post", "#vminfo");
+    var jsondata = $.parseJSON(dev);
+    if(jsondata.result == 0){
+      $('#imgload').remove();
+      Showbo.Msg.alert('还原成功');
+    }
+    else{
+      $('#imgload').remove();
+      Showbo.Msg.alert('还原失败！');
+    }
+    $("body *").each(function(i,dom){
+          $(this).css({opacity: '',});  
+        });
+}
+
+function resetvmcallback(){
+  var preid = $("#lsvm").data("selid");
+    $("#vmid").val(preid);
+
+    $("body").append("<div id='imgload' style='position:fixed;width: 130px; display: block; top: 300px; left: 650px;'></div>");
+    $("#imgload").append("<img src='/statics/images/loading.gif' />");
+    $("body *:not('#imgload')").each(function(i,dom){
+              $(this).css({opacity: 0.9,});
+         });
+
+
+    var dev = ajaxobj("/tools/selectServerResetVM/", "", "post", "#vminfo");
+    var jsondata = $.parseJSON(dev);
+    if(jsondata.result == 0){
+      $('#imgload').remove();
+      Showbo.Msg.alert('还原成功');
+    }
+    else{
+      $('#imgload').remove();
+      Showbo.Msg.alert('还原失败！');
+    }
+    $("body *").each(function(i,dom){
+          $(this).css({opacity: '',});  
+        });
+}
+function editvm()
+  {
+    var preid = $("#lsvm").data("selid");
+    $("#vmid").val(preid);
+    var dev = ajaxobj("/vminfo/", "", "post", "#vminfo");
+    var jsondata = $.parseJSON(dev);
+    $("#vmname").val(jsondata.vmname);
+    $("#vmmgrip").val(jsondata.vmmgrip);
+    $("#vmmgrport").val(jsondata.vmmgrport);
+    $("#vmtype").val(jsondata.vmtype);
+    $("#vmremark").val(jsondata.remark);
+    $("#vmram").val(jsondata.vmram);
+    $("#vmcpu").val(jsondata.vmcpu);
+    $('#myModal2').modal('show');
+  }
+
+function editimg()
+  {
+    document.getElementById('imginfo').reset();
+    var preid = $("#lsimg").data("selid");
+    if(preid == "0")
+      return false;
+    $("#imgid").val(preid);
+    var dev = ajaxobj("/imginfo/", "", "post", "#imginfo");
+    var jsondata = $.parseJSON(dev);
+
+    $("#imgname").val(jsondata.imgname);
+    $("#imgexptype").val(jsondata.imgarc);
+    $("#imgostype").val(jsondata.imgostype);
+    $("#imgram").val(jsondata.imgram);
+    $("#imgcpu").val(jsondata.imgcpu);
+    $("#imgarc").val(jsondata.imgarc);
+    $("#imgosversion").val(jsondata.imgosversion);
+    $("#imgfname").val(jsondata.imgfilename);
+    $("#remark").val(jsondata.remark);
+    $("#imgfname").show();
+    $('#myModal1').modal('show');
+  }
+
+  function vmdetailinfo()
+  {
+      var m_url=window.location.href;
+      if(m_url){
+        var m_start=m_url.indexOf("page=");
+        var m_end = m_url.indexOf("&");
+        m_url=m_url.substr((m_start+5),(m_end-m_start-5));
+      }
+      else{
+        m_url='';
+      }
+      $('#page').val(m_url);
+      var preid = $("#lsvm").data("selid");
+      if(preid == "0")
+        $('#vmdetail').attr('formaction', "");
+      else
+        $('#vmdetail').attr('formaction', '/tools/getInstanceInfo/' + preid);
+  }
+  function vmstop()
+    {
+      var preid = $("#lsvm").data("selid");
+      if(preid == "0")
+        return
+      else
+      {
+        json=ajaxobj('/tools/selectServerVMStop/' + preid+'/', "", "post", "");
+        jsondata = $.parseJSON(json);
+        if(jsondata.result == 0)
+        {
+          Showbo.Msg.alert("停止失败");
+        }
+        else
+        {
+         document.getElementById("vmform").submit();
+       }
+     }
+   }
+  function vmstart()
+   {
+      var preid = $("#lsvm").data("selid");
+      if(preid == "0")
+      {
+        return;
+      }
+      else
+      {
+        json=ajaxobj('/tools/selectServerVMStart/' + preid+'/', "", "post", "");
+        jsondata = $.parseJSON(json);
+        if(jsondata.result == 0)
+        {
+          Showbo.Msg.alert("启动失败");
+        }
+        else
+        {
+          document.getElementById("vmform").submit();
+        }
+      }
+    }
+  function hiddenfname()
+  {
+    $("#imgfname").hide();
+  }
+  function checkinputfile(){
+    if($('#image_file').val() && !$('#uploadbtn').prop("disabled")){
+      Showbo.Msg.oncallback = checkinputfilecallback;
+      Showbo.Msg.confirm("镜像未上传,继续提交吗？");
+      return false;
+    }
+    else
+    {
+      // clearuploadfile();
+      return true;
+    }
+  }
+
+  //****************************************************************
+   // 检测上传文件大小并与服务器剩余空间比较
+   function getFileSize(obj,uploadbtnid){ 
+    var objValue = obj.value;  
+    if (objValue=="") return ;  
+    var fileLenth=-1; 
+    try {  
+      //对于IE判断要上传的文件的大小  
+      var fso = new ActiveXObject("Scripting.FileSystemObject");  
+      fileLenth=parseInt(fso.getFile(objValue).size);  
+    } catch (e){  
+      try{  
+          //对于非IE获得要上传文件的大小  
+          fileLenth=parseInt(obj.files[0].size);  
+        }catch (e) {  
+          fileLenth=-1;  
+        }  
+      }
+      if(fileLenth!=-1){
+        fileLenth=fileLenth/1048576;
+      }
+      var toolnamecheck = ajaxobj("/tools/toollengthcheck/", "", "post", "");
+      var jsondata = $.parseJSON(toolnamecheck);
+      
+      if(fileLenth>15360){
+        Showbo.Msg.alert('上传文件大小超过15G限定');
+        $('#'+uploadbtnid).attr('disabled','disabled');
+        clearuploadfile();
+      }
+      else if(jsondata.available<20480){
+        Showbo.Msg.alert('磁盘空间小于20G，禁止上传');
+        $('#'+uploadbtnid).attr('disabled','disabled');
+        clearuploadfile();
+      }
+      return fileLenth;  
+    } 
+  //*****************************************************
+  function checkinputfilecallback(){
+    document.getElementById("img_exptype").value=document.getElementById("img_arc").value
+    document.getElementById("btnsaveimg").onclick = clearuploadfile();
+    document.getElementById("btnsaveimg").click();
+  }
+
+  function checkeditinputfile(){
+    if($('#imgfilename').val() && !$('#uploadbtnedit').prop("disabled")){
+      Showbo.Msg.oncallback = checkeditinputfilecallback;
+      Showbo.Msg.confirm("镜像未上传,继续提交吗？");
+      return false;
+    }
+    else
+    {
+      // clearuploadfile();
+      return true;
+    }
+  }
+
+  function checkeditinputfilecallback(){
+    document.getElementById("btnsaveimgedit").onclick = clearuploadfile;
+    document.getElementById("btnsaveimgedit").click();
+  }
+
+  function clickcancel(){
+    var reg = new RegExp(/\?page=/);
+    var str = window.location.href;
+
+    if(str.match(reg)){
+      self.location.reload();
+    }
+    else{
+      window.location.href="/vms/?page=1&type=img";
+    }
+  }
+
+  function newvm(){
+    $("#image_file").val("");
+    $("#btnsavevm").attr('disabled',false);
+    $("#btnsaveimg").attr('disabled',false);
+    $("#resetbutton").attr('disabled',false);
+    document.getElementById('upload_form').reset();
+  }
+
+  function startUploadingimg(strURL, progress_percent, currentProgress, ufile, ufilename, upload_form) {
+    if($("#" + ufile).val() == "")
+      return;
+    $("#imagefilename").val("");
+    $("#imagefilename1").val("");
+    $("#" + ufilename).val("-1");
+    $("#btnsavevm").attr('disabled','disabled');
+    $("#btnsaveimg").attr('disabled','disabled');
+    $("#resetbutton").attr('disabled','disabled');
+
+    pgpercent = progress_percent;
+    progress = currentProgress;
+    // cleanup all temp states
+    iPreviousBytesLoaded = 0;
+
+    document.getElementById(pgpercent).innerHTML = '0%';
+
+     var file = $("#" + ufile)[0].files[0],  //文件对象
+          name = file.name,        //文件名
+          size = file.size,        //总大小
+          succeed = 0;
+
+      var shardSize = 10 * 1024 *1024,     //以10MB为一个分片
+          shardCount = Math.ceil(size / shardSize);   //总片数
+      var m_percent=0;
+
+      // 先删除原有同名文件，再进行上传
+      var deleteform = new FormData();
+      deleteform.append("name", name);     
+      //Ajax提交
+      $.ajax({
+        url:'/deletefile/',
+        type: "POST",
+        data: deleteform,
+        async: false,         //同步
+        processData: false,  //很重要，告诉jquery不要对form进行处理
+        contentType: false,  //很重要，指定为false才能形成正确的Content-Type
+      });
+
+      // 上传新文件
+      for(var i = 0;i < shardCount;++i){
+          //计算每一片的起始与结束位置
+          var start = i * shardSize,
+          end = Math.min(size, start + shardSize);
+
+          //构造一个表单，FormData是HTML5新增的
+          var form = new FormData();
+          form.append("data", file.slice(start,end));  //slice方法用于切出文件的一部分
+          form.append("name", name);
+          form.append("total", shardCount);   //总片数
+          form.append("index", i + 1);        //前是第几片         
+          //Ajax提交
+          var uploadajax = $.ajax({
+            url: strURL,
+            type: "POST",
+            data: form,
+            async: false,//异步
+            processData: false,//很重要，告诉jquery不要对form进行处理
+            contentType: false,  //很重要，指定为false才能形成正确的Content-Type
+            success: function(){
+              ++succeed;
+              m_percent=Math.round((succeed)/(shardCount)*100*1)/1;// 计算结果保留整数位
+              document.getElementById(pgpercent).innerHTML = m_percent+"%";
+              $("#"+progress).width(m_percent+"%");
+              if(succeed==shardCount){
+                $("#" + ufilename).val(name);
+              }
+              else{
+                $("#" + ufilename).val("-1");
+              }
+              if(m_percent==100){
+                $("#btnsavevm").attr('disabled',false);
+                $("#btnsaveimg").attr('disabled',false);
+                $("#resetbutton").attr('disabled',false);           
+              }
+            }
+          });
+          // var form = new FormData();
+          // form.append("name", name);     
+          // //Ajax提交
+          // $.ajax({
+          //   url:'/deletefile/',
+          //   type: "POST",
+          //   data: form,
+          //   async: true,         //异步
+          //   processData: false,  //很重要，告诉jquery不要对form进行处理
+          //   contentType: false,  //很重要，指定为false才能形成正确的Content-Type
+          // });
+          // break;
+      }
+
+      // if($("#" + ufile).val() == "")
+      //   return;
+      // $("#imagefilename").val("");
+      // $("#imagefilename1").val("");
+      // $("#" + ufilename).val("-1");
+      
+      // pgpercent = progress_percent;
+      // progress = currentProgress;
+      // // cleanup all temp states
+      // iPreviousBytesLoaded = 0;
+
+      // document.getElementById(pgpercent).innerHTML = '';
+
+      // var vFD = new FormData(document.getElementById(upload_form)); 
+
+      // var oXHR = new XMLHttpRequest();        
+      // oXHR.upload.addEventListener('progress', uploadProgress, false);
+      // oXHR.addEventListener('load', uploadFinish, false);
+
+      // oXHR.open('POST', strURL);
+      // oXHR.send(vFD);
+
+      // oTimer = setInterval(doInnerUpdates, 300);
+      $('#uploadbtn').attr('disabled','disabled');
+      $('#uploadbtnedit').attr('disabled','disabled');
+
+    }
+
+    function uploadresult(jsondata)
+    {
+      if($("#imagefilename").val() == "-1")
+      {
+        $("#imagefilename").val(jsondata);
+      }
+      if($("#imagefilename1").val() == "-1")
+      {
+        $("#imagefilename1").val(jsondata);
+      }
+    } 
+
+    function clearupload(){
+      $('#uploadbtn').attr('disabled','disabled');
+      $("#currentProgress").width(0);
+      $('#progress_percent').text('0%');
+    }
+
+    function clearuploadfile()
+    {
+      $("#image_file").val("");
+      $("#imgfilename").val("");
+    }
+
+
+    function selectFileTypeedit()
+    {
+        if ((/\w+.img$/).test($('#imgfilename').val()) || (/\w+.qcow2$/).test($('#imgfilename').val())) {
+          $('#uploadbtnedit').removeAttr('disabled', 'disabled');
+          $("#curProgress").width(0);
+        }
+        else {
+          Showbo.Msg.alert('请选择字母、数字、下划线命名的镜像文件');
+          $('#uploadbtnedit').attr('disabled', 'disabled');
+          clearuploadfile();
+        }
+    }
+
+    function selectFileType()
+    {
+      if((/.img$/).test($('#image_file').val())||(/.iso$/).test($('#image_file').val()))
+      {
+        if((/\w+.img$/).test($('#image_file').val()) || (/\w+.qcow2$/).test($('#image_file').val()) || (/\w+.iso$/).test($('#image_file').val()))
+        {           
+          $('#uploadbtn').removeAttr('disabled','disabled');
+          $("#currentProgress").width(0);
+        }
+        else
+        {
+          Showbo.Msg.errorMsg('请选择字母、数字、下划线命名的镜像文件');
+          $('#uploadbtn').attr('disabled','disabled');
+          clearuploadfile();
+        }
+      }
+      else
+      {
+        Showbo.Msg.errorMsg('只允许上传img格式或iso格式的镜像文件');
+        $('#uploadbtn').attr('disabled','disabled');
+        clearuploadfile();
+      }
+    }
+
+    function checkvmname()
+    {
+      var vgateimgname=document.getElementById("img_name");
+      var vgacheck = ajaxobj("/vmnamecheck/", "", "post", "#upload_form");
+      var jsondata = $.parseJSON(vgacheck);
+      var reg=/^[A-Za-z0-9]+$/;
+      if(reg.test(vgateimgname.value)==false){
+        vgateimgname.setCustomValidity("只能输入数字或字母");
+       }
+      else if(jsondata.judgename==1){
+        vgateimgname.setCustomValidity("已存在的镜像名称!");
+        }
+      else{
+       vgateimgname.setCustomValidity("");
+      }
+    }
+
+  function checkvgavmname()
+  {
+    var vgatename=document.getElementById("vm_name");
+    var vgacheck = ajaxobj("/vgavmnamecheckt/", "", "post", "#createvm");
+    var jsondata = $.parseJSON(vgacheck);
+    var reg=/^[A-Za-z0-9]+$/;
+    if(reg.test(vgatename.value)==false)
+    {
+      vgatename.setCustomValidity("请输入数字或字母");
+      $("#hidebtn").click();
+      return false;
+    }
+    else if(jsondata.judgename==1)
+    {
+      vgatename.setCustomValidity("已存在的设备名称!");
+      $("#hidebtn").click();
+      return false;
+    }
+    else
+      {vgatename.setCustomValidity("");return true;}
+  }
+
+  function checknum(ramid){
+    var mob = document.getElementById(ramid);
+    var reg=/^\d+$/;
+    if(reg.test(mob.value)==false){
+    mob.setCustomValidity("请输入数字！");
+    $("#hidebtn").click();
+    return false;
+    }
+    else{
+      if(ramid==='vm_ram' && (parseInt(mob.value) > 8192 || parseInt(mob.value) < 1)){
+        mob.setCustomValidity("请输入1到8192之间的数字!");
+        $("#hidebtn").click();
+        return false;
+      }
+      else if(ramid==='vm_cpu' && (parseInt(mob.value) > 4 || parseInt(mob.value) < 1)){
+        mob.setCustomValidity("请输入1到4之间的数字!");
+        $("#hidebtn").click();
+        return false;
+      }
+      else{
+        mob.setCustomValidity("");
+      }
+    }
+    return true;
+  }
+
+
+  function checkvmnameedit()
+  {
+    var vgateimgname=document.getElementById("imgname");
+    var vgacheck = ajaxobj("/vmnamecheck/", "", "post", "#imginfo");
+    var jsondata = $.parseJSON(vgacheck);
+    if(jsondata.judgename==1)
+      vgateimgname.setCustomValidity("已存在的镜像名称!");
+    else
+      vgateimgname.setCustomValidity("");
+  }
+
+  function checknumbercpu(cpuid){
+   var mob = document.getElementById(cpuid);
+   var reg=/^\d+$/;
+   if(reg.test(mob.value)==false){
+      mob.setCustomValidity("CPU只能是数字！");
+      $("#hidebtn_edit").click();
+      return false;
+   }
+   else if((parseInt(mob.value) > 4 || parseInt(mob.value) < 1)){
+      mob.setCustomValidity("请输入1到4之间的数字!");
+      $("#hidebtn_edit").click();
+      return false;
+    }
+   else{
+    mob.setCustomValidity("");
+    return true;
+   }
+    
+  }
+
+  function checknumberram(ramid){
+   var mob = document.getElementById(ramid);
+   var reg=/^\d+$/;
+   if(reg.test(mob.value)==false){
+     mob.setCustomValidity("内存只能是数字！");
+     $("#hidebtn_edit").click();
+     return false;
+   }
+   else if((parseInt(mob.value) > 8192 || parseInt(mob.value) < 1)){
+      mob.setCustomValidity("请输入1到8192之间的数字!");
+      $("#hidebtn_edit").click();
+      return false;
+    }
+   else{
+    mob.setCustomValidity("");
+    return true;
+   }
+    
+  }
+
+  function isIP_edit(strIP) { 
+    var ipstr = document.getElementById(strIP);
+    var re=/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/g //匹配IP地址的正则表达式 
+    if(re.test(ipstr.value)) 
+    { 
+      if( RegExp.$1 <256 && RegExp.$2<256 && RegExp.$3<256 && RegExp.$4<256)
+      { 
+        if(strIP=='vm_mgrip')
+        {
+          var vgacheck = ajaxobj("/vmipnamecheck/", "", "post", "#createvm");
+          var jsondata = $.parseJSON(vgacheck);
+        }
+        else
+        {
+          var vgacheck = ajaxobj("/vmipnamecheckedit/", "", "post", "#vminfo");
+          var jsondata = $.parseJSON(vgacheck);
+        }
+        // if(jsondata.judgename==1)
+        //   {ipstr.setCustomValidity("已存在的ip地址!");
+        // $("#hidebtn_edit").click();
+        // return false;}
+        // else
+        //   {ipstr.setCustomValidity("");
+        // return true;}
+        ipstr.setCustomValidity("");
+        return true;
+      }
+      else
+      {
+        ipstr.setCustomValidity("请输入正确ip地址格式！");
+        $("#hidebtn_edit").click();
+        return false;
+      }
+    } 
+    else
+    {
+      ipstr.setCustomValidity("请输入正确ip地址格式!");
+      $("#hidebtn_edit").click();
+      return false;
+    }
+  } 
+
+  function isIP(strIP) { 
+    var ipstr = document.getElementById(strIP);
+    var re=/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/g //匹配IP地址的正则表达式 
+    if(re.test(ipstr.value)) 
+    { 
+      if( RegExp.$1 <256 && RegExp.$2<256 && RegExp.$3<256 && RegExp.$4<256)
+      { 
+        if(strIP=='vm_mgrip')
+        {
+          var vgacheck = ajaxobj("/vmipnamecheck/", "", "post", "#createvm");
+          var jsondata = $.parseJSON(vgacheck);
+        }
+        else
+        {
+          var vgacheck = ajaxobj("/vmipnamecheckedit/", "", "post", "#vminfo");
+          var jsondata = $.parseJSON(vgacheck);
+        }
+        // if(jsondata.judgename==1)
+        //   {ipstr.setCustomValidity("已存在的ip地址!");
+        // $("#hidebtn").click();
+        // return false;}
+        // else
+          // {
+          ipstr.setCustomValidity("");
+          return true;
+      // }
+      }
+      else
+      {
+        ipstr.setCustomValidity("请输入正确ip地址格式！");
+        $("#hidebtn").click();
+        return false;
+      }
+    } 
+    else
+    {
+      ipstr.setCustomValidity("请输入正确ip地址格式!");
+      $("#hidebtn").click();
+      return false;
+    }
+  } 
+
+  function isPort(str){  
+    var portstr = document.getElementById(str);
+    if (/^\d+$/.test(portstr.value) && parseInt(portstr.value)<65536 && parseInt(portstr.value)>0)
+    {
+      portstr.setCustomValidity("");
+      return true;
+    }
+    else
+    {
+      portstr.setCustomValidity("请输入1到65536的数字");
+      $("#hidebtn").click();
+      return false;
+    }
+  } 
+
+  function isPort_edit(str){  
+    var portstr = document.getElementById(str);
+    if (/^\d+$/.test(portstr.value) && parseInt(portstr.value)<65536 && parseInt(portstr.value)>0)
+    {
+      portstr.setCustomValidity("");
+      return true;
+    }
+    else
+    {
+      portstr.setCustomValidity("请输入1到65536的数字");
+      $("#hidebtn_edit").click();
+      return false;
+    }
+  } 
+</script>
+{% endblock %}

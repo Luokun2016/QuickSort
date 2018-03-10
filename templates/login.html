@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>天融信网络安全仿真系统</title>
+    <link href="/statics/css/bootstrap.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/statics/css/navbar.css" rel="stylesheet"/>
+    <link href="/statics/css/allStyle.css" rel="stylesheet"/>
+    <!--   <link href="/statics/css/docsss.css" rel="stylesheet"/> -->
+    <link href='/statics/css/ui.dynatree.css' rel='stylesheet'/>
+    <link href="/statics/css/showBo.css" rel="stylesheet"/>
+
+    <link href='/statics/css/ui.dynatree.custom.css' rel='stylesheet'/>
+    <link href="/statics/css/bootstrap-datetimepicker.min.css" rel="stylesheet"/>
+
+    <link type="text/css" href="/statics/myflow/lib/jquery-ui-1.8.4.custom.css" rel="stylesheet" />
+
+    <style type="text/css">
+      .table-hover > tbody > tr:hover > td { cursor: pointer; }
+    </style>
+    {% block css %}{% endblock %}
+    <script src="/statics/js/jquery.js"></script>
+    <script src="/statics/js/showBo.js"></script>
+    <script src="/statics/js/bootstrap.min.js"></script>
+    <script src="/statics/js/bootstrap-datetimepicker.js"></script>
+    <script src="/statics/js/bootstrap-datetimepicker.zh-CN.js"></script>
+    {% block script %}
+      <script src='/statics/js/jquery.custom.js' type="text/javascript"></script>
+      <script src='/statics/js/jquery.cookie.js' type="text/javascript"></script>
+      <script src='/statics/js/jquery.dynatree.js' type="text/javascript"></script>
+      <script type="text/javascript" src="/statics/myflow/lib/raphael.js"></script>
+      <script type="text/javascript" src="/statics/myflow/myflowdetail.js"></script>
+      <script type="text/javascript" src="/statics/myflow/myflow.jpdl4detail.js"></script>
+      <script type="text/javascript" src="/statics/myflow/myflow.editorsdetail.js"></script>
+    {% endblock %}
+      <script type="text/javascript">
+        function GetRandomNum(Min,Max)
+        {   
+            var Range = Max - Min;   
+            var Rand = Math.random();   
+            return(Min + Math.round(Rand * Range));   
+        }
+        function mlogin()
+        {
+          clearinput();
+          $('#myModal1').modal('show');
+        }
+
+        function clogin()
+        {
+           clearinput();
+          $('#myModal2').modal('show');
+        }
+         function clearinput()
+        {
+            document.getElementById("txtaccount").value="";
+            document.getElementById("txtpwd").value="";
+            document.getElementById("ctxtaccount").value="";
+            document.getElementById("ctxtpwd").value="";
+        }
+        function resize()
+        {
+                $("#bgdimg").css('width', window.innerWidth + 'px');
+                $("#bgdimg").css('height', window.innerHeight + 'px');
+                
+                $("#glimg").css('width', 135 * document.documentElement.clientWidth / window.screen.width);
+                $("#glimg").css('height', 105 * document.documentElement.clientHeight/(window.screen.height - 120));
+                $("#khimg").css('width', 135 * document.documentElement.clientWidth / window.screen.width);
+                $("#khimg").css('height', 105 * document.documentElement.clientHeight/(window.screen.height - 120));
+                $("#lgdiv").css('left', $("#bgdimg").css('width') -  $("#glimg").css('width') - 5);
+        }
+    </script>
+  </head>
+
+  <body style='width:100%; height:100%;' onresize="resize()">
+    <form>
+        <div id="bgdimg" style="z-index:5; position:absolute; left:0; top:0; overflow: hidden;">
+            <div style="z-index:50; position:absolute; left:0; top:0; width:100%; height:100%;">
+                <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1920 1151" preserveAspectRatio="none">
+                    <image x="0" y="0" width="1920px" height="1151px" xlink:href="../statics/animate/bgd.png" />
+                    <path id="path1" d="M1250,500 L450,435" fill="none" stroke="none" stroke-width="5" />
+                    <circle cx="1250" cy="500" r="6" fill="red"></circle>
+                    <circle cx="1250" cy="500" r="4" fill="red">
+                        <animate attributeType="CSS" attributeName="opacity" begin="0s" from="0.8" to="0.3" dur="4s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="0s" dur="4s" fill="remove" from="4" to="50" repeatCount="indefinite" /></circle>
+                    <circle cx="450" cy="435" r="4" fill="yellow"></circle>
+                    <circle cx="450" cy="435" r="4" fill="green">
+                        <animate attributeType="CSS" attributeName="opacity" begin="4s" from="0.8" to="0.3" dur="4s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="4s" dur="4s" fill="freeze" from="4" to="60" repeatCount="indefinite" /></circle>
+                    <circle r="2" fill="red">
+                        <animateMotion dur="4s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path1" /></animateMotion>
+                    </circle>
+                    <path d="M0,-2 L0,2 L -102,0 z" fill="red" stroke="red" stroke-width="1" opacity="0.8">
+                        <animateMotion dur="4s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path1" /></animateMotion>
+                        <animateTransform attributeName="transform" attributeType="XML" type="scale" from="0" to="1" additive="sum" begin="0s" dur="4s" repeatCount="indefinite" /></path>
+                    <path id="path2" d="M407,452 L1200,430" fill="none" stroke="none" stroke-width="5" />
+                    <circle cx="1200" cy="430" r="4" fill="red"></circle>
+                    <circle cx="1200" cy="430" r="4" fill="red">
+                        <animate attributeType="CSS" attributeName="opacity" begin="0s" from="0.8" to="0.3" dur="4s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="0s" dur="4s" fill="freeze" from="4" to="30" repeatCount="indefinite" /></circle>
+                    <circle cx="407" cy="452" r="4" fill="yellow"></circle>
+                    <circle cx="407" cy="452" r="4" fill="#7CFC00">
+                        <animate attributeType="CSS" attributeName="opacity" begin="4s" from="0.8" to="0.3" dur="4s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="4s" dur="4s" fill="freeze" from="4" to="30" repeatCount="indefinite" /></circle>
+                    <circle r="2" fill="#7CFC00">
+                        <animateMotion dur="4s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path2" /></animateMotion>
+                    </circle>
+                    <path d="M0,-2 L0,2 L -102,0 z" fill="#7CFC00" stroke="#7CFC00" stroke-width="1" opacity="0.8">
+                        <animateMotion dur="4s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path2" /></animateMotion>
+                        <animateTransform attributeName="transform" attributeType="XML" type="scale" from="0" to="1" additive="sum" begin="0s" dur="4s" repeatCount="indefinite" /></path>
+                    <path id="path3" d="M380,440 L1286,420" fill="none" stroke="none" stroke-width="5" />
+                    <circle cx="1286" cy="420" r="6" fill="red"></circle>
+                    <circle cx="1286" cy="420" r="4" fill="red">
+                        <animate attributeType="CSS" attributeName="opacity" begin="0s" from="0.8" to="0.3" dur="4s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="0s" dur="4s" fill="freeze" from="4" to="30" repeatCount="indefinite" /></circle>
+                    <circle cx="380" cy="440" r="4" fill="yellow"></circle>
+                    <circle cx="380" cy="440" r="4" fill="yellow">
+                        <animate attributeType="CSS" attributeName="opacity" begin="4s" from="0.8" to="0.3" dur="4s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="4s" dur="4s" fill="freeze" from="4" to="30" repeatCount="indefinite" /></circle>
+                    <circle r="2" fill="yellow">
+                        <animateMotion dur="4s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path3" /></animateMotion>
+                    </circle>
+                    <path d="M0,-2 L0,2 L -102,0 z" fill="yellow" stroke="yellow" stroke-width="1" opacity="0.8">
+                        <animateMotion dur="4s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path3" /></animateMotion>
+                        <animateTransform attributeName="transform" attributeType="XML" type="scale" from="0" to="1" additive="sum" begin="0s" dur="4s" repeatCount="indefinite" /></path>
+                    <path id="path4" d="M1240,444 L360,400" fill="none" stroke="none" stroke-width="5" />
+                    <circle cx="1240" cy="444" r="6" fill="red"></circle>
+                    <circle cx="1240" cy="444" r="4" fill="red">
+                        <animate attributeType="CSS" attributeName="opacity" begin="0s" from="0.8" to="0.3" dur="12s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="0s" dur="12s" fill="freeze" from="4" to="35" repeatCount="indefinite" /></circle>
+                    <circle cx="360" cy="400" r="4" fill="yellow"></circle>
+                    <circle cx="360" cy="400" r="4" fill="#ed4def">
+                        <animate attributeType="CSS" attributeName="opacity" begin="12s" from="0.8" to="0.3" dur="12s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="12s" dur="12s" fill="freeze" from="4" to="35" repeatCount="indefinite" /></circle>
+                    <circle r="2" fill="red">
+                        <animateMotion dur="12s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path4" /></animateMotion>
+                    </circle>
+                    <path d="M0,-2 L0,2 L -102,0 z" fill="red" stroke="red" stroke-width="1" opacity="0.8">
+                        <animateMotion dur="12s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path4" /></animateMotion>
+                        <animateTransform attributeName="transform" attributeType="XML" type="scale" from="0" to="1" additive="sum" begin="0s" dur="12s" repeatCount="indefinite" /></path>
+                    <path id="path5" d="M330,430 L1300,480" fill="none" stroke="none" stroke-width="5" />
+                    <circle cx="1300" cy="480" r="6" fill="red"></circle>
+                    <circle cx="1300" cy="480" r="4" fill="red">
+                        <animate attributeType="CSS" attributeName="opacity" begin="0s" from="0.8" to="0.3" dur="8s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="0s" dur="8s" fill="freeze" from="4" to="40" repeatCount="indefinite" /></circle>
+                    <circle cx="330" cy="430" r="4" fill="yellow"></circle>
+                    <circle cx="330" cy="430" r="4" fill="#4dedef">
+                        <animate attributeType="CSS" attributeName="opacity" begin="8s" from="0.8" to="0.3" dur="8s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="8s" dur="8s" fill="freeze" from="4" to="40" repeatCount="indefinite" /></circle>
+                    <circle r="2" fill="#4dedef">
+                        <animateMotion dur="8s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path5" /></animateMotion>
+                    </circle>
+                    <path d="M0,-2 L0,2 L -102,0 z" fill="#4dedef" stroke="#4dedef" stroke-width="1" opacity="0.8">
+                        <animateMotion dur="8s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path5" /></animateMotion>
+                        <animateTransform attributeName="transform" attributeType="XML" type="scale" from="0" to="1" additive="sum" begin="0s" dur="8s" repeatCount="indefinite" /></path>
+                    <path id="path6" d="M1270,510 L320,440" fill="none" stroke="none" stroke-width="5" />
+                    <circle cx="1270" cy="510" r="4" fill="red"></circle>
+                    <circle cx="1270" cy="510" r="4" fill="red">
+                        <animate attributeType="CSS" attributeName="opacity" begin="0s" from="0.8" to="0.3" dur="6s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="0s" dur="6s" fill="freeze" from="4" to="35" repeatCount="indefinite" /></circle>
+                    <circle cx="320" cy="440" r="4" fill="yellow"></circle>
+                    <circle cx="320" cy="440" r="4" fill="#f6a8f6">
+                        <animate attributeType="CSS" attributeName="opacity" begin="6s" from="0.8" to="0.3" dur="6s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="6s" dur="6s" fill="freeze" from="4" to="35" repeatCount="indefinite" /></circle>
+                    <circle r="2" fill="red">
+                        <animateMotion dur="6s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path6" /></animateMotion>
+                    </circle>
+                    <path d="M0,-2 L0,2 L -102,0 z" fill="red" stroke="red" stroke-width="1" opacity="0.8">
+                        <animateMotion dur="6s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path6" /></animateMotion>
+                        <animateTransform attributeName="transform" attributeType="XML" type="scale" from="0" to="1" additive="sum" begin="0s" dur="6s" repeatCount="indefinite" /></path>
+                    <path id="path7" d="M420,440 L1300,400" fill="none" stroke="none" stroke-width="5" />
+                    <circle cx="1300" cy="400" r="4" fill="red"></circle>
+                    <circle cx="1300" cy="400" r="4" fill="red">
+                        <animate attributeType="CSS" attributeName="opacity" begin="0s" from="0.8" to="0.3" dur="5s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="0s" dur="5s" fill="freeze" from="4" to="40" repeatCount="indefinite" /></circle>
+                    <circle cx="420" cy="440" r="4" fill="yellow"></circle>
+                    <circle cx="420" cy="440" r="4" fill="#FF4500">
+                        <animate attributeType="CSS" attributeName="opacity" begin="5s" from="0.8" to="0.3" dur="5s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="5s" dur="5s" fill="freeze" from="4" to="40" repeatCount="indefinite" /></circle>
+                    <circle r="2" fill="#FF4500">
+                        <animateMotion dur="5s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path7" /></animateMotion>
+                    </circle>
+                    <path d="M0,-2 L0,2 L -102,0 z" fill="#FF4500" stroke="#FF4500" stroke-width="1" opacity="0.8">
+                        <animateMotion dur="5s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path7" /></animateMotion>
+                        <animateTransform attributeName="transform" attributeType="XML" type="scale" from="0" to="1" additive="sum" begin="0s" dur="5s" repeatCount="indefinite" /></path>
+                    <path id="path8" d="M247,410 L1150,410" fill="none" stroke="none" stroke-width="5" />
+                    <circle cx="1150" cy="410" r="4" fill="red"></circle>
+                    <circle cx="1150" cy="410" r="4" fill="red">
+                        <animate attributeType="CSS" attributeName="opacity" begin="0s" from="0.8" to="0.3" dur="11s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="0s" dur="11s" fill="freeze" from="4" to="35" repeatCount="indefinite" /></circle>
+                    <circle cx="247" cy="410" r="4" fill="yellow"></circle>
+                    <circle cx="247" cy="410" r="4" fill="#9400D3">
+                        <animate attributeType="CSS" attributeName="opacity" begin="11s" from="0.8" to="0.3" dur="11s" repeatCount="indefinite" />
+                        <animate attributeName="r" attributeType="XML" begin="11s" dur="11s" fill="freeze" from="4" to="35" repeatCount="indefinite" /></circle>
+                    <circle r="2" fill="#9400D3">
+                        <animateMotion dur="11s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path8" /></animateMotion>
+                    </circle>
+                    <path d="M0,-2 L0,2 L -102,0 z" fill="#9400D3" stroke="#9400D3" stroke-width="1" opacity="0.8">
+                        <animateMotion dur="11s" repeatCount="indefinite" rotate="auto">
+                            <mpath xlink:href="#path8" /></animateMotion>
+                        <animateTransform attributeName="transform" attributeType="XML" type="scale" from="0" to="1" additive="sum" begin="0s" dur="11s" repeatCount="indefinite" /></path>
+                </svg>
+            </div>
+            <div id='lgdiv' style="z-index:110; position:absolute; bottom:5px; width:100%; color:white; float:right;">
+                <table style="float:right;">
+                    <tr>
+                        <td style="float:right; padding-right:5px;">
+                            <img id="glimg" src="../statics/animate/gl.png" alt="" onclick="mlogin()" style="cursor:pointer;" /></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <img id="khimg" src="../statics/animate/kh.png" alt="" onclick="clogin()" style="cursor:pointer;" /></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </form>
+    <form id='logincheck' class="form-signin" action="/Login/" method="post" style="text-align:center; vertical-align:middle;">
+      {% csrf_token %}
+      <div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" style="overflow: hidden;">
+        <div class="modal-dialog"  style="width:360px; padding-top:240px;">
+          <div class="modal-content" style="width:330px; height:180px; padding-top:5px; border-top: 5px solid #2D63EF; ">
+            <div style="margin-top:50px; margin-left:10px;">
+              <table >
+                  <tr>
+                      <td>
+                          <strong>用户名：</strong>
+                      </td>
+                      <td>
+                          <input type="text" tabindex=1 id='txtaccount' name="txtaccount" required="required" class="form-control topself_input" placeholder="用户名" maxLength="20" autofocus />
+                      </td>
+                      <td rowspan="2" style="padding-top:0px; vertical-align:top;">
+                          <button class="btn btn-lg btn-primary topsecloginbtn" style="width:60px; height:50px; margin-top:3px; border-radius: 3px 3px 3px 3px; padding: 0px 9px;" tabindex=4 onclick='checkdname()' type="submit" formaction="/index/">登 录</button>
+                      </td>
+                  </tr>
+                  <tr>
+                      <td style="vertical-align:middle; padding-top:0px;">
+                          <strong>密&nbsp;&nbsp;&nbsp;码：</strong>
+                      </td>
+                      <td style="padding-top:6px; vertical-align:middle;">
+                          <input type="password" tabindex=2 id='txtpwd' name="txtpwd" required="required" maxLength="20" class="form-control topself_input" placeholder="密码" />
+                      </td>
+                  </tr>
+                   <tr>
+                      <td colspan="3"  style="text-align:right;padding-top:0px; ">
+                          <button class="btn btn-primary topsecloginbtn" style="width:100px; height:30px; margin-top:11px; border-radius: 3px 3px 3px 3px; padding: 0px 9px;" onclick=' showregister_admin();'  type="submit">注册新管理员</button>
+                      </td>
+                  </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+    <form id='clientcheck' class="form-signin" action="/clientindex/" method="post" style="text-align:center; vertical-align:middle;">
+      {% csrf_token %}
+      <div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true"  style="overflow: hidden;">
+        <div class="modal-dialog"  style="width:360px; padding-top:240px;">
+          <div class="modal-content" style="width:330px; height:180px; padding-top:5px; border-top: 5px solid #2D63EF;">
+            <div style="margin-top:50px; margin-left:10px;">
+              <table>
+                  <tr>
+                      <td>
+                          <strong>学&nbsp;&nbsp;&nbsp;号：</strong>
+                      </td>
+                      <td>
+                          <input type="text" tabindex=1 id='ctxtaccount' name="ctxtaccount" required="required" class="form-control topself_input" placeholder="学号" maxLength="20" autofocus />
+                      </td>
+                      <td rowspan="2" style="padding-top:0px; vertical-align:top;">
+                          <button tabindex=4 class="btn btn-lg btn-primary topsecloginbtn" style="width:60px; height:50px; margin-top:3px; border-radius: 3px 3px 3px 3px; padding: 0px 9px;" onclick='return checkcname();'  type="submit">登 录</button>
+                      </td>
+                  </tr>
+                  <tr>
+                      <td style="vertical-align:middle; padding-top:0px;">
+                          <strong>密&nbsp;&nbsp;&nbsp;码：</strong>
+                      </td>
+                      <td style="padding-top:6px; vertical-align:middle;">
+                          <input type="password" tabindex=2 id='ctxtpwd' name="ctxtpwd" required="required" maxLength="20" class="form-control topself_input" placeholder="密码" />
+                      </td>
+                  </tr>
+                  <tr>
+                      <td colspan="3"  style="text-align:right;padding-top:0px; ">
+                          <button class="btn btn-primary topsecloginbtn" style="width:90px; height:30px; margin-top:11px; border-radius: 3px 3px 3px 3px; padding: 0px 9px;" onclick='showregister_student();'  type="submit">注册新学员</button>
+                      </td>
+                  </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+    <!-- 注册教练页面 action="/registeradmin/" method="post"-->
+    <form id='registeradmin' class="form-signin"  style="text-align:center; vertical-align:middle;">{% csrf_token %}
+        <div class="modal fade" id="myModal4" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" style="overflow: hidden;">
+            <div class="modal-dialog" style="width:1000px">
+                <div class="modal-content" style="width:950px;">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h3 id="adminModalLabel">注册管理员</h3></div>
+                    <div>
+                        <table class="table topsec_tabletop">
+                            <tr>
+                                <td style="width:130px; text-align:right; vertical-align:middle;">
+                                    <font color="#FF0000">*</font>账号：</td>
+                                <td style="width:370px; ">
+                                    <input id='account_admin' name='account' type='text' required="required" placeholder="最多输入20个文字" maxLength="20"  class="form-control topself_input"/></td>
+                                <td style="width:130px; text-align:right; vertical-align:middle;">
+                                    <font color="#FF0000">*</font>姓名：</td>
+                                <td style="width:370px; ">
+                                    <input id='name_admin' name='teaname' type='text' required="required" placeholder="最多输入20个文字" maxLength="20" class="form-control topself_input" /></td>
+                            </tr>
+                            <tr>
+                                <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>性别：</td>
+                                <td>
+                                    <select class="form-control" style="width:120px;" id='sex_admin' name='sex' required="required">
+                                        <option value="0">男</option>
+                                        <option value="1">女</option></select>
+                                </td>
+                                <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>权限：</td>
+                                <td>
+                                    <select class="form-control" style="width:120px;" id='roletype_admin' name='roletype' required="required">
+                                        <option value='0'>教练员</option>
+                                        <option value='1'>管理员</option></select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width:130px; text-align:right; vertical-align:middle;">邮箱：</td>
+                                <td style="width:370px; ">
+                                    <input id='email_admin' name='email' type='email' placeholder="最大长度50个字符" maxLength="50" class="form-control topself_input" /></td>
+                                <td style="width:130px; text-align:right; vertical-align:middle;">电话：</td>
+                                <td style="width:370px; ">
+                                    <input id='mobile_admin' name='mobile' type='text' maxLength="11"  class="form-control topself_input" /></td>
+                            </tr>
+                            <tr>
+                                <td style="width:130px; text-align:right;  vertical-align:middle;">其它联系方式：</td>
+                                <td colspan=3>
+                                    <input id='otherlink_admin' name='otherlink' maxLength="50" type='text' class="form-control topself_input" /></td>
+                            </tr>
+                            <tr>
+                                <td style="width:130px; padding-left:60px;  vertical-align:middle;">
+                                    <h4>密码</h4></td>
+                                <td style="width:370px; "></td>
+                                <td colspan=2 style="width:370px; "></td>
+                            </tr>
+                            <tr>
+                                <td style="width:130px; text-align:right; vertical-align:middle;">
+                                    <font color="#FF0000">*</font>密 码：</td>
+                                <td>
+                                    <input id='pwd_admin' name='pwd' required="required" maxLength="20" type='password'  class="form-control topself_input" placeholder="请输入6-20位字母、数字或字符" /></td>
+                                <td style="width:130px; text-align:right;">
+                                    <input id="checkbox_admin" type="checkbox" onclick='result("pwd_admin","pwdagain_admin","checkbox_admin")' style="width:50px; height:26px;" /></td>
+                                <td style="text-align:left; vertical-align:middle; ">使用初始密码</td></tr>
+                            <tr>
+                                <td style="width:130px; text-align:right; vertical-align:middle;">
+                                    <font color="#FF0000">*</font>确认密码：</td>
+                                <td style="width:370px; ">
+                                    <input id='pwdagain_admin' name='pwdagain' required="required" maxLength="20" type='password' class="form-control topself_input" placeholder="请输入6-20位字母、数字或字符" /></td>
+                                <td colspan=2></td>
+                            </tr>
+                        </table>
+                        <input id='createsadmin' name='createsadmin' type='hidden' value='1'/>
+                        <div class="modal-footer">
+                            <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'>
+                                <span class="glyphicon glyphicon-remove"></span>
+                            </button>
+                            <button class="btn btn-primary" id="btnaddtea_admin" type="button" onclick='createadmin()' title='保存'>
+                                <span class="glyphicon glyphicon-floppy-save"></span>
+                            </button>
+                            <button class="btn btn-default" type="button" onclick='clearinfo()' title='重置'>
+                                <span class="glyphicon glyphicon-retweet"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <!-- 注册学员页面 action="/registerstudent/" method="post"-->
+    <form id='registerstudent' class="form-signin"  style="text-align:center; vertical-align:middle;">{% csrf_token %}
+      <div class="modal fade" id="myModal3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" style="overflow: hidden;">
+        <div class="modal-dialog" style="width:1000px">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+              <h3 id="studentModalLabel">注册学员</h3></div>
+            <div>
+              <table class="table topsec_tabletop">
+                <tr>
+                  <td style="width:130px; text-align:right; vertical-align:middle;">
+                    <font color="#FF0000">*</font>学号：</td>
+                  <td style="width:370px; ">
+                    <input id='number_stu' required="required" placeholder="最多输入20个文字" maxLength="20" name='stuno' class="form-control topself_input" type='text' /></td>
+                  <td style="width:130px; text-align:right; vertical-align:middle;">
+                    <font color="#FF0000">*</font>姓名：</td>
+                  <td style="width:370px; ">
+                    <input id='name_stu' maxLength="20" placeholder="最多输入20个文字" required="required" name='stuname' type='text' class="form-control topself_input" /></td>
+                </tr>
+                <tr>
+                  <td style="width:130px; text-align:right; vertical-align:middle;">
+                    <font color="#FF0000">*</font>性别：</td>
+                  <td>
+                    <select class="form-control" style="width:120px;" id='sex_stu' name='sex'>
+                      <option value="0">男</option>
+                      <option value="1">女</option></select>
+                  </td>
+                  <td style="width:130px; text-align:right; vertical-align:middle;">邮箱：</td>
+                  <td style="width:370px; ">
+                    <input id='email_stu' name='email' placeholder="最大长度50个字符" type='email' maxLength="50" class="form-control topself_input" /></td>
+                </tr>
+                <tr>
+                  <td style="width:130px; text-align:right; vertical-align:middle;">电话：</td>
+                  <td style="width:370px; ">
+                    <input id='mobile_stu' name='mobile' type='text' maxLength="15" class="form-control topself_input" /></td>
+                  <td style="width:130px; text-align:right; vertical-align:middle;">
+                    <font color="#FF0000">*</font>系名：</td>
+                  <td>
+                    <select id='departmentid' name='departmentid' onchange="deptgracla()" class="form-control" style="width:240px;" required="required">
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="width:130px; text-align:right;  vertical-align:middle;">
+                    <font color="#FF0000">*</font>年级：</td>
+                  <td>
+                    <select id='gradeid' name='gradeid' onchange="gracla()" class="form-control" style="width:240px;" required="required">
+                    </select>
+                  </td>
+                  <td style="width:130px; text-align:right;  vertical-align:middle;">
+                    <font color="#FF0000">*</font>班级：</td>
+                  <td>
+                    <select id='clasid' name='clasid' class="form-control" style="width:240px;" required="required">
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="width:130px; padding-left:60px;  vertical-align:middle;">
+                    <h4>密码</h4></td>
+                  <td style="width:370px; "></td>
+                  <td colspan=2 style="width:370px; "></td>
+                </tr>
+                <tr>
+                  <td style="width:130px; text-align:right; vertical-align:middle;">
+                    <font color="#FF0000">*</font>密 码：</td>
+                  <td>
+                    <input id='pwd_stu' name='pwd' required="required" maxLength="20" type='password' class="form-control topself_input" placeholder="请输入6-20位字母、数字或字符" /></td>
+                  <td style="width:130px; text-align:right;">
+                    <input id="checkbox_stu" type="checkbox" onclick='result("pwd_stu","pwdagain_stu","checkbox_stu")' style="width:50px; height:26px;" /></td>
+                  <td style="text-align:left; vertical-align:middle; ">使用初始密码</td></tr>
+                <tr>
+                  <td style="width:130px; text-align:right; vertical-align:middle;">
+                    <font color="#FF0000">*</font>确认密码：</td>
+                  <td style="width:370px; ">
+                    <input id='pwdagain_stu' name='pwdagain_stu' required="required" maxLength="20" type='password'  placeholder="请输入6-20位字母、数字或字符" class="form-control topself_input" /></td>
+                  <td colspan=2></td>
+                </tr>
+              </table>
+              <input id='createstu' name='createstu' type='hidden' value='1'/>
+              <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'>
+                  <span class="glyphicon glyphicon-remove"></span>
+                </button>
+                <button class="btn btn-primary" id="btnaddcla_stu" type="button" onclick='createstudent()' title='保存'>
+                  <span class="glyphicon glyphicon-floppy-save"></span>
+                </button>
+                <button class="btn btn-default" type="button" onclick='clearinfo()' title='重置'>
+                  <span class="glyphicon glyphicon-retweet"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <script type="text/javascript">
+      $(document).ready(function() {
+          var agent = navigator.userAgent.toLowerCase();
+          var regStr_ff = /firefox\/[\d.]+/gi;
+          var str;
+          var arr;
+          var isChrome = window.navigator.userAgent.indexOf("Chrome") !== -1
+          //alert(document.body.clientWidth +"   " + document.body.clientHeight + "   " + window.screen.height + "    " + window.screen.width + "   " + document.documentElement.clientHeight)
+          resize();
+          if (agent.indexOf("firefox") > 0) {
+              str = agent.match(regStr_ff);
+              arr = str[0];
+              arr = arr.substr(8);
+              if (parseInt(arr) < 23) alert('火狐浏览器版本过低，请使用23.0及以上版本');
+          } else if (isChrome) {
+              alert("您当前使用为Chrome浏览器，不完全支持HTML5，请使用火狐23.0及以上版本，ie9以上版本等完全支持html5的浏览器！");
+          } else {
+              if (typeof(Worker) !== "undefined") {} else {
+                  alert("当前浏览器不支持HTML5，请使用火狐23.0及以上版本，ie9以上版本等完全支持html5的浏览器！");
+              }
+          }
+
+      });
+
+      function ajaxobj(_url, _tag, _way, _form) {
+          var m = (typeof(_way) == "undefined" ? "GET": _way);
+          var par = (typeof(_form) == "undefined" ? "": $(_form).serialize());
+          var info = "";
+          $.ajax({
+              type: m,
+              url: _url,
+              data: par,
+              async: false,
+              error: function(request) {
+                  //alert("Connection error");
+                  info = "xxxxxxx";
+              },
+              success: function(data) {
+                  //$(_tag).html(data);
+                  //alert(data);
+                  info = data;
+              }
+          });
+          return info;
+      }
+      // 注册管理员
+      function createadmin()
+      {
+
+          if(checkaccount()==1)
+            return;
+          if(checkname_admin()==1)
+            return;          
+          if(checknumber("mobile_admin")==1)
+            return;
+          if(checkPasswords('pwd_admin','pwdagain_admin')==1)
+            return;
+          var adm = ajaxobj("/teacheradd/", "", "post", "#registeradmin");
+          var jsondata = $.parseJSON(adm);
+          if (jsondata.result==0){
+            Showbo.Msg.alert("注册成功，等待管理员审核");
+            $('#myModal4').modal('hide');
+          }
+          else{
+            Showbo.Msg.alert("注册失败");
+          }
+      }
+      // 注册学生
+      function createstudent()
+      {
+          if(checkstuno()==1)
+            return;
+          if(checknumber("mobile_stu")==1)
+            return;
+          if(checkname_stu()==1)
+            return;            
+          if(checkPasswords('pwd_stu','pwdagain_stu')==1)
+            return;          
+          var stu = ajaxobj("/studentadd/", "", "post", "#registerstudent");
+          var jsondata = $.parseJSON(stu);
+          if (jsondata.result==0){
+            Showbo.Msg.alert("注册成功，等待管理员审核");
+            $('#myModal3').modal('hide');
+          }
+          else{
+            Showbo.Msg.alert("注册失败");
+          }
+      }
+
+      // 检查管理员账号是否存在
+      function checkaccount(){
+        var account=document.getElementById("account_admin");
+        if(account.value==''){
+          Showbo.Msg.alert("账号不能为空！");
+            return 1;
+        }
+
+        var judgeedit;
+        var tea = ajaxobj("/teacheraccountcheck/", "", "post", "#registeradmin");
+        var jsondata = $.parseJSON(tea);
+        judgeedit=jsondata.judgeaccount;
+        var reg=/^[A-Za-z0-9]+$/;//只能是数字或字母
+
+        if(reg.test(account.value) == false)
+        {
+            Showbo.Msg.alert("账号只能输入数字或字母！");
+            return 1;
+        }
+        else if(judgeedit==1)
+        {
+            Showbo.Msg.alert("已存在的教练账号!");
+            return 1;
+        }
+        else
+        {
+            account.setCustomValidity("");
+            return 0;
+        }
+      }
+
+      function checkname_admin(){
+        var account=document.getElementById("name_admin");
+        if(account.value==''){
+          Showbo.Msg.alert("姓名不能为空！");
+            return 1;
+        }
+      }
+
+      function checkname_stu(){
+        var account=document.getElementById("name_stu");
+        if(account.value==''){
+          Showbo.Msg.alert("姓名不能为空！");
+            return 1;
+        }
+      }
+
+      function checknumber(mobile){
+        var mob = document.getElementById(mobile);
+        if(mob.value!=''){
+          var reg=/^\d+$/;
+          if(reg.test(mob.value)==false){
+              Showbo.Msg.alert("电话只能是数字！");
+              return 1;
+          }
+          else if(mob.value.length<7 ){
+              Showbo.Msg.alert("电话位数错误！");
+              return 1;
+          }
+          else{
+              mob.setCustomValidity(""); 
+              return 0;         
+          }
+        }
+      }
+
+      function checkstuno(){
+         var stun=document.getElementById("number_stu");
+         var judgeadd;
+         var stu = ajaxobj("/studentstunocheck/", "", "post", "#registerstudent");
+         var jsondata = $.parseJSON(stu);
+         judgeadd=jsondata.judgestuno;
+         var reg=/^[A-Za-z0-9]+$/;//只能是数字或字母
+
+          if(reg.test(stun.value) == false)
+          {
+            Showbo.Msg.alert("账号只能输入数字或字母！");
+            return 1;
+          }
+          else if(judgeadd==1){
+            Showbo.Msg.alert("已存在的学员账号!");
+            return 1
+          }
+          else{
+            stun.setCustomValidity("");
+            return 0;
+          }
+
+      }
+
+      function clearinfo()
+      {
+        document.getElementById("account_admin").value="";
+        document.getElementById("name_admin").value="";
+        document.getElementById("email_admin").value="";
+        document.getElementById("mobile_admin").value="";
+        document.getElementById("otherlink_admin").value="";
+        document.getElementById("checkbox_admin").checked = false;
+        document.getElementById("pwd_admin").value="";
+        document.getElementById("pwdagain_admin").value="";
+
+        document.getElementById("number_stu").value="";
+        document.getElementById("name_stu").value="";
+        document.getElementById("email_stu").value="";
+        document.getElementById("mobile_stu").value="";
+        document.getElementById("checkbox_stu").checked = false;
+        document.getElementById("pwd_stu").value="";
+        document.getElementById("pwdagain_stu").value="";
+      }
+
+      function showregister_admin()
+      {
+        clearinfo();
+        clearinput();
+        $('#myModal1').modal('hide');
+        $('#myModal2').modal('hide');
+        $('#myModal4').modal('show');
+      }
+
+      function showregister_student()
+        {
+          clearinfo();
+          clearinput();
+          $('#myModal1').modal('hide');
+          $('#myModal2').modal('hide');
+          $('#myModal3').modal('show');
+          var stu = ajaxobj("/students/", "", "post", "#registerstudent");
+          var jsondata = $.parseJSON(stu);
+          var department=document.getElementById("departmentid");
+
+          department.length = 0; 
+          
+          for(var i=0;i<jsondata.length;i++)
+          {
+            var a=jsondata[i]; 
+              for (var key in a) {
+              department.options.add( new Option(a[key],key));
+            } 
+          }
+          deptgracla();
+        }
+
+
+      // 更改下来菜单附属内容
+      function  deptgracla(){
+            var department=document.getElementById("departmentid");
+            var grade=document.getElementById("gradeid");
+            var clas=document.getElementById("clasid");
+            grade.options.length=0;
+            clas.options.length=0;
+
+            var stu = ajaxobj("/stugracla/", "", "get", "");
+            var jsondata = $.parseJSON(stu);
+              
+            var clss=jsondata.clss;
+            var classes=jsondata.classes;
+            
+            for(var i=0;i<clss.length;i++)
+            {
+              var a=clss[i][1];     
+              if(a==department.value)           
+              grade.options.add( new Option(clss[i][0],clss[i][0]));
+            }
+            for(var j=0;j<classes.length;j++)
+            {   
+              var b = classes[j][3];
+              var c = classes[j][1];
+              if(c==department.value)
+              if(b==grade.value)
+              {
+               clas.options.add(new Option(classes[j][2],classes[j][0]));
+              }
+            }  
+           
+      }
+
+      function gracla() {
+          var department = document.getElementById("departmentid");
+          var grade = document.getElementById("gradeid");
+          var clas = document.getElementById("clasid");
+          clas.options.length = 0;
+
+          var stu = ajaxobj("/stugracla/", "", "get", "");
+          var jsondata = $.parseJSON(stu);
+          var classes = jsondata.classes;
+          for (var j = 0; j < classes.length; j++) {
+              var b = classes[j][3];
+              var c = classes[j][1];
+              if (c == department.value) if (b == grade.value) clas.options.add(new Option(classes[j][2], classes[j][0]));
+          }
+      }
+
+      // 设置默认密码
+      function result(pwd,pwdagain,checkbox)
+      {
+            if(document.getElementById(checkbox).checked == true)
+            {
+              document.getElementById(pwd).value = '123456';
+              document.getElementById(pwdagain).value = '123456';
+
+              document.getElementById(pwd).readOnly=true;
+              document.getElementById(pwdagain).readOnly=true;  
+            }
+            else
+            {
+              document.getElementById(pwd).readOnly=false;
+              document.getElementById(pwdagain).readOnly=false;
+            
+              document.getElementById(pwd).value='';
+              document.getElementById(pwdagain).value='';
+            }
+      }
+
+      function checkPasswords(pwd,pwdagain) {
+          var pass1 = document.getElementById(pwd);
+          var pass2 = document.getElementById(pwdagain);
+          if (pass1.value != pass2.value){
+            Showbo.Msg.alert("两次输入密码不一致！");
+            return 1;
+          } 
+          else if(pass1.value.length < 6){
+            Showbo.Msg.alert("密码需大于五位！");
+            return 1;
+          } 
+          else{
+            pass1.setCustomValidity("");
+            return 0;
+          } 
+      }
+
+
+
+      function checkdname() {
+          var acc = document.getElementById("txtaccount");
+          var pwd = document.getElementById("txtpwd");
+          pwd.setCustomValidity("");
+          acc.setCustomValidity("");
+          if (acc.value.length != 0 && pwd.value.length != 0) {
+              var clientcheck = ajaxobj("/Login/", "", "post", "#logincheck");
+              var jsondata = $.parseJSON(clientcheck);
+
+              if (jsondata.judge == 1) {
+                  pwd.setCustomValidity("用户名或密码错误!");
+              } else if (jsondata.judge == 2) {
+                  pwd.setCustomValidity("当前用户不存在!");
+              }
+          }
+      }
+
+      function checkcname() {
+          var acc = document.getElementById("ctxtaccount");
+          var pwd = document.getElementById("ctxtpwd");
+          pwd.setCustomValidity("");
+          acc.setCustomValidity("");
+          if (acc.value.length != 0 && pwd.value.length != 0) {
+              var clientcheck = ajaxobj("/client/", "", "post", "#clientcheck");
+              var jsondata = $.parseJSON(clientcheck);
+              if (jsondata.judge == 1) {
+                  pwd.setCustomValidity("用户名或密码错误!");
+
+              } else if (jsondata.judge == 2) {
+                  pwd.setCustomValidity("当前用户不存在!");
+              }
+          }
+      }
+    </script>
+  </body>
+</html>

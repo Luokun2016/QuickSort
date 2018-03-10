@@ -1,0 +1,120 @@
+{% extends "templates/sysmgrmenu.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}配置服务器IP{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">配置服务器IP</span>
+</div>
+{% endblock %}
+{% block content1 %}
+<form id='studentaddform' action="/aaa/" method='post'>
+  {% csrf_token %}
+  <div class="page-header" style="position:relative; top:-40px; ">
+    <h3>服务器网络信息</h3></div>
+  <div class="bs-docs-section" style="position:relative; top:-40px; text-align:left;">
+    <button type="button" class="btn btn-primary" data-target="#addModal" data-toggle="modal" title="更改IP" onclick='mclear()'>
+      <span class="glyphicon glyphicon-pencil"></span>
+    </button>
+  </div>
+  <div class="panel-body" style="padding-left: 0px; padding-right: 0px;">
+    <table class="table topsec_tabletop" style="font-size:16px; vertical-align:middle; position:relative; top:-30px;">
+      <tr>
+        <td style="width:130px; text-align:right; vertical-align:middle;">IP：</td>
+        <td style="width:370px; ">
+          <input id='input_ip' required="required" maxLength="20" name='input_ip'  type='text' disabled='true' onchange="checkstuno()" class="form-control topself_input " value={{getip}} /></td>
+        <td style="width:130px; text-align:right; vertical-align:middle;">网 关：</td>
+        <td style="width:370px; ">
+          <input id='input_gate' maxLength="20" required="required" disabled='true' name='input_gate' type='text' class="form-control topself_input" value={{getgate}} /></td>
+      </tr>
+      <tr>
+        <td style="width:130px; text-align:right; vertical-align:middle;">子网掩码：</td>
+        <td style="width:370px; ">
+          <input id='input_mask' maxLength="20" required="required" disabled='true' name='input_mask' type='text' class="form-control topself_input" value={{getmask}} /></td>
+        <td style="width:130px; text-align:right; vertical-align:middle;">DNS：</td>
+        <td style="width:370px; ">
+          <input id='input_dns' name='input_dns' type='text' maxLength="50" disabled='true' class="form-control topself_input" value={{getdns}} /></td>
+      </tr>
+    </table>
+  </div>
+  <input id='classidadd' name='classidadd' type='hidden' value='0' /></form>
+<form id='addtool' action="/sysmgr/changeip/" method='post' enctype="multipart/form-data">{% csrf_token %}
+  <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:800px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="addModalLabel">更改IP</h3></div>
+        <div>
+          <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;">IP：</td>
+              <td style="width:370px; ">
+                <input id='change_ip' required="required" maxLength="20" name='change_ip' onchange="checkip('ip')" class="form-control topself_input " type='text' value={{getip}} /></td>
+              <td style="width:130px; text-align:right; vertical-align:middle;">网 关：</td>
+              <td style="width:370px; ">
+                <input id='change_gate' maxLength="20" required="required" name='change_gate' type='text' onchange="checkip('gate')"  class="form-control topself_input" value={{getgate}} /></td>
+            </tr>
+            <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;">子网掩码：</td>
+              <td style="width:370px; ">
+                <input id='change_mask' maxLength="20" required="required" name='change_mask' type='text' class="form-control topself_input" onchange="checkip('mask')"  value={{getmask}} /></td>
+              <td style="width:130px; text-align:right; vertical-align:middle;">DNS：</td>
+              <td style="width:370px; ">
+                <input id='change_dns' name='change_dns' type='text' maxLength="50" class="form-control topself_input" onchange="checkip('dns')"  value={{getdns}} /></td>
+            </tr>
+          </table>
+          <div class="modal-footer">
+            <button class="btn btn-default" id='cancelbut' data-dismiss="modal" type="button" title='关闭'>
+              <span class="glyphicon glyphicon-remove"></span>
+            </button>
+            <button class="btn btn-primary" id="btnaddtea" type="submit" id="btnsaveimg" title='保存'>
+              <span class="glyphicon glyphicon-floppy-save"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<script type="text/javascript">
+  $(function() {
+    setfontcolor("sysctrl");
+    setbackgroundcolor("configip");
+  });
+
+  function checkip(type)
+  {
+    var toolname=document.getElementById("change_ip");
+    var message="";
+      switch(type)
+      {
+      case 'ip':
+        toolname=document.getElementById("change_ip");
+        message="输入IP格式不正确";
+        break;
+      case 'gate':
+        toolname=document.getElementById("change_gate");
+        message="输入网关格式不正确";
+        break;
+      case 'mask':
+        toolname=document.getElementById("change_mask");
+        message="输入子网掩码格式不正确";
+        break;  
+      case 'dns':
+        toolname=document.getElementById("change_dns");
+        message="输入DNS格式不正确";
+        break;   
+      }
+    var reg=/^(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])$/;
+
+    if(reg.test(toolname.value)==false){
+      toolname.setCustomValidity(message);
+    }
+    else
+      toolname.setCustomValidity("");
+  }
+
+</script>
+  {% endblock %}

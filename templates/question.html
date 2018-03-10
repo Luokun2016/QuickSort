@@ -1,0 +1,115 @@
+{% extends "templates/questiondesign.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}题目管理{% endblock %}
+{% block css %}
+    
+{% endblock %}
+{% block script1 %}
+
+{% endblock %}
+{% block content1 %}
+
+<form id='questionform' action="/choose/" method='get' style="position: relative; ">
+   {% csrf_token %}
+  <div class="bs-docs-section">
+    <button type="button"  onclick='details()'   title="题目详情" data-toggle="modal" class="btn btn-primary disabled" id='detailsuccess'><span class="glyphicon glyphicon-info-sign"></span></button>
+    <button type="button" class="btn btn-primary" data-target="#myModal" data-toggle="modal" title="添加题目" onclick='mclear()'><span class="glyphicon glyphicon-plus"></span></button>
+    <button type="button" class="btn btn-primary disabled"  onclick='edit()' title="编辑题目" data-toggle="modal" id='editsuccess'><span class="glyphicon glyphicon-pencil"></span></button>
+    <button id="btndel" type="button" class="btn btn-danger disabled" title="删除题目" onclick='submitdelformedit()'><span class="glyphicon glyphicon-remove"></span></button>
+    <input id='querytext' name='querytext' type='text' class="form-control topself_input" style="width:120px; margin-left:230px; margin-top:-30px;"/>
+    <button id="btnquery" type="submit" class="btn btn-danger" formaction="/choose/" title="查找题目" style="margin-left:370px; margin-top:-50px;"><span class="glyphicon glyphicon-search"></span></button>
+  </div>
+  <div class="panel-body" style="padding-left:0px; padding-right:0px;">
+    <!-- Glyphicons
+  ================================================== -->
+    <table  id="lsque" class="table table-striped topsec_tabletop table-hover" data-selid="0" >
+      <tr>
+        
+        <th>编号</th>
+        <th>标题</th>
+        <th>类型</th>
+        <th>分值</th>
+        <th>出题人</th>
+        <th>创建时间</th>
+        <th>最后修改时间</th>
+      </tr>
+      {% for question in questionls.object_list %}
+      <tr  id="{{question.id}}" >
+        <td>{{question.qid}}</td>
+        <td>{{question.qtitle}}</td>
+        <td>
+        	 <span>{% ifequal question.qtype 0 %}选择题{% endifequal %}{% ifequal question.qtype 1 %}技能题{% endifequal %}{% ifequal question.qtype 2 %}渗透题{% endifequal %}</span>
+        </td>
+        <td>{{question.qscore}}</td>
+        <td>{{question.teacherid.teaname}}</td>
+        <td>{{question.createtime}}</td>
+        <td>{{question.edittime}}</td>
+      </tr>
+      {% endfor %}
+
+
+   
+    <tr>
+      <td colspan="8" >
+          <div class="flickr">
+              {% if questionls.has_previous %}
+              <a href="?page={{ questionls.previous_page_number }}{% ifnotequal queselect '' %}&questionselect={{queselect}}{% endifnotequal %}">上一页</a>
+              {% else %}
+              <span>上一页</span>
+              {% endif %}
+              <span>
+                  {% for p in page_range %}
+
+                  {% ifequal p teacherls.number %}
+                  <span class="current">{{p}}</span>
+                  {% else %}
+                  <a href="?page={{p}}{% ifnotequal queselect '' %}&questionselect={{queselect}}{% endifnotequal %}" title="第{{p}}页">{{p}}</a>
+                  {% endifequal %}
+
+              {% endfor %}
+              </span>
+              {% if questionls.has_next %}
+              <a href="?page={{ questionls.next_page_number }}{% ifnotequal queselect '' %}&questionselect={{queselect}}{% endifnotequal %}">下一页</a>
+              {% else %}
+              <span>下一页</span>
+              {% endif %}
+          </div>
+      </td>
+
+  </tr>
+
+
+
+    </table>
+  </div>
+</form>
+<script type="text/javascript">
+  setfontcolor("choctrl");
+  setbackgroundcolor("choose");
+setTableEvent("lsque", true);
+
+function setTableEvent(tableid, singleSelect) {
+         var tr = "#" + tableid + ">tbody>tr";
+         var trSelected = tr + ".success";
+
+         $(tr).click(function(event) {
+                    if($(this).attr('id') == undefined)
+                      return;
+                  //var id = $("td:first-child", $(this)).text();
+                  // single-select
+                  if (singleSelect) {
+                      $(trSelected).removeClass('success');
+                  }
+                    if($("#editsuccess").hasClass('disabled'))
+                  {
+                    $("#editsuccess").removeClass('disabled');
+                    $("#btndel").removeClass('disabled');
+                  }
+                  $(this).addClass('success');
+                  $("#lsque").data("selid", $(this).attr('id'));
+                  $("#btndel").attr('formaction', '/questiondel/' + $(this).attr('id')+'/');  
+         });
+}
+</script>
+{% endblock %}

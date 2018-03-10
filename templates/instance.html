@@ -1,0 +1,213 @@
+{% extends "templates/resource.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}虚拟设备详情{% endblock %}
+{% block css %}
+
+{% endblock %}
+{% block script1 %}
+
+{% endblock %}
+{% block content1 %}
+<form action="/vmdetail/" method='get'>
+    <!--<div class="modal fade" id="myModal3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true">
+    <div class="modal-dialog" style="width:850px">
+      <div class="modal-content" style="width:800px; padding-top:5px;">-->
+        <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-15px;">
+          <!--<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>-->
+          <ul class="nav nav-tabs">
+        <li  class="active" id='vmserverli'>
+          <a href="#vGates" data-toggle="tab">虚拟设备详情</a>
+        </li>
+
+      </ul>
+        </div>
+        <div>
+        <table style="font-size:16px; vertical-align:middle; position:relative; top:0px; width: 100%">
+            <tr>
+                <td style="height:40px; text-align:left; width:40%; padding-left:30px;">
+                    <p>名称</p>
+                </td>
+                <td style="height:40px; text-align:left;width:60%; padding-left:30px;">
+                    <p><strong>{{ vname }}</strong></p>
+                </td>
+            </tr>
+
+            <tr>
+                <td style="height:40px; text-align:left; width:40%; padding-left:30px;">
+                    <p>状态</p>
+                </td>
+                <td style="height:40px; text-align:left;width:60%; padding-left:30px;">
+                    <p>{% if dom.info %}
+                    <span class={% ifequal dom.info.0 5 %}"text-danger">{% trans "未运行" %}{% endifequal %}{% ifequal dom.info.0 1 %}"text-success">{% trans "已运行" %}{% endifequal %}{% ifequal dom.info.0 3 %}"text-warnging">{% trans "暂停" %}{% endifequal %}</span>
+                    {% else %}
+                    {% trans "None" %}
+                    {% endif %}
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td style="height:40px; text-align:left; width:40%; padding-left:30px;">
+                    <p>CPU</p>
+                </td>
+                <td style="height:40px; text-align:left;width:60%; padding-left:30px;">
+                    <p><strong>{{ vcpu }}  个</strong></p>
+                </td>
+            </tr>
+<!--             <tr>
+                <td style="height:40px; text-align:left; width:40%; padding-left:30px;">
+                    <p>CPU使用率</p>
+                </td>
+                <td style="height:40px; text-align:left;width:60%; padding-left:30px; padding-top:15px; vertical-align:middle; ">
+                  <p>
+                    <div class="progress">
+                        <span id="cpu-usage" style="text-align:center;">{% ifequal dom.info.0 5 %}0%{% endifequal %}</span>
+                        <div class="progress-bar" id="cpu-usage-bar" style="width:{{ cpu_usage }}%;"></div>
+                    </div>
+                  </p>
+                </td>
+            </tr>
+            <tr> -->
+                <td style="height:40px; text-align:left; width:40%; padding-left:30px;">
+                    <p>内存</p>
+                </td>
+                <td style="height:40px; text-align:left;width:60%; padding-left:30px;">
+                    <p>{{ memory }} {% trans "MB" %}</p>
+                </td>
+            </tr>
+<!--             <tr>
+                <td style="height:40px; text-align:left; width:40%; padding-left:30px;">
+                <p>内存利用率</p>
+                </td>
+                <td style="height:40px; text-align:left;width:60%; padding-left:30px; padding-top:15px; vertical-align:middle; ">
+                  <p>
+                    <div class="progress">
+                        <span id="memory-usage" style="text-align:center;">{% ifequal dom.info.0 5 %}0%{% endifequal %}</span>
+                        <div class="progress-bar" id="memory-usage-bar" style="width:{{ mem_perc }}%;"></div>
+                    </div>
+                  </p>
+                </td>
+            </tr> -->
+             {% for network in networks %}
+             <tr>
+                <td style="height:40px; text-align:left; width:40%; padding-left:30px;">
+                    <p><strong>Eth{{ forloop.counter0 }}</strong></p>
+                </td>
+                <td style="height:40px; text-align:left;width:60%; padding-left:30px;">
+                    <p>{{ network.mac }} ({{ network.nic }})</p>
+                </td>
+             </tr>
+             {% endfor %}
+             <!--{% for dev_bus, hdd_dev in hdd_image.items reversed %}-->
+             <!--<tr>-->
+                <!--<td style="height:40px; text-align:left; width:40%; padding-left:30px;">-->
+                    <!--<p><strong>{% trans "Disk" %} {{ dev_bus }}:</strong></p>-->
+                <!--</td>-->
+                <!--<td style="height:40px; text-align:left;width:60%; padding-left:30px;">-->
+                    <!--<p>{{ hdd_dev.0 }} ({{ hdd_dev.1 }})</p>-->
+                <!--</td>-->
+             <!--</tr>-->
+             <!--{% endfor %}-->
+            <tr>
+                <td style="height:40px; text-align:left; width:40%; padding-left:30px;">
+                    <p>使用次数</p>
+                </td>
+                <td style="height:40px; text-align:left;width:60%; padding-left:30px;">
+                    <p><a href="" style="text-decoration: underline;" onclick="show_details();return false;"><strong>{{ use_count }}  次</strong></a></p>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div id="details" style="height: auto; max-height: 220px; overflow-y: auto;
+                     display: none; margin: 0 5px 0 30px; border-top: solid 2px gray;">
+                        <table class="table" style="width: 100%; margin-bottom: 0;">
+                            {% for detail in use_details %}
+                                <tr>
+                                    <td style="text-align: center; padding: 4px;">{{ detail.deptname }}</td>
+                                    <td style="text-align: center; padding: 4px;">{{ detail.grade }}</td>
+                                    <td style="text-align: center; padding: 4px;">{{ detail.claname }}</td>
+                                    <td style="text-align: center; padding: 4px;">{{ detail.stuname }}</td>
+                                    <td style="text-align: center; padding: 4px;">{{ detail.expname }}</td>
+                                    <td style="text-align: right; padding: 4px;">{{ detail.starttime }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td style="text-align: center;">该虚拟机暂无使用数据</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </td>
+            </tr>
+             <tr>
+                <td style="height:40px; text-align:left; width:40%; padding-left:30px;">
+                    <p>备注</p>
+                </td>
+                <td style="height:40px; text-align:left;width:60%; padding-left:30px;">
+                    <p><strong>{{ description }}</strong></p>
+                </td>
+            </tr>
+        </table>
+        <input id='page' name='page' value='{{ page }}' type='hidden'/>
+        <input id='vmid' name='vmid' type='hidden'/>
+          <div class="modal-footer">
+          <button id="ret" class="btn btn-default" data-dismiss="modal" type="submit" formaction="{{ redirecturl }}"> 返回 </button>
+          </div>
+        </div>
+      <!--</div>
+    </div>
+  </div>-->
+</form>
+
+<script type="text/javascript">
+    /*$(document).on('change','#vnc_passwd_gen',function(){
+        if($(this).prop('checked')) {
+            $('#vnc_passwd_manual').hide();
+        } else {
+            $('#vnc_passwd_manual').show();
+        }
+    });*/
+    var details = document.getElementById("details");
+    function show_details(){
+        if(details.style.display === "none"){
+            details.style.display = "block";
+        } else {
+            details.style.display = "none";
+        }
+    }
+</script>
+{% ifequal dom.info.0 1 %}
+    <script type="text/javascript">
+
+        // function cpu(){
+        //     $.get('/info/vds/cpu/{{ vname }}', function(data) {
+        //         setBar($('#cpu-usage-bar'),$('#cpu-usage'),data);
+        //     });
+        // }
+        // function memory(){
+        //     $.get('/info/vds/memory/{{ vname }}', function(data) {
+        //         setBar($('#memory-usage-bar'),$('#memory-usage'),data);
+        //     });
+        // }
+        // function setBar(bar,text,value){
+        //     text.text(value +'%').fadeIn();
+        //     bar.css({'width':value +'%'});
+        //     if (value < 50){
+        //         bar.attr('class', "progress-bar progress-bar-success");
+        //     }else if (value < 80){
+        //         bar.attr('class', "progress-bar progress-bar-warning");
+        //     }else if (value <= 100){
+        //         bar.attr('class', "progress-bar progress-bar-danger");
+        //     }
+        // }
+        // function refresh(){
+        //     cpu();
+        //     memory();
+        // }
+        // $(function() {
+        //     refresh();
+        //     window.setInterval('refresh()', {{ time_refresh }});
+        // });
+    </script>
+{% endifequal %}
+{% endblock %}

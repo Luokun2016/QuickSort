@@ -1,0 +1,517 @@
+{% extends "templates/resource.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}资源管理{% endblock %}
+{% block css %}
+    
+{% endblock %}
+{% block script1 %}
+
+{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">物理设备</span>
+</div>
+{% endblock %}
+{% block content1 %}
+<form id="deviceform" action="/devices/" method='get' style="position: relative; ">
+  {% csrf_token %}
+  <div class="bs-docs-section">
+    <table width="100%">
+      <tr>
+        <td >
+          <div style="text-align:left;">
+
+            <button type="button" id="btndevadd" class="btn btn-primary" data-target="#myModal" data-toggle="modal"  title="添加" onclick='mclear()'><span class="glyphicon glyphicon-plus"></span></button>
+            <button id="btndevedit" type="button" class="btn btn-primary disabled" onclick='edit()' data-toggle="modal" title='编辑'><span class="glyphicon glyphicon-pencil"></span></button>
+            <button id="btndel" type="button" class="btn btn-danger disabled" formaction='' onclick="deldevice()" title='删除'><span class="glyphicon glyphicon-remove"></span></button>
+          </div>
+        </td>
+        <td align="right">
+          <div style="text-align:right;">       
+            <input id='querytext' name='querytext' type='text' class="form-control topself_input"  placeholder="请输入名称、类型关键字" value="{{querytext}}" style="width:185px; display:inline;" />
+            <button id="btnquery" type="submit" class="btn btn-danger" formaction="/devices/"  title='查询'><span class="glyphicon glyphicon-search"></span></button>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="panel-body" style="padding-left:0px; padding-right:0px; margin-top:-10px;">
+    <!-- Glyphicons
+    ================================================== -->
+    <table id="lsdev" class="table table-striped topsec_tabletop table-hover" data-selid="0"  data-sepage ="{{ page }}">
+      <tr>
+        <th>设备名称</th>
+        <th>设备厂商</th>
+        <th>设备型号</th>
+        <th>设备类型</th>
+        <th>版本号</th>
+        
+        <th>连接网口</th>
+        <th>脚本</th>
+        <th>使用类型</th>
+        <th>使用中</th>
+      </tr>
+      {% for device in devicels %}
+      <tr id="{{device.id}}" data-sepage="{{ page }}">
+        <td>{{ device.devname }}</td>
+        <td title='{{device.devfac}}'>{{ device.devfac | truncatechars:13}}</td>
+        <td title='{{device.devxh}}'>{{ device.devxh | truncatechars:13}}</td>
+        <td>
+          {%ifequal device.devtype "pgate"%}安全设备{% endifequal %}
+          {%ifequal device.devtype "pswitch"%}网络设备{% endifequal %}
+          {%ifequal device.devtype "pc"%}终端设备{% endifequal %}
+        </td>
+
+        <td title='{{device.devpub}}'>{{ device.devpub | truncatechars:13}}</td>
+        
+        {%if device.ethx  %}
+        <td title='{{device.ethx}}'>{{ device.ethx | truncatechars:13}}</td>
+        {%else%}
+        <td>--</td>
+        {% endif %}
+        {%if device.pyscript %}
+        <td>
+          <a id="download" href = "/document/devpyscript/{{device.pyscript}}" >下载</a>
+        </td>
+        {%else%}
+        <td>--</td>
+        {% endif %}
+        <td>
+          
+          {%ifequal device.usetype 0 %}课程{% endifequal %}
+          {%ifequal device.usetype 1 %}竞赛{% endifequal %}
+          {%ifequal device.usetype 2 %}攻防{% endifequal %}
+
+          {%ifequal device.usetype None %}--{% endifequal %}
+        </td>
+        
+        {%if device.examuseNo %}
+        <td title='{{device.examuseNo}}'> {{device.examuseNo| truncatechars:13}}</td>
+        {%else%}
+        <td>  --</td>
+        {% endif %}
+        
+      </tr>
+      {% endfor %}
+
+    </table>
+      <tr>
+        <td colspan="9" >
+          <div class="flickr">
+            {% if devicels.has_previous %}
+            <a href="?page={{ devicels.previous_page_number }}{% ifnotequal querytext '' %}&querytext={{querytext}}{% endifnotequal %}">上一页</a>
+            {% else %}
+            <span>上一页</span>
+            {% endif %}
+            <span>
+              {% for p in page_range %}
+
+              {% ifequal p devicels.number %}
+              <span class="current">{{p}}</span>
+              {% else %}
+              <a href="?page={{p}}{% ifnotequal querytext '' %}&querytext={{querytext}}{% endifnotequal %}" title="第{{p}}页">{{p}}</a>
+              {% endifequal %}
+
+              {% endfor %}
+            </span>
+            {% if devicels.has_next %}
+            <a href="?page={{ devicels.next_page_number }}{% ifnotequal querytext '' %}&querytext={{querytext}}{% endifnotequal %}">下一页</a>
+            {% else %}
+            <span>下一页</span>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+  </div>
+</form>
+<form id='newdevice' action="/deviceadd/" method='post' enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">添加设备</h3>
+        </div>
+        <div>
+          <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>设备名称：</td>
+              <td colspan="2">
+                <input id='dname' placeholder="只能包含字母、数字、中文以及（）——_!@#$<>《》？|=-" name='dname' required="required" type='text' class="form-control topself_input" required="required" maxLength="20" onchange="checkdname()"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right; ">设备类型：</td>
+              <td colspan="2">
+                  <select class="form-control" style="width:120px;" id='dtype' name='dtype'>
+                    <option value="pgate">安全设备</option>
+                    <option value="pswitch">网络设备</option>
+                    <option value="pc">终端设备</option>
+                  </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right; ">设备厂商：</td>
+              <td colspan="2">
+                <input id='dfac' name='dfac' type='text' class="form-control topself_input" maxLength="30"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right; ">设备型号：</td>
+              <td colspan="2">
+                <input id='dxh' name='dxh' type='text' class="form-control topself_input" maxLength="30"/>
+              </td>
+            </tr>
+
+
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right; ">版本号：</td>
+              <td colspan="2">
+                <input id='dpub' name='dpub' type='text' class="form-control topself_input" maxLength="30"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right; ">添加网口：
+              </td>
+              <td style=" text-align:left; vertical-align:left;">
+                <input id="checkbox" type="checkbox" value="checkbox" onclick='result()' />
+              </td>
+              <td style="vertical-align:left; text-align:left; ">
+                如果需要将物理设备连接到服务器，必须添加网口。
+              </td>  
+            </tr>  
+            <tr>
+              
+              <td style="width:100px; vertical-align:middle; text-align:right; ">连接网卡：
+              </td>
+              <td colspan="2">
+                <input id='eth' name='eth' type='text' class="form-control topself_input" maxLength="50" onchange="checkdeth()" readOnly="true" placeholder="请不要添加服务器管理网口，网卡之间使用英文逗号隔开"/>    
+              </td>
+
+            </tr>
+
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right; ">上传脚本：</td>
+              <td colspan="2">
+                <input  type='file' id='uploadadd' name='uploadadd'  maxLength="50" onchange="fileSelected(this);"/>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="width:100px;  vertical-align:middle; text-align:right; ">备注：</td>
+              <td colspan="2">
+                <input id='dremark' name='dremark' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+          </table>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          <button class="btn btn-default"  type="reset" title='重置'  ><span class="glyphicon glyphicon-retweet"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<form id="deviceinfo" action="/deviceedit/" method='post' enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content" style="width:600px;">
+        <div class="modal-header" >
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel1">编辑设备</h3>
+        </div>
+        <div>
+          <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right;"><font color="#FF0000">*</font>设备名称：</td>
+              <td>
+                <input id='devname' name='dname' onchange="checkdnameedit()" type='text' required="required" class="form-control topself_input" maxLength="20"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right;">设备类型：</td>
+              <td>
+                  <select class="form-control" style="width:120px;" id='devtype' name='devtype'>
+                    <option value="pgate">安全设备</option>
+                    <option value="pswitch">网络设备</option>
+                    <option value="pc">终端设备</option>
+
+                  </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right;">设备厂商：</td>
+              <td>
+                <input id='devfac' name='devfac' type='text' class="form-control topself_input" maxLength="30"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right;">设备型号：</td>
+              <td>
+                <input id='devxh' name='devxh' type='text' class="form-control topself_input" maxLength="30"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right;">版本号：</td>
+              <td>
+                <input id='devpub' name='devpub' type='text' class="form-control topself_input" maxLength="30"/>
+              </td>
+            </tr>
+             <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right; ">连接网卡：</td>
+              <td>
+                <input id='ethedit' name='ethedit' type='text' class="form-control topself_input" onchange="checkdethedit()" maxLength="50" placeholder="网卡之间使用英文逗号隔开"/>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="width:100px; vertical-align:middle; text-align:right; ">更换脚本：</td>
+              <td>
+                <input id='uploadedit' name='uploadedit' type='file'  onchange="fileSelected(this);" maxLength="50"/>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="width:100px;  vertical-align:middle; text-align:right;">备注：</td>
+              <td>
+                <input id='devremark' name='devremark' type='text' class="form-control topself_input" maxLength="50"/>
+              </td>
+            </tr>
+          </table>
+          <input id='devid' name='devid' type='hidden'/>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<script type="text/javascript">
+ /*$("#myModal1").on('show.bs.modal', function(e){
+          $('#myModal').modal('hide');                                   
+          return true;
+ });
+ $("#myModal1").on('hide.bs.modal', function(e){
+        $('#myModal').modal('show');
+        return true;
+});*/
+setTableEvent("lsdev", true);
+setfontcolor("souctrl");
+setbackgroundcolor("devcolor");
+
+function setTableEvent(tableid, singleSelect) {
+   var tr = "#" + tableid + ">tbody>tr";
+   var trSelected = tr + ".success";
+
+   $(tr).click(function(event) {
+      if($(this).attr('id') == undefined)
+          return;
+      //var id = $("td:first-child", $(this)).text();
+      // single-select
+      if (singleSelect) {
+          $(trSelected).removeClass('success');
+      }
+
+      $(this).addClass('success');
+      $("#lsdev").data("selid", $(this).attr('id'));
+      // $("#btndel").attr('formaction', '/devicedel/' + $(this).attr('id')+'/');  
+      if(tableid == "lsdev")
+      {
+        if($("#btndevedit").hasClass('disabled'))
+        {
+            $("#btndevedit").removeClass('disabled');
+            $("#btndel").removeClass('disabled');
+        }
+      }
+   });
+}
+
+function mclear()
+{           
+  document.getElementById('dname').value = '';//更改id为toolname元素的value属性值为空
+  document.getElementById('dfac').value = '';
+  document.getElementById('dxh').value = '';  
+  document.getElementById('dpub').value = ''; 
+  document.getElementById('eth').value = ''; 
+  document.getElementById('devremark').value = '';
+  document.getElementById('uploadadd').value = '';
+}
+
+function deldevice(){
+  var preid = $("#lsdev").data("selid");
+  if(preid == "0")
+    return false;
+  Showbo.Msg.oncallback = deldevicecallback;
+  Showbo.Msg.confirm("确定删除吗？");
+}
+function deldevicecallback(){
+  var preid = $("#lsdev").data("selid");
+
+  var delurl="/devicedel/"+preid+'/';
+  document.getElementById("deviceform").action=delurl;
+  document.getElementById("deviceform").submit();
+}
+function checkdeth()
+{
+    var deviceeth=document.getElementById("eth");
+    var reg=new RegExp(/(eth\d{1,5})|(eth\d{1,5}(,)?)+/g);
+    var device_value=deviceeth.value;
+    var is_match=true;
+    if(device_value==""){
+      return;
+    }
+    input_values=device_value.split(",");
+    match_values=device_value.match(reg);
+    if(match_values!=null&&input_values!=null){
+      if(input_values.length==match_values.length){
+        for(var i=0;i<input_values.length;i++){
+          if(input_values[i]!=match_values[i]){
+            is_match=false;
+          }
+        }
+        if(is_match){
+        deviceeth.setCustomValidity("");
+        }
+        else{
+        deviceeth.setCustomValidity("请按'eth*,eth*'格式输入");
+        }
+      }
+      else{
+        deviceeth.setCustomValidity("请按'eth*,eth*'格式输入");
+      }
+    }
+    else{
+      deviceeth.setCustomValidity("请按'eth*,eth*'格式输入");
+    }  
+
+    // var reg=/(eth\d{1,5})|(eth\d{1,5}(,)+)+/;
+    //  if(reg.test(deviceeth.value)==false){
+    //         deviceeth.setCustomValidity("请按'eth*,eth*'格式输入");
+    //  }
+    // else
+    // deviceeth.setCustomValidity("");
+}
+function checkdethedit()
+{
+    var deviceeth=document.getElementById("ethedit");
+    var reg=new RegExp(/(eth\d{1,5})|(eth\d{1,5}(,)?)+/g);
+    var device_value=deviceeth.value;
+    var is_match=true;
+    input_values=device_value.split(",");
+    match_values=device_value.match(reg);
+    if(device_value==""){
+      return;
+    }
+    if(match_values!=null&&input_values!=null){
+      if(input_values.length==match_values.length){
+        for(var i=0;i<input_values.length;i++){
+          if(input_values[i]!=match_values[i]){
+            is_match=false;
+          }
+        }
+        if(is_match){
+        deviceeth.setCustomValidity("");
+        }
+        else{
+        deviceeth.setCustomValidity("请按'eth*,eth*'格式输入");
+        }
+      }
+      else{
+        deviceeth.setCustomValidity("请按'eth*,eth*'格式输入");
+      }
+    }
+    else{
+      deviceeth.setCustomValidity("请按'eth*,eth*'格式输入");
+    }  
+    // var reg=/(eth\d{1,5})|(eth\d{1,5}(,)+)+/;
+    //  if(reg.test(deviceeth.value)==false){
+    //         deviceeth.setCustomValidity("请按'eth*,eth*'格式输入");
+    //  }
+    // else
+    // deviceeth.setCustomValidity("");
+}
+function checkdname()
+{
+    var devicename=document.getElementById("dname");
+    var devcheck = ajaxobj("/devicenamecheck/", "", "post", "#newdevice");
+    var jsondata = $.parseJSON(devcheck);
+    var reg=/^[a-zA-Z0-9\u4e00-\u9fa5（）——_!@#$<>《》？|=-]+$/;
+    if(devicename.value){
+         if(reg.test(devicename.value)==false){
+            devicename.setCustomValidity("存在不能输入的特殊字符!");
+         }
+        else if(jsondata.judgename==1)
+            devicename.setCustomValidity("已存在的设备名称!");
+        else
+            devicename.setCustomValidity("");
+    }
+    else{
+        devicename.setCustomValidity("设备名称不能为空!");
+    }
+}
+
+
+function checkdnameedit()
+{
+    var devicename=document.getElementById("devname");
+    var devcheck = ajaxobj("/devicenamecheck/", "", "post", "#deviceinfo");
+    var jsondata = $.parseJSON(devcheck);
+    var reg=/^[a-zA-Z0-9\u4e00-\u9fa5（）——_!@#$<>《》？|=-]+$/
+    if(devicename.value){
+         if(reg.test(devicename.value)==false){
+            devicename.setCustomValidity("存在不能输入的特殊字符!");
+         }
+        else if(jsondata.judgename==1)
+                devicename.setCustomValidity("已存在的设备名称!");
+        else
+                devicename.setCustomValidity("");
+    }
+    else{
+        devicename.setCustomValidity("设备名称不能为空!");
+    }
+}
+
+function edit()
+{
+    document.getElementById('uploadedit').value = '';
+  var preid = $("#lsdev").data("selid");
+  if(preid == "0")
+      return false;
+  $("#devid").val(preid);
+  var dev = ajaxobj("/deviceinfo/", "", "post", "#deviceinfo");
+  var jsondata = $.parseJSON(dev);
+
+  $("#devname").val(jsondata.devname);
+  $("#devxh").val(jsondata.devxh);
+  $("#devpub").val(jsondata.devpub);
+  $("#devfac").val(jsondata.devfac);
+   $("#devtype").find("option[value='"+jsondata.devtype+"']").attr("selected",true);
+  $("#ethedit").val(jsondata.ethx);
+  // $("#uploadedit").val(jsondata.pyscript);
+  $("#devremark").val(jsondata.remark);
+  $('#myModal1').modal('show');
+}
+
+function result()
+{
+  if(document.getElementById('checkbox').checked == true)
+  {
+      document.getElementById('eth').readOnly=false;
+  }
+  else
+  {
+      document.getElementById('eth').readOnly=true;
+      document.getElementById('eth').value = '';
+  }
+}
+</script>
+{% endblock %}

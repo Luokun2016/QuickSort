@@ -1,0 +1,128 @@
+{% extends "templates/index.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}注册审核{% endblock %}
+{% block script %}
+    {% block script1 %}{% endblock %}
+    <script src='/statics/js/jquery.custom.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.cookie.js' type="text/javascript"></script>
+<script src='/statics/js/jquery.dynatree.js' type="text/javascript"></script>
+<script type="text/javascript" src="/statics/js/ajaxProgressUpload.js"></script>
+<script src='/statics/js/uploadfile.js' type="text/javascript"></script>
+<link href="/statics/css/upload.css" rel="stylesheet"/>
+<link type="text/css" href="/statics/myflow/lib/jquery-ui-1.8.4.custom.css" rel="stylesheet" />
+
+<script type="text/javascript" src="/statics/myflow/lib/raphael.js"></script>
+<script type="text/javascript">
+    height = 380;
+    width = 800;
+</script>
+
+<script type="text/javascript" src="/statics/myflow/myflow.js"></script>
+<script type="text/javascript" src="/statics/myflow/myflow.jpdl4.js"></script>
+<script type="text/javascript" src="/statics/myflow/myflow.editors.js"></script>
+<script type="text/javascript" src="/statics/myflow/myflowedit.js"></script>
+<script type="text/javascript" src="/statics/myflow/myflow.jpdl4edit.js"></script>
+<script type="text/javascript" src="/statics/myflow/myflow.editorsedit.js"></script>
+<script type="text/javascript" src="/statics/myflow/myflowdetail.js"></script>
+<script type="text/javascript" src="/statics/myflow/myflow.jpdl4detail.js"></script>
+<script type="text/javascript" src="/statics/myflow/myflow.editorsdetail.js"></script>
+<script type="text/javascript">
+        function setbackgroundcolor(curt)
+        {     
+             $("#" + curt).css("background-color","#2D63EF");
+        }
+    </script>
+<style type="text/css">
+
+.node {
+  width: 90px;
+  text-align: left;
+  vertical-align: middle;
+  border: 1px solid #fff;
+}
+
+.mover {
+  border: 1px solid #ddd;
+  background-color: #ddd;
+}
+
+.selected {
+  background-color: #ddd;
+}
+
+.state {
+  
+}
+
+#myflow_props table {
+  
+}
+
+#myflow_props th {
+  letter-spacing: 2px;
+  text-align: left;
+  padding: 6px;
+  background: #ddd;
+}
+
+#myflow_props td {
+  background: #fff;
+  padding: 6px;
+}
+
+#pointer {
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#path {
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#task {
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#state {
+  background-repeat: no-repeat;
+  background-position: center;
+}
+</style>
+{% endblock %}
+{% block maincontent %}{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">注册审核</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="contentMain">
+        <div class="personLeft" style="margin-top:58px">
+          <!--col-md-3    col-md-9-->
+          <div class="bs-sidebar hidden-print affix-top topsecTop" role="complementary">
+            <ul class="nav bs-sidenav">
+              <li class="active">
+                <a>注册审核</a>
+                <u1 class="nav">
+                  <li>
+                    <a id='student' href="/tools/registerstudent/" onclick="">学生审核</a>
+                  </li>
+                  <li>
+                    <a id='admin' href="/tools/registerteacher/" onclick="">管理员审核</a>
+                  </li>
+                </u1>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+</div>
+<div id="MainContent" class="personRight"  role="main" style=" heigth:100%;">
+          {% block content1 %}{% endblock %}
+        </div>
+{% endblock %}

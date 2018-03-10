@@ -1,0 +1,194 @@
+{% extends "templates/index.html" %}
+<!-- 继承自templates/index.html的模板 -->
+{% load i18n %}
+<!-- 国际化 -->
+{% load staticfiles %}
+{% block title %}教练控制台{% endblock %}
+{% block css %}   
+{% endblock %}
+{% block script %}
+    <script src='/statics/js/jquery.custom.js' type="text/javascript"></script>
+    <script src='/statics/js/jquery.cookie.js' type="text/javascript"></script>
+    <script src='/statics/js/jquery.dynatree.js' type="text/javascript"></script>
+    <script type="text/javascript" src="/statics/js/ajaxProgressUpload.js"></script>
+    <script src='/statics/js/uploadfile.js' type="text/javascript"></script>
+    <link href="/statics/css/upload.css" rel="stylesheet"/>
+    <script src='/statics/js/jquery.pagination.js' type="text/javascript"></script>
+{% endblock %}
+{% block maincontent %}{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png' style="padding-bottom:8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">教练控制台</span>
+  <button id="clickbutton" class="btn btn-primary disabled" title="开启监控" onclick = "clickbut()" style="position: absolute;left: 1132px;top: 113px;">开启监控</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<form  id='realtime' action="/realtimeinfor/" method='post' >
+  {% csrf_token %}
+  <input id='judgepage' name='judgepage' type='hidden' value='1'/>
+  <input id='page' name='page' type='hidden' value='1'/>
+<!--   <div id="content" class="contentMain" style="position:relative; top:-10px; "> -->
+  <div id="content" class="panel-body" style="padding-left:0px; padding-right:0px;">
+    <div class="tab-pane fade in active" id="home">
+      <table class="table table-striped topsec_tabletop table-hover" id="isrealtime" >
+        <tr>
+          <th>学员</th>
+          <th>当前课程</th>
+          <th>当前实验</th>
+          <th>进展</th>
+          <th>监控指导</th>
+        </tr>
+      </table>
+    </div>
+  </div>
+</form>
+ <script type="text/javascript">
+  setfontcolor("teactrl");
+ $(function(){
+        timedCount();
+        setTableEvent("isrealtime", true);
+});
+
+function clickbut()
+{
+  var flag = 0;
+  localStorage.removeItem("names");
+  localStorage.removeItem("nums");
+  // aa(clickfile,linklist);
+  localStorage.setItem("names",clickfile);
+  console.log(localStorage.getItem("names"));
+  localStorage.setItem("nums",linklist);
+  // window.location.href="/seesight/"
+  window.open("/seesight/");
+}
+
+ function setTableEvent(tableid, singleSelect)
+{
+  var tr = "#" + tableid + ">tbody>tr";//#tableid 定位表 tbody定位表主体； tr定位表中某一行
+  var trSelected = tr + ".success";//表中class=success的行
+
+  $(tr).click(function(event) {//表中发生点击事件
+    if($(this).attr('id') == undefined)//如果点击的行的id为空
+      return;
+    if(singleSelect){
+      $(trSelected).removeClass('success');//删除class=success行的success属性
+    }
+    if($("#btnedit").hasClass('disabled')){//点击后将修改、删除、详情按钮置高亮（删除disabled属性）
+      $("#btnedit").removeClass('disabled');
+      $("#btndel").removeClass('disabled');
+      $("#btndisplay").removeClass('disabled');
+    }
+    $(this).addClass('success');//点击的行添加success属性
+    $("#isrealtime").data("selid", $(this).attr('id'));//设置data-selid 的值为当前id
+    //$("#btndel").attr('formaction', '/paperdel/' + $(this).attr('id')+'/');//???????
+  });
+}
+function open_vnc(preid) 
+{
+    // var preid = $("#lsvm").data("selid");
+//    var url = '/console/' + preid + '/vm?token=' + preid;
+//    window.open(url,'','width=850,height=485');
+
+    $.post('/tools/getServerIp/', {'vmid': preid}, function(re){
+        ip = JSON.parse(re);
+        var url = 'http://' + ip + '/console/' + preid + '/vm?token=' + preid;
+        window.open(url,'','width=850,height=485');
+    });
+}
+function getcon(stuname)
+{
+  if(stuname!=0)
+  {
+    open_vnc(stuname);
+  }
+  else
+  {
+    Showbo.Msg.alert("该学员没有开启虚拟机！");
+  }
+
+}
+clickfile = new Array()
+linklist = new Array()
+function setbackcolor(sender)
+{
+  // alert($(sender).data("name"))
+  var list = ","+clickfile.join(",")+",";
+  var links = ","+linklist.join(",")+",";
+  var str = $(sender).data("tag");
+  // alert(links);
+  // alert($(sender).data("link"));
+  $(sender).addClass('success');
+   
+  if(list.indexOf($(sender).data("tag"))>=0)
+  {
+      $(sender).removeClass('success');
+
+      for(var i = 0; i < clickfile.length; i++)
+      {
+       
+        if(str == clickfile[i] )
+        {
+            clickfile.splice(i, 1);
+            linklist.splice(i, 1);
+            break;
+        }
+      }
+  }
+  else
+  {
+    $(sender).addClass('success');
+    clickfile.push($(sender).data("tag"));
+    linklist.push($(sender).data("link"));  
+  }
+  if(clickfile.length>0)
+  {
+    $("#clickbutton").removeClass('disabled');
+  }
+  else
+  {
+    $("#clickbutton").addClass('disabled');
+  }
+  
+
+};
+
+function Selectedfiles()
+{
+
+  str =  ","+clickfile.join(",")+ ",";
+  $("#isrealtime>tbody>tr").each(
+    function(){
+      if(str.indexOf( ","+$(this).data("tag")+ ",") >=0)
+      {
+         $(this).addClass('success');
+      }
+    });
+}
+
+function timedCount()
+{
+  var realtime = ajaxobj("/realtimeinfor/", "", "post", "#realtime");
+  var jsondata = $.parseJSON(realtime);
+  var information=jsondata.realtimeinfor;
+  
+  innertext= "<tr><th>学员</th><th>当前课程</th><th>当前实验</th><th>进展</th><th>监控指导</th></tr>";
+  for(var i=0;i<information.length;i++)
+  {
+      innertext+="<tr data-tag='"+ information[i][0]+ "' data-link='"+ information[i][3]+ "' onclick=\"setbackcolor(this)\"><td>"+information[i][0]+"</td><td>"+information[i][1]+
+      "</td><td>"+information[i][2]+"</td><td>进行中</td><td><button type='button' onclick='getcon("+ information[i][3] +")' class='btn btn-primary' style='border:0'><span class='glyphicon glyphicon-eye-open'></span></button></td></tr>";
+  }
+
+  document.getElementById("isrealtime").innerHTML = innertext;
+  Selectedfiles();
+
+  
+
+  var t=setTimeout("timedCount()",6000);   
+ 
+}
+
+ </script>
+
+  {% endblock %}

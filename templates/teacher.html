@@ -1,0 +1,709 @@
+{% extends "templates/index.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}教练管理{% endblock %}
+{% block css %}
+    
+{% endblock %}
+{% block script %}
+
+{% endblock %}
+
+{% block maincontent %}{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png' style="padding-bottom: 8px;" /></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">教练管理</span>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<form id='teacherform' action="/teachers/" method='get' style="position: relative; top:-10px; background-color:transparent; ">
+   {% csrf_token %}
+  <div class="bs-docs-section">
+    <table width="100%">
+      <tr>
+        <td>
+          <div>
+          <button type="button" class="btn btn-primary" data-target="#myModal" data-toggle="modal" title="添加教练" id='addstu' onclick='mclear()'><span class="glyphicon glyphicon-plus"></span></button>
+          <button type="button" class="btn btn-primary disabled"  onclick='edit()' title="编辑教练" data-toggle="modal" id='editsuccess'><span class="glyphicon glyphicon-pencil"></span></button>
+          <button id="btndel" type="button" class="btn btn-danger disabled" title="删除教练" onclick='delTeachers()'><span class="glyphicon glyphicon-remove"></span></button>
+          </div>
+        </td>
+        <td align="right">
+          <div style=" text-align:'right'">
+            <input id='querytext' name='querytext' type='text' class="form-control topself_input" placeholder="请输入账号、姓名关键字" value="{{teaselect}}" style="width:185px; display:inline;" />
+            <button id="btnquery" type="submit" class="btn btn-danger" formaction="/teachers/" title="查找教练"><span class="glyphicon glyphicon-search"></span></button>
+          </div>
+        </td>
+      </tr>
+    </table>
+</div>
+  <div class="panel-body" style="padding-left:0px; padding-right:0px;">
+    <!-- Glyphicons
+  ================================================== -->
+    <table  id="lstea" class="table table-striped topsec_tabletop table-hover" data-selid="0" data-sepage ="{{ page }}">
+      <tr> 
+        <th>账号</th>
+        <th>姓名</th>
+        <th>权限</th>
+        <th>性别</th>
+        <th>邮箱</th>
+        <th>电话</th>
+        <th>其它联系方式</th>
+      </tr>
+      {% for teacher in teacherls.object_list %}
+      <tr onclick='setTableEvent("lstea", true)' id="{{teacher.id}}" data-teaccount={{teacher.account}}>
+        <td>{{teacher.account}}</td>
+        <td>{{teacher.teaname}}</td>
+        <td>
+        	 <span>{% ifequal teacher.roletype 0 %}教练员{% else %}管理员{% endifequal %}</span>
+        </td>
+        <td>
+        	<span>{% ifequal teacher.sex 0 %}男{% else %}女{% endifequal %}</span>
+        </td>
+        <td title={{teacher.email}}>{{teacher.email|truncatechars:15}}</td>
+        <td>{{teacher.mobile}}</td>
+        <td title={{teacher.otherlink}}>{{teacher.otherlink|truncatechars:10}}</td>
+      </tr>
+      {% endfor %}
+      </table>
+   
+          <div class="flickr">
+              {% if teacherls.has_previous %}
+              <a href="?page={{ teacherls.previous_page_number }}{% ifnotequal teaselect '' %}&teacherselect={{teaselect}}{% endifnotequal %}">上一页</a>
+              {% else %}
+              <span>上一页</span>
+              {% endif %}
+              <span>
+                  {% for p in page_range %}
+
+                  {% ifequal p teacherls.number %}
+                  <span class="current">{{p}}</span>
+                  {% else %}
+                  <a href="?page={{p}}{% ifnotequal teaselect '' %}&teacherselect={{teaselect}}{% endifnotequal %}" title="第{{p}}页">{{p}}</a>
+                  {% endifequal %}
+
+              {% endfor %}
+              </span>
+              {% if teacherls.has_next %}
+              <a href="?page={{ teacherls.next_page_number }}{% ifnotequal teaselect '' %}&teacherselect={{teaselect}}{% endifnotequal %}">下一页</a>
+              {% else %}
+              <span>下一页</span>
+              {% endif %}
+          </div>
+     
+    
+  </div>
+</form>
+<form  id='teacheraddform' action="/teacheradd/" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">添加教练</h3>
+        </div>
+        <div>
+          <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>账号：</td>
+              <td style="width:370px; ">
+                <input id='account' name='account' type='text'  required="required" maxLength="20" onchange="checkaccount()" class="form-control topself_input"/>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>姓名：</td>
+              <td style="width:370px; ">
+                <input id='teaname' name='teaname' type='text' required="required" maxLength="20" onchange="checkteaname()" class="form-control topself_input"/>
+              </td>
+            </tr>             
+
+            <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;">性别：</td>
+              <td>
+                  <select class="form-control" style="width:120px;" id='sex' name='sex' required="required">
+                    <option value="0">男</option>
+                    <option value="1">女</option>
+                  </select>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;">权限：</td>
+              <td >
+                <select class="form-control" style="width:120px;" id='roletype' name='roletype' required="required">
+                          <option value='0'>教练员</option>
+                          <option value='1'>管理员</option>
+                </select>
+              </td>
+            </tr>
+           <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;">邮箱：</td>
+              <td style="width:370px; ">
+                <input id='email' name='email' type='email' maxLength="50" class="form-control topself_input"/>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;">电话：</td>
+              <td style="width:370px; ">
+                <input id='mobile' name='mobile' type='text'  maxLength="11" onchange="checknumber()" class="form-control topself_input"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:130px; text-align:right;  vertical-align:middle;">其它联系方式：</td>
+              <td colspan=3>
+                <input id='otherlink' name='otherlink' maxLength="50" type='text'   class="form-control topself_input"/>
+              </td>
+            </tr>
+	     <tr>
+              <td style="width:130px; padding-left:60px;  vertical-align:middle;"><h4>密码</h4>
+
+              </td>
+               <td  style="width:370px; ">
+
+              </td>
+              <td colspan=2  style="width:370px; ">
+              </td>
+            </tr>
+            <tr>
+                <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>密 码：</td>
+                <td >
+               <input id='pwd' name='pwd' required="required" maxLength="20" type='password' onchange="checkPasswords()" class="form-control topself_input" placeholder="请输入6-20位字母、数字或字符" />
+               </td>
+               <td style="width:130px; text-align:right;">
+                <input id="checkbox" type="checkbox" value="checkbox" onclick='result()' style="width:50px; height:26px;"/>
+               </td>
+               <td  style="text-align:left; vertical-align:middle; ">
+                使用初始密码
+                </td>
+                </tr>
+                <tr>
+                <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>确认密码：</td>
+                <td style="width:370px; ">
+               <input id='pwdagain' name='pwdagain' required="required" maxLength="20" type='password' onchange="checkPasswords()" class="form-control topself_input" placeholder="请输入6-20位字母、数字或字符" />
+               </td>
+               <td colspan=2>
+               </td>
+            </tr>
+          </table>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='取消'><span class="glyphicon glyphicon-remove"></span></button>
+          <button class="btn btn-primary" id="btnaddtea" type="submit" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          <button class="btn btn-default"  type="button" onclick='mclear()' title='重置'><span class="glyphicon glyphicon-retweet"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<form  id='teachereditform' action="/teacheredit/" method='post'>
+  {% csrf_token %}
+  <div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+    <div class="modal-dialog" style="width:1000px">
+      <div class="modal-content" style="width:950px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">编辑教练</h3>
+        </div>
+        <div>
+          <table class="table topsec_tabletop">
+            <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>账号：</td>
+              <td style="width:370px; ">
+                <input id='account1' name='account' type='text'  required="required" maxLength="20"  onchange="checkaccountedit()" class="form-control topself_input" readonly/>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>姓名：</td>
+              <td style="width:370px; ">
+                <input id='teaname1' name='teaname' type='text' style="background-color: transparent" required="required" maxLength="20" onchange="checkteaname1()" class="form-control topself_input" />
+              </td>
+            </tr>             
+
+            <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;">性别：</td>
+              <td>
+                  <select class="form-control" style="width:120px;" id='sex1' name='sex' required="required">
+                    <option value="0">男</option>
+                    <option value="1">女</option>
+                  </select>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;">权限：</td>
+              <td >
+                <select class="form-control" style="width:120px;" id='roletype1' name='roletype' required="required">
+                          <option value='0'>教练员</option>
+                          <option value='1'>管理员</option>
+                </select>
+              </td>
+            </tr>
+           <tr>
+              <td style="width:130px; text-align:right; vertical-align:middle;">邮箱：</td>
+              <td style="width:370px; ">
+                <input id='email1' name='email' type='email'  maxLength="50" class="form-control topself_input"/>
+              </td>
+              <td style="width:130px; text-align:right; vertical-align:middle;">电话：</td>
+              <td style="width:370px; ">
+                <input id='mobile1' name='mobile' type='text'  maxLength="11" onchange="checknumberedit()" class="form-control topself_input"/>
+              </td>
+            </tr>             
+            <tr>
+              <td style="width:130px;  text-align:right; vertical-align:middle;">其它联系方式：</td>
+              <td colspan=3>
+                <input id='otherlink1' name='otherlink' type='text' maxLength="50" class="form-control topself_input"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:130px;  text-align:right; vertical-align:middle;">
+                <input id="recheckbox1" type="checkbox" value="checkbox" onclick='reresultedit()' style="width:50px; height:26px;"/>
+              </td>
+              <td style="width:370px; text-align:left; ">
+                <h4 width="175px">重置密码</h4>
+              </td>
+               <td colspan=2>
+              </td>
+            </tr>
+            <tr>
+                <td style="width:130px;  text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>密 码：</td>
+                <td >
+               <input id='pwd1' name='pwd' required="required" maxLength="20" type='password' onchange="checkPasswordsedit()" class="form-control topself_input" placeholder="请输入6-20位字母、数字或字符" disabled/>
+               </td>
+               <td style="width:130px; text-align:right;">
+                <input id="checkbox1" type="checkbox" value="checkbox" onclick='resultedit()'  style="width:50px; height:26px;" disabled/>
+               </td>
+               <td  style="width:130px; text-align:left; vertical-align:left; ">
+                使用初始密码
+                </td>
+                </tr>
+                <tr>
+                <td style="width:130px;  text-align:right; vertical-align:middle;"><font color="#FF0000">*</font>确认密码：</td>
+                <td style="width:370px; vertical-align:middle;">
+               <input id='pwdagain1' name='pwdagain' required="required" maxLength="20" type='password' onchange="checkPasswordsedit()" class="form-control topself_input" placeholder="请输入6-20位字母、数字或字符"  disabled/>
+               </td>
+               <td colspan=2>
+               </td>
+               </tr>
+          </table>
+          <input id='teaid' name='teaid' type='hidden'/>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove"></span></button>
+      <button class="btn btn-primary" type="submit" onclick="submitaddformedit()" title='保存'><span class="glyphicon glyphicon-floppy-save"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<script type="text/javascript">
+        setfontcolor("admctrl");
+
+        var tea = ajaxobj("/roletypecheck/", "", "get", "");
+        var jsondata = $.parseJSON(tea);
+        var roletype=jsondata.roletype;
+        if(roletype == 0)
+        {
+          $("#addstu").remove();
+          $("#btndel").remove();
+          $('#roletype1>option:eq(1)').remove();
+        }
+
+function mclear()
+  {
+    var account=document.getElementById("account");
+    account.setCustomValidity("");
+    var pass1 = document.getElementById("pwd");
+    pass1.setCustomValidity("");
+    var mob = document.getElementById("mobile");
+    mob.setCustomValidity("");
+    var em = document.getElementById("email");
+    em.setCustomValidity("");
+    document.getElementById('teaname').value = '';
+    document.getElementById('account').value = '';
+    document.getElementById('pwd').value = '';
+    document.getElementById('roletype').value = 0;
+    document.getElementById('sex').value = 0;
+    document.getElementById('email').value = '';
+    document.getElementById('mobile').value = '';
+    document.getElementById('otherlink').value = '';
+    document.getElementById('pwdagain').value = '';
+    document.getElementById('checkbox').checked = false;
+     if(document.readyState=="complete")
+     {
+      document.getElementById('pwd').readOnly=false;
+      document.getElementById('pwdagain').readOnly=false;
+     }                 
+  }
+  function result()
+  {
+   if(document.getElementById('checkbox').checked == true)
+   {
+     document.getElementById('pwd').type='text'
+     document.getElementById('pwdagain').type='text'
+     document.getElementById('pwd').value = '123456';
+     document.getElementById('pwdagain').value = '123456';
+     if(document.readyState=="complete")
+     {
+      document.getElementById('pwd').readOnly=true;
+      document.getElementById('pwdagain').readOnly=true;
+     }      
+   }
+   else
+   {
+     document.getElementById('pwd').type='password'
+     document.getElementById('pwdagain').type='password'
+      if(document.readyState=="complete")
+     {
+      document.getElementById('pwd').readOnly=false;
+      document.getElementById('pwdagain').readOnly=false;
+     }
+
+     document.getElementById('pwd').value='';
+     document.getElementById('pwdagain').value='';
+    }
+  }
+
+
+  function checkPasswords() {
+    var pass1 = document.getElementById("pwd");
+    var pass2 = document.getElementById("pwdagain");
+    if (pass1.value != pass2.value)
+            pass1.setCustomValidity("两次输入密码不一致！");
+    else if(pass1.value.length < 6)
+            pass1.setCustomValidity("密码需大于五位");
+    else
+            pass1.setCustomValidity("");
+  }
+  function checknumber(){
+   var mob = document.getElementById("mobile");
+   var reg=/^\d+$/;
+   if(reg.test(mob.value)==false)
+      mob.setCustomValidity("电话只能是数字！");
+    else if(mob.value.length<4 )
+       mob.setCustomValidity("电话位数错误！");
+    else
+      mob.setCustomValidity("");
+  }
+
+ function checkteaname()
+ {
+
+   var teaname = document.getElementById("teaname");
+   var reg=/^[a-zA-Z0-9\u4e00-\u9fa5]+$/;//不能输入特殊字符
+   if(reg.test(teaname.value) == false)
+   {
+      teaname.setCustomValidity("不能输入特殊字符！");
+      return
+   }
+   else
+  {
+    teaname.setCustomValidity("");
+  }
+ }
+ function checkteaname1()
+ {
+  
+   var teaname = document.getElementById("teaname1");
+   var reg=/^[a-zA-Z0-9\u4e00-\u9fa5]+$/;//不能输入特殊字符
+   if(reg.test(teaname.value) == false)
+   {
+      teaname.setCustomValidity("不能输入特殊字符！");
+      return
+   }
+   else
+  {
+    teaname.setCustomValidity("");
+  }
+ }
+ function checkaccount(){
+
+   var account=document.getElementById("account");
+   var judgeedit;
+   var tea = ajaxobj("/teacheraccountcheck/", "", "post", "#teacheraddform");
+   var jsondata = $.parseJSON(tea);
+   judgeedit=jsondata.judgeaccount;
+   //var reg=/^[a-zA-Z0-9\u4e00-\u9fa5]+$/;//不能输入特殊字符
+  var reg=/^[A-Za-z0-9]+$/;//只能是数字或字母
+
+  if(reg.test(account.value) == false)
+  {
+    account.setCustomValidity("只能输入数字或字母！");
+    return
+  }
+  else if(judgeedit==1)
+  {
+    account.setCustomValidity("已存在的教练!");
+  }
+  else
+  {
+    account.setCustomValidity("");
+  }
+}
+
+
+      function resultedit()
+      {
+       if(document.getElementById('checkbox1').checked == true)
+       {
+         document.getElementById('pwd1').type='text'
+         document.getElementById('pwdagain1').type='text'
+         document.getElementById('pwd1').value = '123456';
+         document.getElementById('pwdagain1').value = '123456';
+         if(document.readyState=="complete")
+         {
+          document.getElementById('pwd1').readOnly=true;
+          document.getElementById('pwdagain1').readOnly=true;
+         }
+           
+       }
+      else
+      {
+         document.getElementById('pwd1').type='password'
+         document.getElementById('pwdagain1').type='password'
+         if(document.readyState=="complete")
+         {
+          document.getElementById('pwd1').readOnly=false;
+          document.getElementById('pwdagain1').readOnly=false;
+         } 
+         document.getElementById('pwd1').value='';
+         document.getElementById('pwdagain1').value='';
+
+       }
+      }
+       function reresultedit()
+       {
+         if(document.getElementById('recheckbox1').checked == false)
+         {
+         document.getElementById('pwd1').value='';
+         document.getElementById('pwdagain1').value='';   
+         document.getElementById('checkbox1').checked=false;         
+         document.getElementById('pwd1').disabled=true;
+         document.getElementById('pwdagain1').disabled=true;
+         document.getElementById('checkbox1').disabled=true;
+
+         }
+         else
+         {
+         document.getElementById('pwd1').value='';
+         document.getElementById('pwdagain1').value='';             
+         document.getElementById('pwd1').disabled=false;
+         document.getElementById('pwdagain1').disabled=false;
+         document.getElementById('checkbox1').disabled=false;
+         document.getElementById('pwd1').type='password'
+         document.getElementById('pwdagain1').type='password'
+          if(document.readyState=="complete")
+           {
+             document.getElementById('pwd1').readOnly=false;
+             document.getElementById('pwdagain1').readOnly=false;
+           } 
+         }
+
+       }
+
+
+    function checkPasswordsedit() {
+        var pass1 = document.getElementById("pwd1");
+        var pass2 = document.getElementById("pwdagain1");
+        if (pass1.value != pass2.value) {
+            pass1.setCustomValidity("两次输入密码不一致！");
+        }
+        else if(pass1.value.length < 6) {
+            pass1.setCustomValidity("密码需大于五位！");
+        }
+        else {
+            pass1.setCustomValidity("");
+        }
+
+    }
+        function checknumberedit(){
+                 var mob = document.getElementById("mobile1");
+                 var reg=/^\d+$/;
+                 if(reg.test(mob.value)==false)
+                    mob.setCustomValidity("电话只能是数字!");
+                  else if(mob.value.length<4)
+                     mob.setCustomValidity("电话位数错误！");
+                  else
+                    mob.setCustomValidity("");
+    }
+  function checkaccountedit(){
+    var account=document.getElementById("account1");
+    var judgeedit;
+    var tea = ajaxobj("/teacheraccountcheck/", "", "post", "#teachereditform");
+    var jsondata = $.parseJSON(tea);
+    judgeedit=jsondata.judgeaccount;
+    var reg=/^[A-Za-z0-9]+$/;//只能是数字或字母
+
+    if(reg.test(account.value) == false)
+    {
+        account.setCustomValidity("只能输入数字或字母！");
+        return
+    }
+    else if(judgeedit==1)
+    {
+        account.setCustomValidity("已存在的教练!");
+    }
+    else
+    {
+        account.setCustomValidity("");
+    }
+  }
+
+    function submitaddform()
+  {
+    //document.getElementById("btnaddtea").submit();
+   }
+
+ function submitaddformedit()
+  {
+    // alert($("#roletype1").val());
+    
+    var preid = $("#lstea").data("selid");
+    var editurl="/teacheredit/"+preid+'/';
+    document.getElementById("teachereditform").action=editurl;
+    var currentPage = $("#lstea").data("sepage");//获取当前页码
+    var pass1 = document.getElementById("pwd1");
+    var pass2 = document.getElementById("pwdagain1");
+      if (pass1.value === pass2.value && pass1.value.length >= 6){
+          if(currentPage>1)
+          {
+             window.location.href="/teachers/?page=" + currentPage;
+          }
+          else
+          {
+             window.location.href="/teachers/?page=1";
+          }
+      }
+    // if($("#roletype1").val() === '1')
+    // {
+    //    $("#addstu").removeClass('disabled');
+    // }
+    // else
+    // {
+    //   alert("11111111");
+    //   $("#addstu").addClass('disabled');
+    // }
+
+  }
+
+function delTeachers(){
+    var tea = ajaxobj("/roletypecheck/", "", "get", "");
+    
+    var jsondata = $.parseJSON(tea);
+
+    var preid = $("#lstea").data("selid");//选中的行id
+
+    var loginId = jsondata.id;//当前登录的ID
+
+    // var loginAccount = $("#lstea>tbody>tr.success").data("teaccount");
+    // if(loginAccount == "admin" )
+    // {
+    //   Showbo.Msg.alert("超级管理员Admin不能被删除！")
+    //   return;
+    // }
+    var isExamExist = ajaxobj("/ExamcheckforTea/"+preid, "", "get", "#lstea");
+    var jsondata2 = $.parseJSON(isExamExist);//返回竞赛中是否有此教师
+   
+    var isCourseExist = ajaxobj("/CoursecheckforTea/"+preid, "", "get", "#lstea");
+    var jsondata3 = $.parseJSON(isCourseExist);//返回课程中是否有此教师
+    if(jsondata2.cando=="false")
+    {
+      Showbo.Msg.alert("超级管理员Admin不能被删除！")
+      return;
+    }
+    
+    if(loginId == preid)
+    {
+      Showbo.Msg.alert("当前用户不能被删除！")
+      return;
+    }
+
+    Showbo.Msg.oncallback = submitdelformedit;
+
+    if(jsondata2.success == 'true' || jsondata3.success == 'true')
+    {
+      Showbo.Msg.confirm("该教练已被添加到竞赛/课程中,确定要删除吗?");
+    }
+    else
+    {
+      Showbo.Msg.confirm("确定删除吗？");
+    }
+}
+
+function submitdelformedit()
+{
+  var tea = ajaxobj("/roletypecheck/", "", "get", "");
+
+  var jsondata = $.parseJSON(tea);
+
+  var preid = $("#lstea").data("selid");
+
+  var loginId = jsondata.id;
+  
+  var loginAccount = $("#lstea>tbody>tr.success").data("teaccount");
+ 
+  if(loginAccount != "admin" || loginId !=preid)
+  {
+    var editurl="/teacherdel/"+preid+'/';
+    document.getElementById("teacherform").action=editurl;
+    document.getElementById("teacherform").submit();
+  }
+}  
+setTableEvent("lstea", true);
+
+function setTableEvent(tableid, singleSelect) {
+        var tr = "#" + tableid + ">tbody>tr";
+        var trSelected = tr + ".success";
+        $(tr).click(function(event) {
+        if($(this).attr('id') == undefined)
+            return;
+        //var id = $("td:first-child", $(this)).text();
+        // single-select
+        if (singleSelect) {
+            $(trSelected).removeClass('success');
+        }
+        
+        if($("#editsuccess").hasClass('disabled'))
+        {
+          $("#editsuccess").removeClass('disabled');
+          $("#btndel").removeClass('disabled');
+        }
+        $(this).addClass('success');
+
+        $("#lstea").data("selid", $(this).attr('id'));
+
+        // // var loginAccount = $(this).data("teaccount");
+        
+    });
+}
+
+
+function edit()
+{
+    var preid = $("#lstea").data("selid");
+    if(preid == "0")
+    {
+        return false;
+    }
+
+    $("#teaid").val(preid);
+    
+    var tea = ajaxobj("/teacherinfo/", "", "post", "#teachereditform");
+    var jsondata = $.parseJSON(tea);
+    if(jsondata.teaid==12)
+    {
+      document.getElementById('roletype1').disabled=true;
+    }
+    else
+    {
+      document.getElementById('roletype1').disabled=false;
+    }
+    $("#pwd1").val('');
+    document.getElementById('pwd1').disabled=true;
+    document.getElementById('pwdagain1').disabled=true;
+    document.getElementById('recheckbox1').checked = false;
+    $("#account1").val(jsondata.account);
+    $("#teaname1").val(jsondata.teaname);
+    $("#sex1").val(jsondata.sex);
+    $("#roletype1").val(jsondata.roletype);
+    $("#email1").val(jsondata.email);
+    $("#mobile1").val(jsondata.mobile);
+    $("#otherlink1").val(jsondata.otherlink);
+    $('#myModal1').modal('show');
+}
+
+</script>
+
+{% endblock %}

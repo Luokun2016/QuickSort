@@ -1,0 +1,324 @@
+{% extends "templates/hackclientindex.html" %}
+{% load i18n %} 
+{% load staticfiles%}
+
+{% block script %}
+   
+<script type="text/javascript">
+      function ajaxobj(_url, _tag, _way, _form)
+      {
+        var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+        var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+        var info = "";
+        $.ajax({
+          type:m,
+          url:_url,
+          data:par,
+          async: false,
+          error: function(request) {
+            //alert("Connection error");
+          },
+          success: function(data) {
+            //$(_tag).html(data);
+            //alert(data);
+            info = data;
+          }
+        });
+        return info;
+      }
+      function LoadDate()
+      {
+        $('.form_date').datetimepicker({
+          language:  'zh-CN',
+          weekStart: 1,
+          todayBtn:  1,
+          autoclose: 1,
+          todayHighlight: 1,
+          startView: 2,
+          minView: 2,
+          forceParse: 0
+        });
+      }
+      function savepwd()
+      {
+          var dev = ajaxobj("/modifypwd/", "", "post", "#userinfoform");
+          if(dev == "1")
+              alert("密码修改成功！");
+          else
+              alert("密码修改失败！");
+          $('#myModal1').modal('hide');
+      }
+      function userpwd()
+      {
+          $('#myModal1').modal('show');
+      }
+</script>
+{% endblock %}
+</head>
+{% block content1 %}
+
+  <div class="container" style="width:100%;height:100%;">
+
+      <div id="HomeContent" style="width:100%;height:100%;">
+
+        <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+          <div class="panel-heading">冠军团队</div>
+          <div id="tree" class="panel-body" style="height:100%;">
+            <div style="text-align:left; vertical-align:top;">
+              精灵鼠
+            </div>
+          </div>
+        </div>
+        <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+          <div class="panel-heading">成绩排名</div>
+          <div class="panel-body" style="height:100%;">
+            <div id="tree1" style="text-align:left; vertical-align:top;">
+              <div  class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div id="first"  class="panel-heading">第1名，精灵鼠</div>
+                  <div class="panel-body" style="height:100%;">
+                    <div id="hacker" style="text-align:left; vertical-align:top;">
+                    总得分107。
+                    </div>
+                  </div>
+              </div>
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">第2名，狼牙团</div>
+                <div class="panel-body" style="height:100%;">
+                  <div id="hacker" style="text-align:left; vertical-align:top;">
+                    总得分81。
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">第3名，黑客团</div>
+                <div class="panel-body" style="height:100%;">
+                  <div id="hacker3" style="text-align:left; vertical-align:top;">
+                    总得分77。
+                  </div>
+                </div>
+              </div>
+              <div class="panel panel-default self_top" style="height:100%; margin-top:0px;">
+                <div class="panel-heading">第4名，开拓者</div>
+                <div class="panel-body" style="height:100%;">
+                  <div id="hacker4" style="text-align:left; vertical-align:top;">
+                    总得分57。
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+  </div>
+  <!-- Bootstrap core JavaScript
+    ================================================== -->
+  <!-- Placed at the end of the document so the pages load faster -->
+  <form id="userinfoform" action="/modifypwd/" method='post'>
+  {% csrf_token %}
+    <div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" >
+      <div class="modal-dialog">
+        <div class="modal-content" style="width:600px;">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="myModalLabel1">修改密码</h3>
+          </div>
+          <div>
+            <table class="table topsec_tabletop">
+              <tr>
+                <td style="width:100px; vertical-align:middle; text-align:right;"><font color="#FF0000">*</font>原密码：</td>
+                <td>
+                  <input id='spwd' name='spwd' type='password' required="required" class="form-control topself_input"/>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:100px; vertical-align:middle; text-align:right;"><font color="#FF0000">*</font>新密码：</td>
+                <td>
+                  <input id='npwd' name='npwd' type='password' class="form-control topself_input"/>
+                </td>
+              </tr>
+              <tr>
+                <td style="width:100px; vertical-align:middle; text-align:right;"><font color="#FF0000">*</font>重&nbsp;&nbsp;&nbsp;&nbsp;复：</td>
+                <td>
+                  <input id='repwd' name='repwd' type='password' class="form-control topself_input"/>
+                </td>
+            </tr>
+          </table>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button">关闭</button>
+          <button class="btn btn-primary" type="button" onclick="savepwd()">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<form>
+  {% csrf_token %}
+ <div class="modal fade" id="About" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+     <div class="modal-dialog">
+      <div class="modal-content" style="width:600px; padding-top:5px;">
+        <div class="modal-header" style="background-color: #FFFFFF">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">关于</h3>
+        </div>
+        <div>
+         <table id='cladeptdetail' style="font-size:16px; vertical-align:middle; position:relative; top:0px; left:100px;">
+                                                      <tr>
+                                                        <td style="height:40px; text-align:left; width:30%;">
+                                                            <p>发行厂商:</p>
+                                                        </td>
+                                                        <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                                                        <p><strong>北京天融信公司</strong></p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="height:40px; text-align:left; width:30%;">
+                                                            <p>产品名称:</p>
+                                                        </td>
+                                                        <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                                                        <p><strong>天融信网络安全仿真系统</strong></p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="height:40px; text-align:left; width:30%;">
+                                                            <p>产品名简称:</p>
+                                                        </td>
+                                                        <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                                                        <p><strong>TopADP</strong></p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="height:40px; text-align:left; width:30%;">
+                                                            <p>版本号:</p>
+                                                        </td>
+                                                        <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                                                        <p><strong>v3</strong></p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="height:40px; text-align:left; width:30%;">
+                                                            <p>版权:</p>
+                                                        </td>
+                                                        <td style="height:40px; text-align:left;width:70%; padding-left:30px;">
+                                                        <p><strong>(C) 2014 Topsec</strong></p>
+                                                        </td>
+                                                    </tr>
+                      </table>
+          <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button" title='关闭'><span class="glyphicon glyphicon-remove-circle"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<form id="information" action="/selcourse/" method='post'>
+  <input id='expid' name='expid' type='hidden' value='0'/>
+  <input id='courname' name='courname' type='hidden' value='0'/>
+  <input id='curexp' name='curexp' type='hidden' value='0'/>
+  <input id='curvms' name='curvms' type='hidden'  value='0'/>
+</form>
+<script type="text/javascript">
+    function open_vnc(fscreen, vmid) 
+    {
+        var preid = vmid;
+        var url = '/console/' + preid + '/vm?token=' + preid;
+        if(fscreen)
+          window.open(url,'','width=850,height=485');
+        else
+          document.getElementById("syssframe").src = url;
+    }
+</script>
+<script type="text/javascript">
+$(function(){
+    setbackgroundcolor("listcolor");
+    getscoreinfo();
+});
+function getscoreinfo()
+{  
+    var scoreinfo = ajaxobj("/teamrank/","","get","");
+    var json = $.parseJSON(scoreinfo);
+    json = json["arry"];
+    var j = 0;
+    $('#tree1').text();
+    j = 1;
+    for(i = 0;i<json.length; i++)
+    {
+      $.each(json[i], function(index, value)
+      { 
+          var last_time="";
+          if (value.total!=0)
+          {
+            last_time=', 最后提交答案时间 '+ value.lasttime;
+          }
+
+          if(i == 0)
+          {
+            $('#tree').text();
+            content='<div style="text-align:left; vertical-align:top;">'+index +'</div>';
+            tr='<div class="panel panel-default self_top" style="height:100%; margin-top:0px;"><div id="first"  class="panel-heading">第'+j+'名，'+index+'</div><div class="panel-body" style="height:100%;"><div id="hacker" style="text-align:left; vertical-align:top;">总得分'+value.total+last_time+'。</div></div></div>';
+            j++;
+          }
+          if(i>0)
+          {  
+            tr+='<div class="panel panel-default self_top" style="height:100%; margin-top:0px;"><div id="first"  class="panel-heading">第'+j+'名，'+index+'</div><div class="panel-body" style="height:100%;"><div id="hacker" style="text-align:left; vertical-align:top;">总得分'+value.total+last_time+'。</div></div></div>';
+            j++;
+            
+          }
+      });
+    }
+
+    $('#tree').html(content);
+    $('#tree1').html(tr);
+
+}
+
+function startBench()
+{
+    var client = ajaxobj("/startBench/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    var result = json.result;
+
+    if(result == 0 && clientid != 0)
+    {
+        open_vnc(false, clientid);
+        $("#curvms").val(clientid);
+        $("#btnstopexp").removeClass('disabled');
+        $("#btnmaxscreen").removeClass('disabled');
+        $("#btnstartexp").addClass('disabled');
+    }
+    else if (result == 2)
+        alert("系统资源无法满足当前请求，请联系管理员！");
+    else if(result == 1)
+        alert("请求失败，请联系管理员！");
+}
+function stopBench()
+{
+    var client = ajaxobj("/stopBench/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    $("#curvms").val("0");
+    document.getElementById("syssframe").src = "";
+    $("#btnstartexp").removeClass('disabled');
+    $("#btnstopexp").addClass('disabled');
+    $("#btnmaxscreen").addClass('disabled');
+}
+function fullscreen()
+{
+    var clientid = $("#curvms").val();
+    open_vnc(true, clientid);
+    //var client = ajaxobj("/fullscreen/", "", "post", "#information");
+}
+function timedCount()
+ {
+    var client = ajaxobj("/clientinfor/", "", "post", "#information");
+    var json = $.parseJSON(client);
+    var clientid = json.clientid;
+    var t=setTimeout("timedCount()",60000);
+ }
+
+</script>
+{% endblock  %}

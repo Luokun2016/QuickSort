@@ -1,0 +1,85 @@
+body {
+	font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size:14px;
+	color:#FFFFFF;
+	background-image: url('bg.png');
+}
+
+.clientuser{
+	top:15px;
+	right: 200px;
+	position: fixed;
+	z-index: 1030;
+}
+
+.swipe-wrap h1 {
+	padding-left: 30px;
+  	padding-top: 20px;
+
+}
+.swipe-wrap a {
+	color:#fff;
+	text-shadow:0 1px 1px rgba(0,0,0,0.5);
+	/*background-image: url('../images/btn.png');*/
+}
+.swipe-wrap a:hover {
+	text-decoration:none
+}
+
+.swipe-wrap table>tr>td,.swipe-wrap table>tbody>tr>td{
+	padding:20px;
+}
+.swipe-wrap table>tr>td button,.swipe-wrap table>tbody>tr>td button{	
+	/*background-color: #007dbb;*/
+	width:220px;
+	height: 65px;
+	text-align: center;
+	border-radius: 2px;
+	color:#fff;
+	font-size:14px;
+	background-image: url('../images/bg1.png');
+	border:1px solid #2085d9;
+}
+.swipe-wrap table>tr>td button:hover,.swipe-wrap table>tbody>tr>td button:hover{	
+	background-image: url('../images/bg2.png');
+	border:1px solid #fff;
+
+}
+
+.btn-top{
+	background-color:transparent;
+	border:none;
+	margin: 0;
+}
+.btn-top:hover{
+	opacity: 0.5;
+}
+ #prev{
+  	color:#fff;
+ 	font-weight: bold;
+ 	font-size: 60px;
+ 	position: fixed;
+ 	top:300px;
+ 	left:170px;
+ 	background: transparent;
+ 	border:none;
+ }
+#prev:hover{	
+ 	opacity: 0.5;
+  }
+  #next{
+ 	color:#fff;
+ 	font-weight: bold;
+ 	font-size: 60px;
+ 	position: fixed;
+ 	top:300px;
+ 	right:170px;
+ 	background: transparent;
+ 	border:none;
+ }
+  #next:hover{
+
+ 	opacity: 0.5;
+ 	
+
+  }

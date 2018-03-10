@@ -1,0 +1,109 @@
+{% extends "templates/register.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}学生审核{% endblock %}
+
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">学生审核</span>
+</div>
+{% endblock %}
+{% block content1 %}
+
+<form id='studentregister' action="/tools/registerstudent/" method='get' style="position: relative; ">
+<div id="MainContent"  role="main" style=" heigth:100%; margin-top:-10px;">
+    <div class="panel-body" style="padding-left:0px; padding-right:0px; position: relative; top:-15px;">
+
+        <div class="tab-pane fade in active" id="registeradmin">
+         <div class="panel-body" style="padding-left:0px; padding-right:0px;">
+          <table  id="lsstu" class="table table-striped topsec_tabletop table-hover1" data-selid="0" >
+            <tr>
+              <th>学号</th>
+              <th>姓名</th>
+              <th>性别</th>
+              <th>系别</th>
+              <th>年级</th>
+              <th>班级</th>
+              <th>审核</th>
+            </tr>
+            {% for student in stu_list %}
+            <tr id='{{student.id}}'>
+              <td>{{student.number}}</td>
+              <td>{{student.name}}</td>
+              <td>
+                <span>{% ifequal student.sex 0 %}男{% else %}女{% endifequal %}</span>
+              </td>
+              <td>
+                {{student.deptname}}
+              </td>    
+              <td>    
+                {{student.grade}}
+              </td>
+              <td>     
+                {{student.classname}}
+              </td>
+
+              <td><button class="btn btn-primary" onclick="acceptit({{student.id}})">通过</button><button class="btn btn-primary" onclick="cancelregister({{student.id}})">删除</button></td>
+              
+            </tr>
+            {% endfor %}
+            <input id='studentid' name='studentid' type='hidden'  value='0'/>
+
+          </table>
+          <tr>
+            <td colspan="8" >
+              <div class="flickr">
+                {% if stu_list.has_previous %}
+                <a href="?page={{ stu_list.previous_page_number }}">上一页</a>
+                {% else %}
+                <span>上一页</span>
+                {% endif %}
+                <span>
+                  {% for p in page_range %}
+
+                  {% ifequal p stu_list.number %}
+                  <span class="current">{{p}}</span>
+                  {% else %}
+                  <a href="?page={{p}}" title="第{{p}}页">{{p}}</a>
+                  {% endifequal %}
+
+                  {% endfor %}
+                </span>
+                {% if stu_list.has_next %}
+                <a href="?page={{ stu_list.next_page_number }}">下一页</a>
+                {% else %}
+                <span>下一页</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        </div>
+      </div>
+    </div>  
+    </div>  
+</form>
+<script type="text/javascript">
+  setbackgroundcolor("student");
+  function acceptit(accentid){
+    $("#studentid").val(accentid);
+    var accept=ajaxobj("/tools/accetpstudent/","","post","#studentregister");
+    var accept_json=$.paresJSON(data);
+}
+
+function cancelregister(studentid){
+    $("#studentid").val(studentid);
+    var accept=ajaxobj("/tools/cancelstudent/","","post","#studentregister");
+    var accept_json=$.paresJSON(data);
+}
+
+  </script>
+  <style type="text/css">
+  .table-hover1 > tbody > tr:nth-child(n+2):hover {
+    background-color:#2D63EF; 
+}
+.table-hover1 > tbody > tr>th,.table-hover1 > thead > tr>th{
+    background-color:#152E80; 
+}
+  </style>
+{% endblock %}

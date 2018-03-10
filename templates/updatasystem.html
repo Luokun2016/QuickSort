@@ -1,0 +1,154 @@
+{% extends "templates/sysmgrmenu.html" %}
+{% load i18n %}
+{% load staticfiles %}
+{% block title %}系统升级{% endblock %}
+{% block link %}
+<div style="width:100%;height:80px;">
+  <a href="/index/"><img src='/statics/images/Left_Round.png'  style="padding-bottom: 8px;"/></a>&nbsp; 
+  <span style="font-size:28px;color:#fff;">系统升级</span>
+</div>
+{% endblock %}
+{% block content1 %}
+<form id='upform' action="/upsystem/" method='get'>
+      <div class="page-header" style="position:relative; top:-40px; ">
+          <h3>系统升级</h3>
+      </div>
+      <table style="position:relative; top:-40px; left:-40px;">
+          <tr>
+            <td style="width:100px; vertical-align:middle; text-align:right; "><font color="#FF0000">*</font>选择文件：
+            </td>
+             <td>
+              <table>
+                <tr>
+                  <td style="padding:0px; width:400px;">
+                    <input type="file" name="toolfile" id="toolfile" onclick="hiddenfname()" onchange="selectFileTypeedit(this);" />
+                  <input type="hidden" id="filename" name="filename" value=""/> 
+                  </td>
+                  <td style="padding:0px;">
+                    <button class="btn btn-primary"  id="uploadbtnedit" type="button" onclick="startUploading('/sysmgr/uploadtool/', 'prog_percent', 'curProgress',  'toolfile')" disabled="disabled"  title="上传"><span class="glyphicon glyphicon-upload"></span></button>
+                  </td>
+<!--                   <td style="padding:0px;">
+                    <button class="btn btn-primary"  id="unzip" type="button" onclick="unzipfile()"  disabled="disabled"  title="解压">解压</button>
+                  </td> -->
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="width:130px; text-align:right; vertical-align:middle; height:30px; vertical-align:middle;" >
+              完成：
+            </td>
+            <td style="width:470px; height:30px; padding:10px; vertical-align:middle;">
+              <table style="width:100%; height:30px; margin:0px; padding:0px;">
+                <tr>
+                  <td style="width:72%; border:0px; margin:0px; padding:0px; vertical-align:middle;">
+                    <div class="progress progress-striped" style="margin:0px; padding:0px;">
+                      <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="curProgress">
+                      </div>
+                    </div>
+                  </td>
+                  <td style="width:28%; border:0px; vertical-align:middle;"><div id="prog_percent" style="text-align:left;"></div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr> 
+      </table>
+</form>
+<script type="text/javascript">
+  $(function () {
+    setfontcolor("sysctrl");
+    setbackgroundcolor("upsystem"); 
+    var obj = document.getElementById('toolfile') ; 
+    obj.outerHTML=obj.outerHTML;
+  });
+
+  function selectFileTypeedit(obj)
+  {  
+    $("#curProgress").width(0);
+    if((/\w+\.zip$/).test(obj.value))
+    {
+      document.getElementById('filename').value = obj.value; 
+      $('#uploadbtnedit').removeAttr('disabled','disabled');
+      $('#unzip').removeAttr('disabled','disabled');
+    }
+    else
+    {
+      $('#uploadbtnedit').attr('disabled','disabled');
+      $('#unzip').attr('disabled','disabled');
+      Showbo.Msg.alert("只支持上传zip格式压缩文件");
+      var obj = document.getElementById('toolfile') ; 
+      obj.outerHTML=obj.outerHTML; 
+    }   
+  }
+
+  function startUploading(strURL, progress_percent, currentProgress, ufile) 
+  {
+    if($("#" + ufile).val() == "")
+      return;
+    $("#imagefilename").val("");
+    $("#btnsavevm").attr('disabled','disabled');
+    $("#btnsaveimg").attr('disabled','disabled');
+    $("#resetbutton").attr('disabled','disabled');
+
+    pgpercent = progress_percent;
+    progress = currentProgress;
+    iPreviousBytesLoaded = 0;
+
+    document.getElementById(pgpercent).innerHTML = '1%';
+    $("#"+progress).width("1%");
+     var file = $("#" + ufile)[0].files[0],  //文件对象
+          name = file.name,        //文件名
+          size = file.size,        //总大小
+          succeed = 0;
+
+      var shardSize = 5 * 1024 *1024,     //以5MB为一个分片
+          shardCount = Math.ceil(size / shardSize);   //总片数
+      var m_percent=0;
+
+
+      // 上传新文件
+      for(var i = 0;i < shardCount;++i){
+          //计算每一片的起始与结束位置
+          var start = i * shardSize,
+          end = Math.min(size, start + shardSize);
+
+          //构造一个表单，FormData是HTML5新增的
+          var form = new FormData();
+          form.append("data", file.slice(start,end));  //slice方法用于切出文件的一部分
+          form.append("name", name);
+          form.append("total", shardCount);   //总片数
+          form.append("index", i + 1);        //前是第几片         
+          //Ajax提交
+          var uploadajax = $.ajax({
+            url: strURL,
+            type: "POST",
+            data: form,
+            async: true,//异步
+            processData: false,//很重要，告诉jquery不要对form进行处理
+            contentType: false,  //很重要，指定为false才能形成正确的Content-Type
+            success: function(){
+              ++succeed;
+              m_percent=Math.round((succeed)/(shardCount)*100*1)/1;// 计算结果保留整数位
+              document.getElementById(pgpercent).innerHTML = m_percent+"%";
+              $("#"+progress).width(m_percent+"%");
+
+              if(m_percent==100){
+                $("#btnsavevm").attr('disabled',false);
+                $("#btnsaveimg").attr('disabled',false);
+                $("#resetbutton").attr('disabled',false);
+                var toolnamecheck = ajaxobj("/sysmgr/unzipfile/", "", "post", "#upform");           
+              }
+            }
+          });
+      }
+      $('#uploadbtn').attr('disabled','disabled');
+      $('#uploadbtnedit').attr('disabled','disabled');
+  }
+
+  function unzipfile()
+  {
+    var toolnamecheck = ajaxobj("/sysmgr/unzipfile/", "", "post", "#upform");
+  }
+</script>
+{% endblock %}

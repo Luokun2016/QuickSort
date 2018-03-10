@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>客户端登录</title> 
+    <!-- Bootstrap core CSS -->
+    <link href="/statics/css/bootstrap.css" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link href="/statics/images/loginstyle.css" rel="stylesheet" type="text/css" />
+    <link href="/statics/css/navbar.css" rel="stylesheet"/>
+    <link href="/statics/css/allStyle.css" rel="stylesheet"/>
+    <link href="/statics/css/docsss.css" rel="stylesheet"/>
+    <link href="/statics/css/signin.css" rel="stylesheet">
+    <link href="/statics/css/showBo.css" rel="stylesheet"/>
+    <script src="/statics/js/jquery.js"></script>
+  <!--<script type="text/javascript"
+  src="/statics/myflow/lib/jquery-ui-1.8.4.custom/js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript"
+  src="/statics/myflow/lib/jquery-ui-1.8.4.custom/js/jquery-ui-1.8.4.custom.min.js">-->
+    <script src="/statics/js/bootstrap.min.js"></script>
+    <script src="/statics/js/bootstrap-datetimepicker.js"></script>
+    <script src="/statics/js/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script src="/statics/js/showBo.js"></script>
+  
+  </head>
+  <body style="background-image: url('/statics/images/backline.jpg'); background-repeat:repeat; text-align:center; vertical-align:middle; height:100%; font-family: 微软雅黑, Arial;">
+    <!--<div class="container"> -->
+      <form id='clientcheck' class="form-signin" action="/clientindex/" method="post">
+        <h2 class="form-signin-heading"></h2>
+        <div style="width: 482px; height: 358px; background-image: url('/statics/images/loginback.png'); margin-top:150px; margin-left:-100px; padding-left:180px; padding-top:150px;">
+          <table >
+              <tr>
+                  <td>
+                      <strong>学&nbsp;&nbsp;&nbsp;号：</strong>
+                  </td>
+                  <td>
+                      <input type="text"  id='ctxtaccount' name="ctxtaccount" required="required" class="input" placeholder="学号" autofocus />
+                  </td>
+                  <td rowspan="2" style="padding-top:0px; vertical-align:top;">
+                      <button class="btn btn-lg btn-primary topsecloginbtn" style="width:60px; height:50px; margin-top:2px; margin-left:2px; border-radius: 3px 3px 3px 3px;"  type="submit" onclick='return checkdname();' >登 录</button>
+                  </td>
+              </tr>
+              <tr>
+                  <td style="vertical-align:middle; padding-top:0px;">
+                      <strong>密&nbsp;&nbsp;&nbsp;码：</strong>
+                  </td>
+                  <td style="padding-top:6px; vertical-align:middle;">
+                      <input type="password" id='ctxtpwd' name="ctxtpwd" required="required" class="input" placeholder="密码" />
+                  </td>
+              </tr>
+              <tr>
+                  <td>
+                      &nbsp;
+                  </td>
+                  <td style="text-align:left;">
+                        <input type="checkbox" value="remember-me" /> <em>记住我 </em>
+                  </td>
+                  <td>
+                      &nbsp;
+                  </td>
+              </tr>
+          </table>
+        </div>
+        
+      </form>
+
+      <div id="footer" style="position:relative; margin-top:50px;">Copyright  2010 <a href="#" ><strong>Company TOPSEC </strong></a> | Designed by <a href="#">www.topsec.com.cn</a></div>
+    <!--</div> --> <!-- /container -->
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/javascript">
+
+  $(document).ready(function() 
+   {
+
+    var agent = navigator.userAgent.toLowerCase();
+    var regStr_ff = /firefox\/[\d.]+/gi;
+    var str;
+    var arr;  
+    var isChrome = window.navigator.userAgent.indexOf("Chrome") !== -1 
+    if(agent.indexOf("firefox") > 0)
+    {
+        str=agent.match(regStr_ff);
+        arr=str[0];
+        arr=arr.substr(8);
+        if(parseInt(arr)<23)
+        {
+          alert( '火狐浏览器版本过低，请使用23.0及以上版本');
+        }
+     }
+    else if(isChrome)
+    {
+      alert("您当前使用为Chrome浏览器，不完全支持HTML5，请使用火狐23.0及以上版本，ie9以上版本等完全支持html5的浏览器！");
+    }
+    else
+    {
+          if (typeof(Worker) !== "undefined")   
+            {   
+            }
+             else   
+            {   
+                alert("当前浏览器不支持HTML5，请使用火狐23.0及以上版本，ie9以上版本等完全支持html5的浏览器！");   
+            }  
+    }
+
+  });
+      function ajaxobj(_url, _tag, _way, _form)
+      {
+        var m = (typeof(_way)  ==  "undefined" ? "GET" :_way );
+        var par = (typeof(_form)  ==  "undefined" ? "" :$(_form).serialize());
+        var info = "";
+        $.ajax({
+          type:m,
+          url:_url,
+          data:par,
+          async: false,
+          error: function(request) {
+            //alert("Connection error");
+            info = "xxxxxxx";
+          },
+          success: function(data) {
+            //$(_tag).html(data);
+            //alert(data);
+            info = data;
+          }
+        });
+        return info;
+      }
+
+      function loadQuestions(){  
+        
+        var examId = $("#exam-selector").val();
+        $("#exam-id").val(examId);
+        $('#exam-selector-modal').modal('hide');
+        // $('#rejump').attr('formaction', "/contesting/");
+
+        ajaxobj("/load-student-questions/", "", "post", "#selcourseform");
+      }
+
+      function setcourse()
+      {
+        var item=$("#coursename").find("option:selected").text();
+        $("#courname").val(item);
+      }
+      function choosed()
+      {
+          result = $("input[name=ychoice]:checked").val();
+          // alert(result)
+          $('#choosing').modal('hide');
+          if(result == 0)
+          {
+              //$('#chs').attr('formaction', "/lab/");
+              var cour=document.getElementById("coursename");
+              var course = ajaxobj("/coursecheck/", "", "get", "");
+              var jsondata = $.parseJSON(course);
+              var coursename=jsondata.coursename;
+               //alert(coursename);
+              if(coursename.length == 0)
+              {
+                alert("你当前无实训课程！");
+              }
+              if(coursename.length)
+              {
+                for (var i=0;i<=coursename.length-1;i++)
+                {
+                cour.options.add(new Option(coursename[i][0],coursename[i][1]));
+                }
+                $('#myModal2').modal('show');
+              }
+              else
+              {
+                $('#choosing').modal('show');
+              }
+          }
+          else if(result == 1)
+          {
+              var compt=document.getElementById("exam-selector");
+              document.getElementById("exam-selector").innerHTML = "";
+              var competition = ajaxobj("/examgetinfo/", "", "get", "");
+              var jsondata = $.parseJSON(competition);
+              var competiname=jsondata.competiname;
+              if(competiname.length == 0)
+              {
+                alert("当前无竞赛开启!");
+              }
+              if(competiname.length)
+              {
+                for (var i=0;i<=competiname.length-1;i++)
+                {
+                   compt.options.add(new Option(competiname[i][1],competiname[i][2]));
+                }
+              // if()
+                $('#exam-selector-modal').modal('show');
+              }
+              else
+              {
+
+                $('#choosing').modal('show');
+              }
+          }
+          else if(result == 2)
+          {
+              $('#chs').attr('formaction', "/hacking/");
+          }
+      }
+
+     function checkdname()
+     {
+        var acc=document.getElementById("ctxtaccount");
+        var pwd=document.getElementById("ctxtpwd");
+        pwd.setCustomValidity("");
+        acc.setCustomValidity("");
+        if(acc.value.length!=0&&pwd.value.length!=0)
+        {   
+            var clientcheck = ajaxobj("/client/", "", "post", "#clientcheck");
+            var jsondata = $.parseJSON(clientcheck);
+            if(jsondata.judge ==1 || jsondata.judge==2)
+            {
+                pwd.setCustomValidity("用户名或密码错误!");
+            }
+            else
+            {
+                 return true;
+            }
+        }
+        return false;
+    }
+    </script>
+  </body>
+</html>
